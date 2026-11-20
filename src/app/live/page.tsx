@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import { meta } from '@/lib/meta';
 import { config, getEventSummary, getKoreanEvents } from '@/lib/ftc';
-import { NEXT, LAST_SEASON, isEventDay, daysToNext, liveCfg } from '@/lib/krc';
+import { NEXT, LAST_SEASON, REGIONALS, isEventDay, daysToNext, liveCfg } from '@/lib/krc';
 import { logoFor } from '@/lib/logos';
 import eventsKo from '@/data/events-ko.json';
 import ops from '@/data/ops-schedule.json';
@@ -151,6 +151,7 @@ export default async function Page() {
           <div className="livebar"><span className="dot"></span><span id="liveClock">LIVE</span></div>
           <h1 id="ev">대회 Live</h1>
           <p id="meta">경기 일정, 결과, 순위가 30초마다 새로 고쳐져요.</p>
+          {REGIONALS.find((r) => r.event === lc.event)?.sponsor && <p className="sponsor"><span className="chip yel">Sponsor</span> {REGIONALS.find((r) => r.event === lc.event)!.sponsor}</p>}
           <EventTabs cur={lc.event} />
         </div></section>
 

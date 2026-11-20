@@ -10,11 +10,11 @@ const KST = (d: string) => Date.parse(`${d}T00:00:00+09:00`);
 export type LiveEvent = { season: number; event: string; start: string; end: string };
 // 2026–27 시즌 국내 지역 대회 (FTC 공식 시스템 등록, 2026-11-19 확인). 그날(한국 시각)이 되면 설정 없이 Live로 띄운다.
 // shortcut: 날짜가 바뀌거나 대회가 새로 등록되면 여기를 고친다
-// city: 대회 고르는 탭에 쓰는 지역 이름 (공식 데이터의 city)
-export const REGIONALS: (LiveEvent & { city: string })[] = [
-  { season: 2026, event: 'KRYON', start: '2026-11-21', end: '2026-11-21', city: '용인' },   // Advance Insights Challenge
-  { season: 2026, event: 'KRYEN', start: '2026-11-28', end: '2026-11-28', city: '영주' },   // Yeongju Robot Challenge
-  { season: 2026, event: 'KRWGN', start: '2026-12-19', end: '2026-12-19', city: '완주' },   // Jeonra Region Tournament
+// title: 공식 대회 이름 (FTC 공식 데이터), city: 지역, sponsor: 후원 (엄제환 확인한 것만)
+export const REGIONALS: (LiveEvent & { title: string; city: string; sponsor?: string })[] = [
+  { season: 2026, event: 'KRYON', start: '2026-11-21', end: '2026-11-21', title: 'Advance Insights Challenge', city: '용인', sponsor: 'KLA Foundation 장학팀 참가 대회' },
+  { season: 2026, event: 'KRYEN', start: '2026-11-28', end: '2026-11-28', title: 'Yeongju Robot Challenge', city: '영주' },
+  { season: 2026, event: 'KRWGN', start: '2026-12-19', end: '2026-12-19', title: 'Jeonra Region Tournament', city: '완주' },
 ];
 export function liveEvent(env: Record<string, string | undefined> = process.env, now = Date.now()): LiveEvent | null {
   const e = String(env.LIVE_EVENT ?? '').trim().match(/^(\d{4})\/(\w+)$/);

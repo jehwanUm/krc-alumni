@@ -12,7 +12,7 @@ export const revalidate = 300;
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const code = (await params).code.toUpperCase();
   const r = REGIONALS.find((x) => x.event === code);
-  return { title: r ? `${r.city} 지역 대회 · ${r.start} · KRC Alumni` : '대회 · KRC Alumni', robots: { index: false } };
+  return { title: r ? `${r.title} · ${r.start} · KRC Alumni` : '대회 · KRC Alumni', robots: { index: false } };
 }
 const KO = eventsKo as Record<string, { name?: string; venue?: string }>;
 const hm = (iso: string | null) => (iso ? iso.slice(11, 16) : '–');
@@ -34,7 +34,8 @@ export default async function Page({ params }: { params: Promise<{ code: string 
     <main className="pg-live">
       <section className="page-head"><div className="in">
         <span className="label">Competition · {r.city}</span>
-        <h1>{KO[r.event]?.name ?? ev?.name ?? r.event}</h1>
+        <h1>{KO[r.event]?.name ?? r.title}</h1>
+        {r.sponsor && <p className="sponsor"><span className="chip yel">Sponsor</span> {r.sponsor}</p>}
         <p>{r.start === r.end ? r.start : `${r.start} – ${r.end.slice(5)}`} · {KO[r.event]?.venue ?? ev?.venue ?? ''} · 참가 {teams.length}팀</p>
         {today && <p><Link className="btn pri" href="/live">지금 Live 보기 →</Link></p>}
         <EventTabs cur={r.event} />
