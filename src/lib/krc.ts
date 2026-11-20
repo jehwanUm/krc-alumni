@@ -1,7 +1,7 @@
 import type { Cfg } from './ftc';
 
 // 다음 KRC와 지난 KRC. 대회 날(한국 시각)에는 대회 페이지가 Live 화면이 된다.
-export const NEXT = { name: 'KRC 2027', season: 2026, start: '2027-01-29', end: '2027-01-30' };
+export const NEXT = { name: 'Korea Robot Championship 2027', season: 2026, start: '2027-01-29', end: '2027-01-30' };
 export const LAST_SEASON = 2025;
 const KST = (d: string) => Date.parse(`${d}T00:00:00+09:00`);
 
@@ -13,7 +13,7 @@ export type LiveEvent = { season: number; event: string; start: string; end: str
 // title: 공식 대회 이름 (FTC 공식 데이터), city: 지역, sponsor: 후원 (엄제환 확인한 것만)
 export const REGIONALS: (LiveEvent & { title: string; city: string; sponsor?: string })[] = [
   { season: 2026, event: 'KRYON', start: '2026-11-21', end: '2026-11-21', title: 'Advance Insights Challenge', city: '용인', sponsor: 'KLA Foundation 장학팀 참가 대회' },
-  { season: 2026, event: 'KRYEN', start: '2026-11-28', end: '2026-11-28', title: 'Yeongju Robot Challenge', city: '영주' },
+  { season: 2026, event: 'KRYEN', start: '2026-11-28', end: '2026-11-28', title: 'Yeongju Robot Challenge', city: '영주', sponsor: 'Novelis Korea 장학팀 참가 대회' },
   { season: 2026, event: 'KRWGN', start: '2026-12-19', end: '2026-12-19', title: 'Jeonra Region Tournament', city: '완주' },
 ];
 export function liveEvent(env: Record<string, string | undefined> = process.env, now = Date.now()): LiveEvent | null {
