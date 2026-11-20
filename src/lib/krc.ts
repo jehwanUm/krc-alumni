@@ -30,3 +30,5 @@ export const isEventDay = (now = Date.now(), ev = liveEvent(process.env, now)) =
   return now >= KST(start) && now < KST(end) + 864e5;
 };
 export const daysToNext = (now = Date.now()) => Math.ceil((KST(NEXT.start) - now) / 864e5);
+// 오늘이거나 다음에 열리는 지역 대회 (QR 시작 페이지가 쓴다). 다 끝났으면 null
+export const nextRegional = (now = Date.now()) => REGIONALS.find((r) => now < KST(r.end) + 864e5) ?? null;

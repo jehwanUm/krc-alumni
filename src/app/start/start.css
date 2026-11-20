@@ -1,0 +1,12 @@
+/* QR 시작 페이지. 휴대폰에서 한 손으로 누르기 쉽게 크게 */
+.pg-start {
+  .start-form { display: grid; gap: 10px; margin-top: 24px; max-width: 360px; }
+  .start-form label { font-size: 14px; color: var(--mut); }
+  .start-form input { height: 56px; padding: 0 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); font: 500 24px var(--mono); text-align: center; letter-spacing: .08em; } /* taste-skill-ignore */
+  .btn { height: 52px; justify-content: center; font-size: 16px; }
+  .ask { margin-top: 24px; max-width: 420px; padding: 20px; border: 1px solid var(--blue); border-radius: 6px; background: var(--panel); }
+  .ask p { margin: 0; font-size: 18px; line-height: 1.5; }
+  .ask .no { font-family: var(--mono); font-size: 22px; color: var(--blue-ink); }
+  .ask .warn { margin-top: 10px; font-size: 14px; color: var(--red-ink); }
+  .ask .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+}
