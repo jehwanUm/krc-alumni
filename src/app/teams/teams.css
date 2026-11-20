@@ -1,0 +1,58 @@
+/* index.astro에서 옮김. 이 페이지 안에서만 쓰이게 .pg-teams 아래에 둔다 (CSS 중첩). */
+.pg-teams {
+  .ctrl { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; padding: 24px 0 20px; border-bottom: 1px solid var(--line); } /* taste-skill-ignore */
+  .tabs, .seg, .tools { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .tools { gap: 10px; }
+  .tabs button, .seg button { font: inherit; font-size: 14px; height: 38px; padding: 0 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 2px; cursor: pointer; }
+  .tabs button[aria-pressed='true'], .seg button[aria-pressed='true'] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .seg { gap: 0; }
+  .tools input, .tools select { font: inherit; font-size: 14px; height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 2px; background: var(--panel); color: var(--ink); }
+  .tools input { width: 230px; }
+  .sub { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+  .count-line { font-size: 14px; color: var(--mut); margin: 0; }
+  .only-auto { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-2); cursor: pointer; user-select: none; }
+  .only-auto input { width: 15px; height: 15px; margin: 0; accent-color: var(--ink); }
+  .tm-foot .has { color: var(--ink); font-weight: 500; }
+  .no-auto { grid-column: 1 / -1; color: var(--mut); padding: 24px 0; margin: 0; }
+  .dim { color: var(--mut); }
+  .note { margin-bottom: 56px; }
+
+  /* 카드 보기 */
+  .dir { padding: 16px 0 24px; }
+  .view-card { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .view-card .dir-head, .view-card .only-table { display: none; }
+  .tm { display: flex; flex-direction: column; gap: 10px; background: var(--panel); border: 1px solid var(--line); padding: 18px; transition: border-color .15s, transform .15s; } /* taste-skill-ignore */
+  .tm:hover, .tm:focus-visible { border-color: var(--ink); transform: translateY(-2px); }
+  .tm[hidden] { display: none; }
+  .tm-who { display: flex; gap: 14px; align-items: center; }
+  .tm-who .avatar { width: 64px; height: 64px; }
+  .tm-who .num { font-family: var(--mono); font-size: 13px; color: var(--mut); } /* taste-skill-ignore */
+  .tm-who b { display: block; font-size: 18px; line-height: 1.3; }
+  .tm-org { font-size: 14px; color: var(--ink-2); }
+  .tm-sp { font-size: 13px; color: var(--mut); }
+  .tm-sp:empty { display: none; }
+  .tm-res { font-size: 13px; }
+  .tm-res .r { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tm-res .r[hidden] { display: none; }
+  .tm-foot { margin-top: auto; display: flex; gap: 14px; font-size: 13px; color: var(--mut); border-top: 1px solid var(--line); padding-top: 10px; } /* taste-skill-ignore */
+
+  /* 표 보기: 같은 HTML을 한 줄로 */
+  .view-table { display: block; }
+  .view-table .dir-head, .view-table .tm { display: grid; grid-template-columns: 2fr 1.6fr 1.2fr 1.6fr 1fr; gap: 16px; align-items: center; }
+  .view-table .dir-head { padding: 0 12px 10px; font-size: 13px; font-weight: 600; color: var(--mut); border-bottom: 1px solid var(--line); } /* taste-skill-ignore */
+  .view-table .tm { border-width: 0 0 1px; padding: 12px; transform: none; }
+  .view-table .tm:hover { background: var(--panel); border-color: var(--line); }
+  .view-table .tm-who .avatar { width: 48px; height: 48px; }
+  .view-table .tm-who b { font-size: 16px; }
+  .view-table .tm-sp:empty { display: block; }
+  .view-table .tm-foot { margin: 0; border: 0; padding: 0; flex-direction: column; gap: 2px; }
+
+  @media (max-width: 1100px) { .view-card { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 800px) {
+    .view-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tools, .tools input { width: 100%; } .tools select { flex: 1; }
+    .view-table .dir-head { display: none; }
+    .view-table .tm { grid-template-columns: 1fr; gap: 6px; }
+  }
+  @media (max-width: 520px) { .view-card { grid-template-columns: 1fr; } }
+}

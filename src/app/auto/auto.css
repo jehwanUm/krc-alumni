@@ -1,0 +1,18 @@
+/* auto.astro에서 옮김. 이 페이지 안에서만 쓰이게 .pg-auto 아래에 둔다 (CSS 중첩). */
+.pg-auto {
+  .dim { color: var(--mut); } .small { font-size: 13px; }
+  .first { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--yel); padding: 16px 20px; margin-top: 24px; } /* taste-skill-ignore */
+  .first b { font-size: 17px; } .first p { margin: 2px 0 0; font-size: 15px; color: var(--ink-2); max-width: 40em; }
+  .edwrap { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 14px; }
+  .ed { width: 100%; height: 720px; border: 1px solid var(--line); background: #fff; display: block; } /* taste-skill-ignore */
+  .ghost { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 14px; } /* taste-skill-ignore */
+  .ghost h3 { margin: 0; font-size: 16px; }
+  .gb { display: flex; flex-direction: column; gap: 6px; }
+  .gb input { height: 36px; border: 1px solid var(--line); padding: 0 10px; font: inherit; font-size: 14px; background: var(--bg); }
+  .ghost .note { margin: 0; }
+  .lock { background: var(--bg); border: 1px dashed var(--line); padding: 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .lock p { margin: 4px 0 0; }
+  .edbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
+  .btn.sm { height: 36px; font-size: 13px; padding: 0 12px; }
+  @media (max-width: 1000px) { .edwrap { grid-template-columns: 1fr; } .ed { height: 640px; } }
+}

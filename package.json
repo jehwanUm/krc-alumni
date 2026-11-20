@@ -1,0 +1,29 @@
+{
+  "name": "krc-community",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test test/*.test.ts",
+    "sync-editor": "cp ../../path-follower/girigocha/editor/index.html ../../path-follower/girigocha/editor/girigocha-path.js public/editor/",
+    "vercel:login": "vercel login",
+    "vercel:link": "vercel link",
+    "vercel:env": "node scripts/vercel-env.mjs",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "next": "^16.4.5",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/web-push": "^3.6.4",
+    "typescript": "^7.0.2",
+    "vercel": "^65.12.1"
+  }
+}

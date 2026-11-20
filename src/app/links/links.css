@@ -1,0 +1,11 @@
+/* 링크 트리: 휴대폰 한 손 화면 기준 좁은 한 줄 목록 */
+.links { min-height: 70vh; }
+.links-in { max-width: 520px; margin-inline: auto; padding: 48px 16px 64px; text-align: center; }
+.links h1 { margin: 8px 0 0; font-size: 32px; font-weight: 600; letter-spacing: -.02em; }
+.links p { margin: 8px 0 0; color: var(--ink-2); }
+.links ul { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 12px; }
+.links a { display: block; padding: 16px 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); text-decoration: none; transition: border-color .15s; }
+.links a:hover { border-color: var(--mut); }
+.links a.hot { background: var(--blue); border-color: var(--blue); color: #fff; }
+.links a b { display: block; font-size: 17px; font-weight: 600; }
+.links a small { display: block; margin-top: 4px; font-size: 14px; opacity: .8; }

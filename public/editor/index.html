@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기리고차 Path Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+ * 기리고차 Path Editor · 가이드 사이트 3판(site3/)과 같은 「실험 노트」 디자인: 밝은 회색 바탕, 흰 판, 얇은 선, 각진 모서리,
+ * 한국적인 요소는 오방색(청·적·황·백·흑) 띠와 데이터 색뿐. 용어는 영어, 설명은 한국어.
+ * 색은 데이터에만: 청 = 계획 경로, 적 = 부딪힘·오류, 황 = Marker(할 일)·북 표시, 흑 = 실제 주행(Replay)·로봇, 회색 = 다른 경로·Ghost.
+ * 글꼴: IBM Plex Sans KR / Plex Mono(라벨·숫자). 오프라인이면 설치된 시스템 글꼴로 대신 그린다.
+ * taste-skill-ignore: 모노 라벨·얇은 선·1px 테두리는 3판 실험 노트 시안의 모양이다 (엄제환 선택, 2026-10-23).
+ */
+:root{
+  color-scheme:dark;
+  --bg:#14171D;--surface:#1A1E26;--surface-2:#161A21;--surface-3:#252A35;--line:#2A303B;--line-2:#383F4C;
+  --ink:#E9ECF1;--muted:#9AA2B0;--faint:#6E7684;
+  --blue:#4C8DFF;--blue-ink:#8AB4FF;--red:#F0565B;--yellow:#F5C542;--on-yellow:#17140A;--grey-path:#7F8796;--ghost:#A3AAB7;
+  --field:#2A2F38;--tile:#3A404B;--wall:#C9CED6;
+  --radius:2px;--gap:8px;
+  --font:"IBM Plex Sans KR",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --shadow-float:0 8px 24px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--font);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;word-break:keep-all}
+button,select,input,textarea{font:inherit;color:inherit}
+button{color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);height:30px;padding:0 11px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background 140ms,border-color 140ms}
+button:hover{background:var(--surface-3);border-color:var(--faint)}
+button:active{transform:translateY(1px)}
+button:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+button.primary:hover{background:var(--blue);border-color:var(--blue)}
+button.icon{width:30px;padding:0;justify-content:center;border-color:transparent;background:transparent;color:var(--muted)}
+button.icon:hover{background:var(--surface-3);color:var(--ink)}
+button.icon.on{background:var(--surface-3);color:var(--ink)}
+button.sm{height:26px;padding:0 8px;font-size:12px}
+button.ghostbtn{border-color:transparent;background:transparent;color:var(--muted)}
+button.ghostbtn:hover{color:var(--ink);background:var(--surface-3)}
+button:disabled{opacity:.4;cursor:default;transform:none}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+select,input,textarea{color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);height:30px;padding:0 8px}
+input[type=number]{width:72px;font-variant-numeric:tabular-nums}
+input[type=range]{height:auto;padding:0;border:0;background:transparent;accent-color:var(--blue)}
+input[type=checkbox]{accent-color:var(--blue);height:auto}
+.num{font-variant-numeric:tabular-nums}
+.mute{color:var(--muted)}
+.tiny{font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:var(--radius);overflow:hidden;height:30px;flex:none}
+.seg button{border:0;border-radius:0;height:28px;background:transparent;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button.on{background:var(--surface-3);color:var(--ink);font-weight:600}
+.term{font-weight:600}
+.term small{font-weight:400;color:var(--muted);margin-left:6px}
+
+/* 위 막대 */
+.top{height:52px;display:flex;align-items:center;gap:8px;padding:0 10px 0 14px;flex:none;border-bottom:1px solid var(--line);background:var(--bg)}
+.obang{display:flex;height:4px;flex:none}.obang i{flex:1}
+.obang i:nth-child(1){background:var(--blue)}.obang i:nth-child(2){background:var(--red)}.obang i:nth-child(3){background:var(--yellow)}.obang i:nth-child(4){background:#fff}.obang i:nth-child(5){background:var(--ink)}
+.mark{width:24px;height:24px;flex:none}
+.brand{font-size:15px;font-weight:700;letter-spacing:.02em;white-space:nowrap;margin:0}
+.brand span{color:var(--muted);font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);font:12px var(--mono);white-space:nowrap;flex:none}
+.chip .d{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.chip.ok .d{background:var(--blue)}
+.chip.bad{background:#3A1F24;border-color:#6E3036;color:#FF9A9D}.chip.bad .d{background:var(--red)}
+.top .sp{flex:1}
+.top .sep{width:1px;height:20px;background:var(--line-2);margin:0 2px}
+
+/* 작업 영역 */
+.work{flex:1;min-height:0;display:grid;grid-template-columns:248px minmax(0,1fr) 264px;gap:var(--gap);padding:var(--gap)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-height:0}
+aside.panel{overflow:auto}
+.sec{padding:14px}
+.sec+.sec{border-top:1px solid var(--line)}
+.sec h2{font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.sec h2 .term,.sec h2 b{color:var(--ink)}
+.sec h2 .sp{flex:1}
+.sec h2 small{font-weight:400;color:var(--muted)}
+.center{display:flex;flex-direction:column;gap:var(--gap);min-height:0;min-width:0}
+.well{position:relative;flex:1;min-height:340px;overflow:hidden;background:var(--surface)}
+.well canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.ov{position:absolute;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius)}
+#cmdBar{left:84px;top:12px;right:12px;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 10px}
+#cmdBar label{color:var(--ink);font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+#cmd{flex:1;min-width:0;border:0;background:transparent;height:28px}
+#cmdHelp{left:84px;top:56px;max-width:min(560px,calc(100% - 24px));padding:10px 12px;font-size:13px}
+#cmdHelp code{font-family:var(--mono);color:var(--blue-ink);background:var(--surface-2);padding:1px 5px;border-radius:4px}
+#tools{left:12px;top:12px;padding:2px;display:flex;flex-direction:column;gap:1px;width:62px}
+#tools .seg{flex-direction:column;height:auto;width:100%;margin:2px 0}#tools .seg button{width:100%;justify-content:center;padding:0 4px;font-size:12px}#tools .seg button+button{border-left:0;border-top:1px solid var(--line-2)}
+#tools button.icon{width:100%}
+#moreTools{left:80px;top:12px;padding:4px;display:flex;flex-direction:column;gap:2px;box-shadow:var(--shadow-float)} /* taste-skill-ignore: 떠 있는 메뉴 */
+#moreTools button{justify-content:flex-start;color:var(--ink)}
+#pActs{padding:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius)}
+#sugBtn{right:12px;bottom:12px;height:30px;background:var(--yellow);color:var(--on-yellow);border:0;font-weight:600}
+#sugBtn:hover{background:#E8B92E}
+#sugPop{right:12px;bottom:50px;width:320px;padding:10px;box-shadow:var(--shadow-float)} /* taste-skill-ignore: 떠 있는 제안 목록 */
+.sug{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:6px}
+.sug:hover{background:var(--surface-2)}
+.sug b{color:var(--blue-ink);min-width:56px;text-align:right}
+.drop{position:absolute;inset:0;border:2px dashed var(--blue);border-radius:var(--radius);background:rgba(20,23,29,.86);display:grid;place-items:center;font-size:16px;font-weight:600;color:var(--blue-ink);pointer-events:none}
+
+/* 경로 목록 */
+.plist{list-style:none;margin:0;padding:0}
+.plist li{display:flex;align-items:center;gap:8px;height:32px;padding:0 2px 0 8px;border-radius:var(--radius);cursor:pointer}
+.plist li:hover{background:var(--surface-2)}
+.plist li.on{background:var(--surface-3)}
+.pdot{width:8px;height:8px;border-radius:2px;flex:none;background:var(--grey-path)}
+.plist li.on .pdot{background:var(--blue)}
+.plist .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plist .t{color:var(--muted);font-size:13px}
+.plist li.hid .nm{color:var(--faint);text-decoration:line-through}
+.acts{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin-top:8px}
+.kv label{color:var(--muted)}
+.box{border:1px solid var(--line);border-radius:var(--radius);padding:10px;background:var(--surface-2)}
+.stat{display:flex;gap:14px;margin:6px 0}
+.stat b{display:block;font:500 15px var(--mono);white-space:nowrap}
+.stat span{color:var(--muted);font:12px var(--mono);text-transform:uppercase;letter-spacing:.04em}
+
+/* 시간표 */
+#tlPanel{flex:none;padding:6px 10px 8px}
+.tlbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#tlPlay{width:34px;height:34px;padding:0;justify-content:center;border-radius:50%}
+.tlbar .big{font:500 18px var(--mono)}
+.tlbar .sp{flex:1}
+#tl{display:block;width:100%;height:96px;margin-top:4px;cursor:pointer;touch-action:none}
+
+/* 인스펙터 */
+.card{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:6px;background:var(--surface)}
+.card.on{border-color:var(--blue)}
+.card .head{display:flex;align-items:center;gap:8px;padding:7px 6px 7px 9px;cursor:pointer;min-height:40px}
+.badge{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-size:11px;font-weight:700}
+.card.on .badge{background:var(--blue);border-color:var(--blue);color:#fff}
+.badge.start{border-radius:4px}
+.card .ttl{flex:1;min-width:0}
+.card .ttl b{display:block;font-weight:600}
+.card .ttl span{color:var(--muted);font-size:13px}
+.card .body{padding:0 10px 10px;border-top:1px solid var(--line)}
+.q{margin-top:10px}
+.q>label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mk{background:var(--surface-2);border-radius:var(--radius);padding:8px;margin-top:6px;border-left:3px solid var(--yellow)}
+.mk .row+.row{margin-top:6px}
+.w{display:flex;gap:8px;margin:4px 0;font-size:13px;align-items:baseline}
+.st{flex:none;width:7px;height:7px;border-radius:50%;background:currentColor;transform:translateY(-1px)}
+.w.error{color:#FF8A8E}.w.warn{color:#E8BE45}.w.info{color:var(--muted)}.w.ok{color:var(--blue-ink)}
+
+/* 대화 상자·서랍 */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px;z-index:10}
+.dialog{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:var(--shadow-float); /* taste-skill-ignore: 떠 있는 대화 상자 */
+  width:min(760px,100%);max-height:calc(100% - 32px);display:flex;flex-direction:column}
+.dialog .hd{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.dialog .hd b{font-size:15px;flex:1}
+.dialog .bd{padding:14px 16px;overflow:auto}
+.dialog ol{margin:4px 0 10px;padding-left:20px}
+pre{background:#0B0D12;color:var(--ink);border:0;border-radius:var(--radius);padding:12px;font:12px/1.55 var(--mono);white-space:pre;overflow:auto;max-height:52vh;margin:8px 0 0}
+.blocks{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.bl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 10px;border-radius:6px;color:#fff;font-size:12px;background:#4A505D}
+.bl.k-path{background:#2B4E8F}.bl.k-heading{background:#5A4A2C}.bl.k-marker{background:#6B5617}.bl.k-run{background:#2F5E45}
+.bl b{font-weight:600}
+.bl span{background:rgba(255,255,255,.16);border-radius:4px;padding:1px 7px;font-variant-numeric:tabular-nums}
+.examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ex{height:auto;display:block;padding:10px;text-align:left;white-space:normal}
+.ex canvas{display:block;width:100%;height:110px;border-radius:var(--radius);background:var(--field);border:1px solid var(--line)}
+.ex b{display:block;margin-top:6px;font-weight:600}
+.ex .tiny{display:block;margin-top:4px}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);background:var(--surface);border-left:1px solid var(--line-2);box-shadow:var(--shadow-float); /* taste-skill-ignore: 떠 있는 서랍 */
+  z-index:11;overflow:auto}
+.drawer .hd{display:flex;align-items:center;padding:14px;border-bottom:1px solid var(--line)}
+.drawer .hd b{flex:1;font-size:15px}
+.steps{display:grid;gap:8px;margin:8px 0}
+.stepline{display:flex;gap:10px;align-items:flex-start}
+.stepline .n{flex:none;width:20px;height:20px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:11px;font-weight:700}
+.result{margin-top:10px;padding:10px;border-radius:var(--radius);background:var(--surface-2);border:1px solid var(--line)}
+
+@media (max-width:1180px){
+  html,body{height:auto}
+  .top{flex-wrap:wrap;height:auto;padding:8px 10px;row-gap:6px}
+  .work{flex:none;grid-template-columns:minmax(0,1fr) 300px;align-items:stretch}
+  .center{grid-row:1;grid-column:1}
+  .well{min-height:500px;flex:none}
+  #right{grid-row:1;grid-column:2}
+  #left{grid-column:1 / -1;grid-row:2}
+}
+@media (max-width:760px){
+  .top{flex-wrap:wrap;height:auto;padding:8px 10px;row-gap:6px}
+  .top .hide-s{display:none}
+  .work{display:flex;flex-direction:column}
+  .well{min-height:64vh}
+  #cmdBar{left:12px;right:12px;top:56px}
+  #cmdHelp{left:12px;top:100px}
+  #tools{flex-direction:row;width:auto;align-items:center}
+  #tools .seg{flex-direction:row;width:auto;margin:0 2px}#tools .seg button+button{border-top:0;border-left:1px solid var(--line-2)}
+  #tools button.icon{width:30px}
+  #moreTools{left:12px;top:56px}
+  #right{order:2}#left{order:3}
+}
+</style>
+</head>
+<body>
+<div class="obang" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+<header class="top">
+  <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="none" stroke="#E9ECF1" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#4C8DFF"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" stroke="#E9ECF1" stroke-width="2"/></svg>
+  <h1 class="brand">GIRIGOCHA <span>Path Editor</span></h1>
+  <span id="budget" class="chip num"><span class="d"></span><span></span></span>
+  <span id="ruleChip" class="chip bad" hidden title="BIOBUZZ 규칙 점검 — 아래 Diagnostics"><span class="d"></span><span></span></span>
+  <span id="robotChip" hidden class="chip hide-s" title="로봇 연결 · Send to robot에서 확인"><span class="d"></span><span>Robot</span></span>
+  <span class="sp"></span>
+  <button class="icon" id="bUndo" title="Undo 되돌리기 (⌘/Ctrl+Z)" aria-label="되돌리기"><svg class="i" viewBox="0 0 16 16"><path d="M5 3 2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg></button>
+  <button class="icon" id="bRedo" title="Redo 다시 (⌘/Ctrl+Shift+Z)" aria-label="다시"><svg class="i" viewBox="0 0 16 16"><path d="m11 3 3 3-3 3"/><path d="M14 6H6.5a4 4 0 0 0 0 8H9"/></svg></button>
+  <button id="bFile" class="ghostbtn">File</button>
+  <button id="bSettings" class="ghostbtn">Settings</button>
+  <button id="bCode">Code</button>
+  <button id="bSend" class="primary">Send to robot</button>
+</header>
+
+<main class="work">
+  <aside class="panel" id="left">
+    <div class="sec">
+      <h2>Paths<span class="sp"></span><button class="sm" id="bAddPath" title="앞 경로 끝에서 이어지는 새 경로">+ Path</button></h2>
+      <ul class="plist" id="plist"></ul>
+      <div class="acts" id="pActs" hidden>
+        <button class="sm" id="bDup" title="이 경로 복제">Duplicate</button>
+        <button class="sm" id="bFlipY" title="위아래 뒤집기 (반대 진영, y → −y)">Mirror ↕</button>
+        <button class="sm" id="bFlipX" title="좌우 뒤집기 (x → −x)">Mirror ↔</button>
+        <button class="sm" id="bUp" aria-label="순서 앞으로" title="순서 앞으로">↑</button>
+        <button class="sm" id="bDown" aria-label="순서 뒤로" title="순서 뒤로">↓</button>
+        <button class="sm" id="bDelPath" title="이 경로 지우기">Delete</button>
+      </div>
+    </div>
+  </aside>
+
+  <section class="center">
+    <div class="panel well" id="well">
+      <canvas id="cv" tabindex="0" aria-label="필드 · 누르면 로봇이 갈 점이 생겨요"></canvas>
+      <form class="ov" id="cmdBar" autocomplete="off" hidden>
+        <label for="cmd">Command</label>
+        <input id="cmd" placeholder="말로 만들기 · 예: 앞으로 36, 왼쪽으로 90도 돌면서 (24, 12)으로 곡선, claw 서보 0, 1초 기다리기">
+        <button type="button" class="icon" id="cmdQ" title="말투 보기" aria-label="말투 보기"><svg class="i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M6.2 6.2a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.4M8 11.5v.1"/></svg></button>
+        <button type="submit" class="sm primary" id="cmdGo">Add</button>
+      </form>
+      <div class="ov" id="cmdHelp" hidden></div>
+      <div class="ov" id="tools">
+        <button class="icon" id="tCmd" title="Command 말로 만들기 (/)" aria-label="말로 만들기"><svg class="i" viewBox="0 0 16 16"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"/></svg></button>
+        <div class="seg" id="newShape" title="새 점을 잇는 모양"><button data-v="line">Line</button><button data-v="curve">Curve</button></div>
+        <button class="icon" id="tGrid" title="Grid 타일 선 (G)" aria-label="타일 선"><svg class="i" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M6 2v12M10 2v12M2 6h12M2 10h12"/></svg></button>
+        <button class="icon" id="tRuler" title="Ruler 자 · 끌어서 거리·각도 (R)" aria-label="자"><svg class="i" viewBox="0 0 16 16"><path d="m2.5 10.5 8-8 3 3-8 8z"/><path d="m5 8 1.3 1.3M7 6l1.3 1.3M9 4l1.3 1.3"/></svg></button>
+        <button class="icon" id="tMore" title="더 보기" aria-label="도구 더 보기"><svg class="i" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r=".6"/><circle cx="8" cy="8" r=".6"/><circle cx="12.5" cy="8" r=".6"/></svg></button>
+      </div>
+      <div class="ov" id="moreTools" hidden>
+        <button class="ghostbtn" id="tDrum" title="Drum marks 북 표시 · 데드휠 한 바퀴마다" aria-label="북 표시"><svg class="i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></svg>Drum marks</button>
+        <button class="ghostbtn" id="tImage" title="Field image 필드 그림 넣기" aria-label="필드 그림"><svg class="i" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.3"/><path d="m3 12 3.5-3 2.5 2 2-1.5L13 12"/></svg>Field image</button>
+        <button class="ghostbtn" id="tPng" title="PNG로 저장" aria-label="그림으로 저장"><svg class="i" viewBox="0 0 16 16"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 11v2h10v-2"/></svg>PNG로 저장</button>
+      </div>
+      <div class="ov num" id="hint" hidden></div>
+      <button class="ov" id="sugBtn" hidden></button>
+      <div class="ov" id="sugPop" hidden></div>
+      <div class="drop" id="drop" hidden>.grlog → Replay · .json → 열기</div>
+    </div>
+    <div class="panel" id="tlPanel">
+      <div class="tlbar">
+        <button id="tlPlay" class="primary" title="Play (스페이스)" aria-label="달려 보기"><svg class="i" viewBox="0 0 16 16" id="tlIcon"><path d="M5 3.5v9l7-4.5z" fill="currentColor" stroke="none"/></svg></button>
+        <span class="big num" id="tlTime">0.0 s</span>
+        <span class="tiny num" id="tlTotal"></span>
+        <span class="tiny num" id="tlPose"></span>
+        <span class="sp"></span>
+        <button class="sm" id="tlLoop" title="반복">Loop</button>
+        <select id="tlSpeed" aria-label="재생 속도"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+      </div>
+      <canvas id="tl" aria-label="Timeline · 눌러서 원하는 시각으로"></canvas>
+    </div>
+  </section>
+
+  <aside class="panel" id="right">
+    <div class="sec">
+      <h2>Inspector <small>점을 눌러 방향·Marker</small></h2>
+      <div class="row" style="margin-bottom:10px"><label for="pWait" class="tiny">Wait after</label><input type="number" id="pWait" min="0" step="0.5" title="이 Path가 끝나고 그 자리를 버티며 기다리기"> <span class="mute">s</span></div>
+      <div id="cards"></div>
+    </div>
+    <div class="sec" id="diagSec">
+      <h2>Diagnostics <small>점검</small></h2>
+      <div id="warnings"></div>
+    </div>
+  </aside>
+</main>
+
+<div class="modal" id="mSend" hidden>
+  <div class="dialog" role="dialog" aria-label="Send to robot" style="width:min(560px,100%)">
+    <div class="hd"><b>Send to robot</b><button class="ghostbtn" data-close>닫기</button></div>
+    <div class="bd" id="sendBody"></div>
+  </div>
+</div>
+<div class="modal" id="mCode" hidden>
+  <div class="dialog" role="dialog" aria-label="Code">
+    <div class="hd"><b>Code</b><div class="seg" id="codeKind"><button data-v="blocks">Blocks</button><button data-v="java">Java</button></div><button class="ghostbtn" data-close>닫기</button></div>
+    <div class="bd" id="codeBody"></div>
+  </div>
+</div>
+<div class="modal" id="mExamples" hidden>
+  <div class="dialog" role="dialog" aria-label="Examples">
+    <div class="hd"><b>Examples</b><button class="ghostbtn" data-close>닫기</button></div>
+    <div class="bd"><p class="tiny" style="margin-top:0">위 넷은 고르면 새 Path로 추가돼요. BIOBUZZ 대표 오토는 지금 작업을 바꿔요.</p><div class="examples" id="exList"></div></div>
+  </div>
+</div>
+<div class="modal" id="mFile" hidden>
+  <div class="dialog" role="dialog" aria-label="File" style="width:min(460px,100%)">
+    <div class="hd"><b>File</b><button class="ghostbtn" data-close>닫기</button></div>
+    <div class="bd">
+      <p class="tiny" style="margin-top:0">작업은 이 브라우저에 자동 저장돼요. 다른 컴퓨터·팀원·파트너 팀과 나누려면 파일로.</p>
+      <div class="row"><button id="bSave" class="primary">Save project</button><button id="bOpen">Open project</button><button id="bNew">New</button><button id="bExamples">Examples</button></div>
+    </div>
+  </div>
+</div>
+<div class="drawer" id="dSettings" hidden>
+  <div class="hd"><b>Settings</b><button class="ghostbtn" id="bCloseSettings">닫기</button></div>
+  <div class="sec">
+    <h2>Auto limit <small>오토 시간 제한</small></h2>
+    <div class="row"><input type="number" id="limit" min="1" step="1"> <span class="tiny">초 · 대회 규칙에 맞게</span></div>
+  </div>
+  <div class="sec">
+    <h2>Replay <small>실제 주행 겹쳐 보기</small></h2>
+    <div id="replayBox"></div>
+  </div>
+  <div class="sec">
+    <h2>Ghost <small>파트너·상대 로봇</small></h2>
+    <div id="ghostBox"></div>
+  </div>
+  <div class="sec">
+    <h2>Robot <small>팀 로봇</small></h2>
+    <p class="tiny" style="margin-top:0">robot.json을 불러오면 로봇 크기·측정값(「기리고차 측정」)으로 시간을 정확히 계산해요.</p>
+    <button id="bRobot">Load robot.json</button>
+    <p class="tiny" id="robotInfo"></p>
+    <div class="kv">
+      <label>Size 길이·폭</label><div class="row"><input type="number" id="rl" aria-label="로봇 길이"><input type="number" id="rw" aria-label="로봇 폭"></div>
+      <label for="pod">Dead wheel 북 표시</label><select id="pod"><option value="32">goBILDA 4-Bar Ø32 mm</option><option value="48">goBILDA Swingarm Ø48 mm</option></select>
+    </div>
+  </div>
+  <div class="sec">
+    <h2>Field <small>필드</small></h2>
+    <div class="kv" style="margin-top:0">
+      <label for="fs">Size 한 변</label><input type="number" id="fs">
+      <label for="game">Game 경기 필드</label><select id="game"><option value="">없음</option><option value="biobuzz">BIOBUZZ (2026-27)</option></select>
+      <label for="forigin">Origin (0, 0)</label><select id="forigin"><option value="center">필드 가운데</option><option value="corner">왼쪽 아래 모서리</option></select>
+      <label for="snap">Snap 맞춤</label><select id="snap"><option value="0">없음</option><option value="1">1</option><option value="5">5</option><option value="10">10</option><option value="tile">타일 반 칸</option></select>
+      <label for="imgAlpha">Image 진하기</label><input type="range" id="imgAlpha" min="0.1" max="1" step="0.05">
+    </div>
+    <button class="sm" id="bClearImg" style="margin-top:10px">필드 그림 빼기</button>
+  </div>
+  <div class="sec">
+    <h2>View</h2>
+    <label class="row"><input type="checkbox" id="showSpeed"> Speed 경로를 속도로 칠하기 (옅을수록 느림)</label>
+    <h2 style="margin-top:14px">Advanced</h2>
+    <label class="row"><input type="checkbox" id="advanced"> 곡선 제어점 직접 조정 · 속도 제한 · 물체 밀기</label>
+  </div>
+</div>
+
+<input type="file" id="fileOpen" accept=".json,application/json" hidden>
+<input type="file" id="fileRobot" accept=".json,application/json" hidden>
+<input type="file" id="fileGhost" accept=".json,application/json" hidden>
+<input type="file" id="fileLog" accept=".grlog,.txt,.jsonl" hidden>
+<input type="file" id="fileImage" accept="image/*" hidden>
+
+<script src="girigocha-path.js"></script>
+<script>
+(function () {
+'use strict';
+var G = window.GPath;
+var $ = function (id) { return document.getElementById(id); };
+var STORE = 'girigocha-editor-v2', PREFS = 'girigocha-editor-prefs', OTHER = 'girigocha-editor-other', IMG = 'girigocha-editor-field-image';
+
+// ---------------------------------------------------------------- 상태
+
+var prefs = Object.assign({ snap: '5', showSpeed: false, advanced: false, newShape: 'line', codeKind: 'blocks', javaKind: 'opmode', grid: true, drum: true, pod: 32, game: 'biobuzz', imgAlpha: 0.6, robotAddr: '192.168.43.1:8080' }, loadJson(PREFS) || {});
+var project = migrate(loadJson(STORE) || freshProject());
+var other = loadJson(OTHER); if (other) other.project = migrate(other.project);
+var fieldImg = null; loadImage(loadText(IMG));
+var cur = 0, sel = null, undo = [], redo = [];
+var cache = {}, tl = { items: [], total: 0 }, acts = [], ocache = {}, otl = null, coll = [], sugs = [];
+var rules = [];                    // BIOBUZZ 규칙 점검 결과 (G.biobuzzRules)
+var replay = null, rgap = null;   // 실제 주행 (.grlog)
+var preview = null;                // 말로 만들기 미리보기 {chunks, errors}
+var robotState = { status: 'unknown', version: '', routines: [] };
+var play = { on: false, t: 0, last: 0, loop: false, speed: 1 };
+var tool = null, ruler = null, drag = null, hover = null, downAt = null;
+
+function loadJson(k) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function loadText(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function saveJson(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v)); return true; } catch (e) { return false; } }
+function migrate(p) {
+  p.paths.forEach(function (q) { G.toPoints(q); q.startActions = q.startActions || []; q.points.forEach(function (pt) { pt.actions = pt.actions || []; pt.heading = pt.heading || { mode: 'keep' }; }); });
+  if (!(p.limit > 0)) p.limit = 30;
+  if (p.units !== 'in') G.convertUnits(p, 'in'); // 길이는 inch 하나 (옛 cm·m 프로젝트는 열 때 바꾼다)
+  p.version = 3;
+  return p;
+}
+/** 새 프로젝트. BIOBUZZ 필드를 켰으면 출발을 HIVE 밖, 빨강 왼쪽 벽(규칙상 출발할 수 있는 자리)에. */
+function freshProject() {
+  var p = G.newProject('in');
+  if (prefs.game === 'biobuzz') p.paths[0].start = { x: -63, y: 5, h: 0 };
+  return p;
+}
+function snapshot() { undo.push(JSON.stringify(project)); if (undo.length > 100) undo.shift(); redo = []; }
+function path() { return project.paths[cur]; }
+function U() { return project.units; }
+function r1(v) { return Math.round(v * 10) / 10; }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+/** 받침이 있으면 「을」, 없으면 「를」. */
+function eul(w) { var c = w.charCodeAt(w.length - 1); return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 ? '을' : '를'; }
+function gwa(w) { var c = w.charCodeAt(w.length - 1); return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 ? '과' : '와'; }
+
+// ---------------------------------------------------------------- 계산
+
+function analyzeAll() {
+  cache = {};
+  project.paths.forEach(function (p, i) {
+    try { cache[i] = G.analyze(project, p); } catch (e) { cache[i] = { length: 0, time: 0, warnings: [{ level: 'error', text: '계산 오류: ' + e.message }] }; }
+  });
+  tl = G.timeline(project, cache);
+  acts = G.actionTimes(project, tl);
+  coll = []; otl = null;
+  if (other) {
+    try {
+      var o = JSON.parse(JSON.stringify(other.project)); if (o.units !== U()) G.convertUnits(o, U());
+      ocache = {}; o.paths.forEach(function (p, i) { ocache[i] = G.analyze(o, p); });
+      otl = G.timeline(o, ocache); other.view = o;
+      coll = G.collisions(project, tl, o, otl);
+    } catch (e) { otl = null; }
+  }
+  try { sugs = G.suggestions(project, { game: prefs.game }); } catch (e) { sugs = []; }
+  rgap = replay && tl.total ? G.replayGap(project, tl, replay) : null;
+  try { rules = prefs.game === 'biobuzz' ? G.biobuzzRules(project, tl) : []; } catch (e) { rules = []; }
+  if (play.t > endT()) play.t = 0;
+}
+function endT() { return Math.max(tl.total, otl ? otl.total : 0, replay ? replay.duration : 0); }
+
+// ---------------------------------------------------------------- 필드 좌표
+
+var cv = $('cv'), ctx = cv.getContext('2d');
+var view = { scale: 1, ox: 0, oy: 0, w: 0, h: 0 };
+function bounds() { var s = project.field.size; return project.field.origin === 'center' ? { lo: -s / 2, hi: s / 2 } : { lo: 0, hi: s }; }
+function resize() {
+  var r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  view.w = r.width; view.h = r.height;
+  // 필드는 도구 상자(넓은 화면: 왼쪽 세로, 좁은 화면: 위 가로)와 열린 Command·제안 단추를 피해서 — 실제 크기로
+  var b = bounds(), size = b.hi - b.lo, tb = $('tools'), cb = $('cmdBar');
+  var vert = tb.offsetHeight > tb.offsetWidth;
+  var side = vert ? tb.offsetLeft + tb.offsetWidth + 10 : 12;
+  var top = Math.max(cb.hidden ? 0 : cb.offsetTop + cb.offsetHeight, vert ? 0 : tb.offsetTop + tb.offsetHeight) + 12;
+  var pad = $('sugBtn').hidden ? 12 : 54, avH = r.height - top - pad;
+  view.scale = Math.max(0.1, Math.min((r.width - 2 * side) / size, avH / size));
+  view.ox = r.width / 2 - ((b.lo + b.hi) / 2) * view.scale;
+  view.oy = top + avH / 2 + ((b.lo + b.hi) / 2) * view.scale;
+  resizeTl(); frame();
+}
+function X(x) { return view.ox + x * view.scale; }
+function Y(y) { return view.oy - y * view.scale; }
+function wx(px) { return (px - view.ox) / view.scale; }
+function wy(py) { return (view.oy - py) / view.scale; }
+function snapStep() { var s = prefs.snap; return s === '0' ? 0.1 : s === 'tile' ? project.field.size / 12 : Number(s); }
+function snap(v) { var st = snapStep(); return Math.round(Math.round(v / st) * st * 100) / 100; }
+
+// ---------------------------------------------------------------- 필드 그리기
+
+var C = {};
+function colors() { var cs = getComputedStyle(document.documentElement); ['field', 'tile', 'wall', 'ink', 'muted', 'faint', 'surface', 'blue', 'red', 'yellow', 'grey-path', 'ghost', 'bg', 'font', 'on-yellow'].forEach(function (k) { C[k] = cs.getPropertyValue('--' + k).trim(); }); }
+function line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+/** BIOBUZZ 필드 요소 (매뉴얼 값, inch·가운데 원점) → 지금 필드 크기·원점에 맞춰 그린다. */
+function drawBiobuzz(b, s) {
+  var F = G.BIOBUZZ, k = s / (2 * F.half), c = (b.lo + b.hi) / 2;
+  var bx = function (x) { return X(c + x * k); }, by = function (y) { return Y(c + y * k); };
+  var box = function (r, fill, alpha) { ctx.globalAlpha = alpha; ctx.fillStyle = fill; ctx.fillRect(bx(r.xMin), by(r.yMax), (r.xMax - r.xMin) * k * view.scale, (r.yMax - r.yMin) * k * view.scale); ctx.globalAlpha = 1; };
+  var label = function (t, x, y, col) { ctx.fillStyle = col; ctx.font = '600 11px ' + C.font; ctx.textAlign = 'center'; ctx.fillText(t, bx(x), by(y) + 4); ctx.textAlign = 'left'; };
+  // 오토 동안 진영 경계 (x = 0, 넘어가면 반칙 위험)
+  ctx.strokeStyle = C.faint; ctx.lineWidth = 1; ctx.setLineDash([4, 6]); line(ctx, bx(0), by(F.half), bx(0), by(-F.half)); ctx.setLineDash([]);
+  var h = F.hive;
+  box({ xMin: h.xMin, xMax: 0, yMin: h.yMin, yMax: h.yMax }, C.red, 0.12);
+  box({ xMin: 0, xMax: h.xMax, yMin: h.yMin, yMax: h.yMax }, C.blue, 0.12);
+  ctx.strokeStyle = C.muted; ctx.lineWidth = 1.5; ctx.strokeRect(bx(h.xMin), by(h.yMax), (h.xMax - h.xMin) * k * view.scale, (h.yMax - h.yMin) * k * view.scale);
+  label('HIVE', 0, 0, C.ink);
+  [['red', C.red], ['blue', C.blue]].forEach(function (side) {
+    var A = F[side[0]], lz = A.loadingZone, g = A.garden;
+    box(lz, side[1], 0.25); label('LZ', (lz.xMin + lz.xMax) / 2, (lz.yMin + lz.yMax) / 2, C.ink);
+    box(g, side[1], 0.7);
+    A.flowers.forEach(function (f) {
+      var ix = f.x === 72 || f.x === -72 ? f.x - Math.sign(f.x) * 3.5 : f.x, iy = f.y === 72 || f.y === -72 ? f.y - Math.sign(f.y) * 3.5 : f.y;
+      ctx.beginPath(); ctx.arc(bx(ix), by(iy), Math.max(3, 3.5 * k * view.scale), 0, Math.PI * 2);
+      ctx.fillStyle = C.field; ctx.fill(); ctx.strokeStyle = C.yellow; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = side[1]; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(bx(ix), by(iy), Math.max(1.5, 1.6 * k * view.scale), 0, Math.PI * 2); ctx.stroke();
+    });
+  });
+}
+
+function draw() {
+  colors();
+  ctx.clearRect(0, 0, view.w, view.h);
+  var b = bounds(), s = project.field.size, S = s * view.scale;
+  ctx.fillStyle = C.field; ctx.fillRect(X(b.lo), Y(b.hi), S, S);
+  if (fieldImg) { ctx.globalAlpha = prefs.imgAlpha; ctx.drawImage(fieldImg, X(b.lo), Y(b.hi), S, S); ctx.globalAlpha = 1; }
+  if (prefs.grid) { ctx.strokeStyle = C.tile; ctx.lineWidth = 1; for (var i = 1; i < 6; i++) { var v = b.lo + i * s / 6; line(ctx, X(v), Y(b.lo), X(v), Y(b.hi)); line(ctx, X(b.lo), Y(v), X(b.hi), Y(v)); } }
+  if (prefs.game === 'biobuzz') drawBiobuzz(b, s);
+  ctx.strokeStyle = C.wall; ctx.lineWidth = 2; ctx.strokeRect(X(b.lo) - 1, Y(b.hi) - 1, S + 2, S + 2);
+  var st = path().start;
+  if (prefs.game !== 'biobuzz' && Math.hypot(st.x, st.y) > Math.max(project.robot.length, project.robot.width)) { // BIOBUZZ는 HIVE가 가운데를 보여 줌
+    ctx.fillStyle = C.faint; ctx.font = '11px ' + C.font; ctx.fillText('(0, 0)', X(0) + 5, Y(0) + 14);
+    ctx.strokeStyle = C.faint; ctx.lineWidth = 1; line(ctx, X(0) - 5, Y(0), X(0) + 5, Y(0)); line(ctx, X(0), Y(0) - 5, X(0), Y(0) + 5);
+  }
+  if (other && other.view) { ctx.setLineDash([6, 5]); other.view.paths.forEach(function (p, i) { strokeGeo(ocache[i], C.ghost, 1.6, 0.6); }); ctx.setLineDash([]); }
+  project.paths.forEach(function (p, i) { if (i !== cur && !p.hidden) strokeGeo(cache[i], C['grey-path'], 2.5, 1); });
+  if (replay) strokeTrack(replay.samples, C.ink, 1.6, 0.85);
+  drawCurrent();
+  if (rules.length) drawRules();
+  if (preview) drawPreview();
+  // 시각 play.t의 로봇들
+  var showAt = play.on || play.t > 0;
+  if (other && other.view && otl && otl.items.length) { var op = G.poseAt(other.view, otl, play.t); if (op) robot(op.x, op.y, op.h, other.view.robot, C.ghost, 1.6, false, true); }
+  if (replay && showAt) { var rpp = G.replayAt(replay, play.t); if (rpp) robot(rpp.x, rpp.y, rpp.h, project.robot, C.ink, 1.8, false, true); }
+  if (showAt && tl.items.length) {
+    var me = G.poseAt(project, tl, play.t), hit = coll.some(function (c) { return play.t >= c.t0 - 0.03 && play.t <= c.t1 + 0.03; });
+    if (me) robot(me.x, me.y, me.h, project.robot, hit ? C.red : C.blue, 2.4, true);
+  }
+  if (ruler) drawRuler();
+}
+
+// BIOBUZZ 규칙 점검 표시: G304·R102는 출발 상자, G402(노랑)·G417(빨강)은 그 시각 구간의 경로, G410은 마커 자리
+function drawRules() {
+  var st = project.paths[0].start;
+  if (rules.some(function (r) { return r.rule === 'G304' || r.rule === 'R102'; })) {
+    robot(st.x, st.y, G.rad(st.h), project.robot, C.red, 2.5, false, true);
+  }
+  rules.forEach(function (r) {
+    if (r.t0 == null || r.rule === 'G403') return;
+    var col = r.level === 'error' ? C.red : C.yellow;
+    ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = 0.45; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath();
+    for (var t = r.t0, first = true; t <= r.t1 + 1e-9; t += 0.05) { var q = G.poseAt(project, tl, t); if (!q) continue; if (first) { ctx.moveTo(X(q.x), Y(q.y)); first = false; } else ctx.lineTo(X(q.x), Y(q.y)); }
+    if (r.t1 - r.t0 < 0.05) { var q1 = G.poseAt(project, tl, r.t0); if (q1) { ctx.arc(X(q1.x), Y(q1.y), 7, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); } }
+    ctx.stroke(); ctx.restore();
+  });
+}
+function strokeGeo(a, color, w, alpha) {
+  if (!a || !a.geo) return;
+  var g = a.geo, u = U(), step = Math.max(0.01, g.length / 300);
+  ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+  for (var s = 0; s <= g.length + 1e-9; s += step) { var q = G.geoPoint(g, Math.min(s, g.length)); if (s) ctx.lineTo(X(G.fromM(q[0], u)), Y(G.fromM(q[1], u))); else ctx.moveTo(X(G.fromM(q[0], u)), Y(G.fromM(q[1], u))); }
+  var e = G.geoPoint(g, g.length); ctx.lineTo(X(G.fromM(e[0], u)), Y(G.fromM(e[1], u))); ctx.stroke(); ctx.globalAlpha = 1;
+}
+function strokeTrack(S, color, w, alpha) {
+  ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineJoin = 'round'; ctx.beginPath();
+  S.forEach(function (q, i) { if (i) ctx.lineTo(X(q.x), Y(q.y)); else ctx.moveTo(X(q.x), Y(q.y)); }); ctx.stroke(); ctx.globalAlpha = 1;
+}
+function speedTint(f) {
+  var m = C.blue.match(/^#(..)(..)(..)$/), bg = C.field.match(/^#(..)(..)(..)$/); if (!m || !bg) return C.blue;
+  var k = 0.3 + 0.7 * f; return 'rgb(' + [1, 2, 3].map(function (i) { var a = parseInt(bg[i], 16), z = parseInt(m[i], 16); return Math.round(a + (z - a) * k); }).join(',') + ')';
+}
+
+function drawCurrent() {
+  var p = path(), a = cache[cur], u = U();
+  robot(p.start.x, p.start.y, G.rad(p.start.h), project.robot, C.ink, 1.5);
+  if (a && a.geo) {
+    var g = a.geo;
+    if (prefs.showSpeed) {
+      var prof = a.prof, maxV = a.limits.maxVel, step = Math.max(0.005, g.length / 500), prev = G.geoPoint(g, 0);
+      ctx.lineWidth = 4; ctx.lineCap = 'round';
+      for (var s = step; s <= g.length + 1e-9; s += step) { var q = G.geoPoint(g, Math.min(s, g.length)); ctx.strokeStyle = speedTint(Math.min(1, prof.speeds[Math.min(prof.n, Math.round(s / prof.ds))] / maxV)); line(ctx, X(G.fromM(prev[0], u)), Y(G.fromM(prev[1], u)), X(G.fromM(q[0], u)), Y(G.fromM(q[1], u))); prev = q; }
+    } else strokeGeo(a, C.blue, 3.5, 1);
+    // 북 표시: 데드휠 한 바퀴마다 황색 눈금 (기리고차 · 일정 거리마다 북을 울리던 수레)
+    if (prefs.drum) {
+      var podD = G.fromM(prefs.pod / 1000, u), ticks = G.drumTicks(project, a, podD);
+      if (ticks.length < 400) {
+        ctx.strokeStyle = C.yellow; ctx.lineWidth = 1.5;
+        ticks.forEach(function (sU) {
+          var sm = G.toM(sU, u), q = G.geoPoint(g, sm), si = G.segmentAt(g, sm), t = g.segs[si].curve.tangent(sm - g.start[si]);
+          var px = X(G.fromM(q[0], u)), py = Y(G.fromM(q[1], u)), nx = -t[1] * 5, ny = -t[0] * 5;
+          line(ctx, px - nx, py - ny, px + nx, py + ny);
+        });
+      }
+    }
+    var end = G.geoPoint(g, g.length);
+    ctx.globalAlpha = 0.4; robot(G.fromM(end[0], u), G.fromM(end[1], u), G.geoHeading(g, g.length), project.robot, C.ink, 1.3); ctx.globalAlpha = 1;
+    G.segsOf(p).forEach(function (sg, i) {
+      sg.markers.forEach(function (m) {
+        var cu = g.segs[i].curve, r = cu.point(cu.length * m.f), px = X(G.fromM(r[0], u)), py = Y(G.fromM(r[1], u));
+        ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.moveTo(px, py - 6); ctx.lineTo(px + 6, py); ctx.lineTo(px, py + 6); ctx.lineTo(px - 6, py); ctx.closePath(); ctx.fill();
+        ctx.font = '600 11px ' + C.font; var tw = ctx.measureText(m.name).width;
+        ctx.fillStyle = C.yellow; rr(ctx, px + 9, py - 21, tw + 12, 18, 4); ctx.fill();
+        ctx.fillStyle = C['on-yellow']; ctx.fillText(m.name, px + 15, py - 8);
+      });
+    });
+  }
+  if (prefs.advanced && typeof sel === 'number') {
+    var segs = G.segsOf(p), from = sel === 0 ? p.start : p.points[sel - 1], sg = segs[sel];
+    if (sg && sg.type === 'curve') {
+      ctx.strokeStyle = C.muted; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); line(ctx, X(from.x), Y(from.y), X(sg.c1.x), Y(sg.c1.y)); line(ctx, X(sg.end.x), Y(sg.end.y), X(sg.c2.x), Y(sg.c2.y)); ctx.setLineDash([]);
+      [sg.c1, sg.c2].forEach(function (q) { var x = X(q.x), y = Y(q.y); ctx.fillStyle = C.surface; ctx.strokeStyle = C.muted; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y - 7); ctx.lineTo(x + 7, y); ctx.lineTo(x, y + 7); ctx.lineTo(x - 7, y); ctx.closePath(); ctx.fill(); ctx.stroke(); });
+    }
+  }
+  p.points.forEach(function (q, i) {
+    var on = sel === i, hv = hover && hover.kind === 'point' && hover.i === i, kn = pointKnob(i);
+    if (kn) { ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; line(ctx, X(q.x), Y(q.y), X(kn.x), Y(kn.y)); knob(kn); }
+    ctx.fillStyle = on ? C.blue : C.bg; ctx.strokeStyle = on ? C.blue : C.ink; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), on || hv ? 11 : 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.font = '700 11px ' + C.font; ctx.textAlign = 'center'; ctx.fillText(String(i + 1), X(q.x), Y(q.y) + 4); ctx.textAlign = 'left';
+  });
+  var k = startKnob(p);
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; line(ctx, X(p.start.x), Y(p.start.y), X(k.x), Y(k.y)); knob(k);
+  ctx.fillStyle = sel === 'start' ? C.blue : C.bg; ctx.strokeStyle = sel === 'start' ? C.blue : C.ink; ctx.lineWidth = 1.8;
+  rr(ctx, X(p.start.x) - 8, Y(p.start.y) - 8, 16, 16, 3); ctx.fill(); ctx.stroke();
+}
+
+function drawPreview() {
+  var from = path().points.length ? path().points[path().points.length - 1] : path().start;
+  ctx.strokeStyle = C.yellow; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
+  preview.chunks.forEach(function (c) { c.points.forEach(function (q) { line(ctx, X(from.x), Y(from.y), X(q.x), Y(q.y)); from = q; }); });
+  ctx.setLineDash([]);
+  preview.chunks.forEach(function (c) { c.points.forEach(function (q) { ctx.fillStyle = C.yellow; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), 5, 0, Math.PI * 2); ctx.fill(); }); });
+}
+
+/** 위에서 본 메카넘 로봇. */
+function robot(x, y, h, r, color, w, filled, dashed) {
+  var L = r.length * view.scale, W = r.width * view.scale, wl = Math.min(L, W) * 0.28, ww = Math.min(L, W) * 0.13;
+  ctx.save(); ctx.translate(X(x), Y(y)); ctx.rotate(-h);
+  if (filled) { ctx.globalAlpha = 0.18; ctx.fillStyle = color; rr(ctx, -L / 2, -W / 2, L, W, Math.min(L, W) * 0.1); ctx.fill(); ctx.globalAlpha = 1; }
+  if (dashed) ctx.setLineDash([4, 3]);
+  ctx.strokeStyle = color; ctx.lineWidth = w; rr(ctx, -L / 2, -W / 2, L, W, Math.min(L, W) * 0.1); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = color;
+  [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (k) { ctx.fillRect(k[0] * (L / 2 - wl * 0.7) - wl / 2, k[1] * (W / 2 - ww * 0.4) - ww / 2, wl, ww); });
+  ctx.lineWidth = w + 2.5; line(ctx, L / 2 - 1, -W / 3, L / 2 - 1, W / 3);
+  ctx.restore();
+}
+function knob(q) { ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), 5.5, 0, Math.PI * 2); ctx.fill(); }
+function startKnob(p) { var L = Math.max(project.robot.length * 0.85, 34 / view.scale); return { x: p.start.x + Math.cos(G.rad(p.start.h)) * L, y: p.start.y + Math.sin(G.rad(p.start.h)) * L }; }
+function pointKnob(i) {
+  var q = path().points[i], hd = q.heading || {};
+  if (hd.mode !== 'linear' && hd.mode !== 'constant') return null;
+  var L = Math.max(project.robot.length * 0.6, 28 / view.scale), a = G.rad(hd.deg || 0);
+  return { x: q.x + Math.cos(a) * L, y: q.y + Math.sin(a) * L };
+}
+function drawRuler() {
+  var a = ruler.a, b = ruler.b, d = Math.hypot(b.x - a.x, b.y - a.y), ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  ctx.strokeStyle = C.yellow; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]); line(ctx, X(a.x), Y(a.y), X(b.x), Y(b.y)); ctx.setLineDash([]);
+  var label = r1(d) + ' ' + U() + ' · ' + Math.round(ang) + '°';
+  ctx.font = '600 12px ' + C.font; var tw = ctx.measureText(label).width, mx = (X(a.x) + X(b.x)) / 2 + 10, my = (Y(a.y) + Y(b.y)) / 2 - 10;
+  ctx.fillStyle = C.yellow; rr(ctx, mx - 6, my - 15, tw + 12, 21, 5); ctx.fill(); ctx.fillStyle = C['on-yellow']; ctx.fillText(label, mx, my);
+}
+
+// ---------------------------------------------------------------- 필드 조작
+
+function hit(px, py) {
+  var p = path(), near = function (q, r) { return q && Math.hypot(X(q.x) - px, Y(q.y) - py) <= (r || 12); };
+  if (near(startKnob(p), 10)) return { kind: 'startKnob' };
+  for (var i = p.points.length - 1; i >= 0; i--) if (near(pointKnob(i), 10)) return { kind: 'pointKnob', i: i };
+  if (prefs.advanced && typeof sel === 'number') { var sg = G.segsOf(p)[sel]; if (sg && sg.type === 'curve') { if (near(sg.c1, 10)) return { kind: 'c1', i: sel }; if (near(sg.c2, 10)) return { kind: 'c2', i: sel }; } }
+  for (var j = p.points.length - 1; j >= 0; j--) if (near(p.points[j], 14)) return { kind: 'point', i: j };
+  var dx = wx(px) - p.start.x, dy = wy(py) - p.start.y, h = G.rad(p.start.h);
+  if (Math.abs(dx * Math.cos(h) + dy * Math.sin(h)) <= project.robot.length / 2 && Math.abs(-dx * Math.sin(h) + dy * Math.cos(h)) <= project.robot.width / 2) return { kind: 'start' };
+  var a = cache[cur];
+  if (a && a.geo) {
+    var best = null, bd = 9;
+    a.geo.segs.forEach(function (s, i) { for (var k = 0; k <= 60; k++) { var q = s.curve.point(s.curve.length * k / 60), d = Math.hypot(X(G.fromM(q[0], U())) - px, Y(G.fromM(q[1], U())) - py); if (d < bd) { bd = d; best = { kind: 'line', i: i }; } } });
+    if (best) return best;
+  }
+  for (var pi = 0; pi < project.paths.length; pi++) {
+    if (pi === cur || project.paths[pi].hidden || !cache[pi] || !cache[pi].geo) continue;
+    var g = cache[pi].geo;
+    for (var s2 = 0; s2 <= g.length; s2 += g.length / 80) { var q2 = G.geoPoint(g, s2); if (Math.hypot(X(G.fromM(q2[0], U())) - px, Y(G.fromM(q2[1], U())) - py) < 7) return { kind: 'otherPath', i: pi }; }
+  }
+  return null;
+}
+function pos(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+
+cv.addEventListener('pointerdown', function (e) {
+  if (e.button !== 0) return;
+  pause(); closePops();
+  var m = pos(e);
+  if (tool === 'ruler') { ruler = { a: { x: wx(m.x), y: wy(m.y) }, b: { x: wx(m.x), y: wy(m.y) } }; drag = { kind: 'ruler' }; cv.setPointerCapture(e.pointerId); draw(); return; }
+  var h = hit(m.x, m.y);
+  downAt = { m: m, h: h, moved: false };
+  if (h && h.kind !== 'line' && h.kind !== 'otherPath') {
+    if (h.kind === 'point' || h.kind === 'pointKnob' || h.kind === 'c1' || h.kind === 'c2') sel = h.i;
+    if (h.kind === 'start' || h.kind === 'startKnob') sel = 'start';
+    snapshot(); drag = h; cv.setPointerCapture(e.pointerId); panel(); draw();
+  }
+});
+cv.addEventListener('pointermove', function (e) {
+  var m = pos(e);
+  if (!ruler || !drag) setHint('x ' + r1(wx(m.x)) + ' · y ' + r1(wy(m.y)) + ' ' + U());
+  if (downAt && Math.hypot(m.x - downAt.m.x, m.y - downAt.m.y) > 3) downAt.moved = true;
+  if (!drag) {
+    if (tool === 'ruler') { cv.style.cursor = 'crosshair'; return; }
+    var h = hit(m.x, m.y), nh = h && h.kind === 'point' ? h : null;
+    if (JSON.stringify(nh) !== JSON.stringify(hover)) { hover = nh; draw(); }
+    cv.style.cursor = h ? (h.kind === 'line' ? 'copy' : h.kind === 'otherPath' ? 'pointer' : 'grab') : 'crosshair';
+    cv.title = h && h.kind === 'line' ? '두 번 누르면 여기에 점을 끼워 넣어요' : h && h.kind === 'otherPath' ? '누르면 「' + project.paths[h.i].name + '」 편집' : '';
+    return;
+  }
+  cv.style.cursor = 'grabbing';
+  var p = path(), x = snap(wx(m.x)), y = snap(wy(m.y));
+  if (drag.kind === 'ruler') { ruler.b = { x: wx(m.x), y: wy(m.y) }; draw(); return; }
+  if (drag.kind === 'start') { p.start.x = x; p.start.y = y; }
+  else if (drag.kind === 'startKnob') p.start.h = angleTo(p.start, m, e.shiftKey);
+  else if (drag.kind === 'point') { p.points[drag.i].x = x; p.points[drag.i].y = y; }
+  else if (drag.kind === 'pointKnob') p.points[drag.i].heading.deg = angleTo(p.points[drag.i], m, e.shiftKey);
+  else if (drag.kind === 'c1' || drag.kind === 'c2') { var q = p.points[drag.i], sg = G.segsOf(p)[drag.i]; q.c1 = q.c1 || sg.c1; q.c2 = q.c2 || sg.c2; q[drag.kind] = { x: x, y: y }; }
+  changed(false, true);
+});
+cv.addEventListener('pointerup', function (e) {
+  var m = pos(e);
+  if (drag && drag.kind === 'ruler') { drag = null; return; }
+  if (drag) { drag = null; changed(true); }
+  else if (downAt && !downAt.moved && !downAt.h) addPoint(snap(wx(m.x)), snap(wy(m.y)));
+  else if (downAt && !downAt.moved && downAt.h && downAt.h.kind === 'line') { sel = downAt.h.i; panel(); draw(); }
+  else if (downAt && !downAt.moved && downAt.h && downAt.h.kind === 'otherPath') { cur = downAt.h.i; sel = null; changed(false); }
+  downAt = null;
+});
+cv.addEventListener('dblclick', function (e) { if (tool) return; var m = pos(e), h = hit(m.x, m.y); if (h && h.kind === 'line') insertPoint(h.i, snap(wx(m.x)), snap(wy(m.y))); });
+cv.addEventListener('contextmenu', function (e) { var m = pos(e), h = hit(m.x, m.y); if (h && h.kind === 'point') { e.preventDefault(); removePoint(h.i); } });
+cv.addEventListener('pointerleave', function () { hint(); if (hover) { hover = null; draw(); } });
+
+function angleTo(q, m, coarse) { var st = coarse ? 15 : 5; return Math.round(Math.atan2(wy(m.y) - q.y, wx(m.x) - q.x) * 180 / Math.PI / st) * st; }
+function newPoint(x, y) { return { x: x, y: y, curve: prefs.newShape === 'curve', heading: { mode: prefs.newShape === 'curve' ? 'tangent' : 'keep' }, actions: [] }; }
+function addPoint(x, y) { var p = path(), last = p.points.length ? p.points[p.points.length - 1] : p.start; if (Math.hypot(x - last.x, y - last.y) < 1e-6) return; snapshot(); p.points.push(newPoint(x, y)); sel = p.points.length - 1; changed(true); }
+function insertPoint(i, x, y) { snapshot(); var q = newPoint(x, y), n = path().points[i]; q.curve = n.curve; q.heading = { mode: n.heading.mode === 'tangent' ? 'tangent' : 'keep' }; path().points.splice(i, 0, q); sel = i; changed(true); }
+function removePoint(i) { snapshot(); path().points.splice(i, 1); sel = null; changed(true); }
+
+// ---------------------------------------------------------------- 말로 만들기 (Command)
+
+var CMD_HELP = '<b>말투</b> · 쉼표·「그리고」로 이어 써요. 숫자는 inch예요<span id="cmdU" hidden></span>.<br>' +
+  '<code>앞으로 36</code> <code>뒤로 12</code> <code>왼쪽으로 16</code> <code>오른쪽 16</code> 로봇 기준 이동<br>' +
+  '<code>(24, 12)으로</code> <code>(24, 12)으로 곡선</code> 필드 좌표로 · <code>곡선</code> 다음 이동을 곡선으로<br>' +
+  '<code>왼쪽으로 90도 돌면서 앞으로 24</code> <code>180도 보면서 (0,0)으로</code> 이동하며 돌기<br>' +
+  '<code>claw 서보 0</code> <code>intake 모터 1</code> <code>arm 위치 300</code> Marker (앞에 <code>중간에</code> · <code>도착 전에</code>)<br>' +
+  '<code>1초 기다리기</code> Wait · 경로가 나뉘어요 · Enter로 미리보기(황색 점선), 한 번 더 Enter로 추가';
+$('cmdQ').onclick = function () { $('cmdHelp').hidden = !$('cmdHelp').hidden; $('cmdHelp').innerHTML = CMD_HELP; $('cmdU').textContent = U(); };
+$('cmd').addEventListener('input', function () { preview = null; $('cmdGo').textContent = 'Preview'; draw(); });
+$('cmd').addEventListener('focus', function () { $('cmdGo').textContent = preview ? 'Add' : 'Preview'; });
+$('cmdBar').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var text = $('cmd').value.trim(); if (!text) { $('cmdQ').click(); return; }
+  if (!preview) {
+    var p = path(), from = p.points.length ? p.points[p.points.length - 1] : p.start;
+    var a = cache[cur], h = a && a.geo ? G.geoHeading(a.geo, a.geo.length) * 180 / Math.PI : p.start.h;
+    preview = G.parseCommands(text, project, { x: from.x, y: from.y, h: h });
+    if (preview.errors.length) {
+      $('cmdHelp').hidden = false;
+      $('cmdHelp').innerHTML = preview.errors.map(function (er) { return '<div class="w error"><span class="st"></span><span>「' + esc(er.text) + '」 ' + esc(er.msg) + '</span></div>'; }).join('');
+    } else $('cmdHelp').hidden = true;
+    $('cmdGo').textContent = 'Add'; draw(); return;
+  }
+  if (preview.errors.length && !preview.chunks.some(function (c) { return c.points.length; })) return;
+  snapshot();
+  preview.chunks.forEach(function (c, i) {
+    if (i > 0) {
+      var prevP = path(), e2 = prevP.points[prevP.points.length - 1], lastH = c.points[0] && c.points[0].heading.mode === 'linear' ? null : null;
+      var hh = cache[cur] && cache[cur].geo ? Math.round(G.geoHeading(cache[cur].geo, cache[cur].geo.length) * 180 / Math.PI) : prevP.start.h;
+      project.paths.splice(cur + 1, 0, G.newPath(prevP.name + '-' + (i + 1), e2.x, e2.y, hh));
+      cur++; analyzeAll(); void lastH;
+    }
+    c.points.forEach(function (q) { path().points.push(q); });
+    if (c.wait) path().wait = (path().wait || 0) + c.wait;
+    analyzeAll();
+  });
+  preview = null; $('cmd').value = ''; $('cmdHelp').hidden = true; $('cmdGo').textContent = 'Preview'; sel = null; changed(true);
+});
+
+// ---------------------------------------------------------------- 시간표
+
+var tlc = $('tl'), tctx = tlc.getContext('2d'), tlw = 0, tlh = 96, LBL = 64, TL_PAD = 6;
+function resizeTl() { var r = tlc.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; tlw = r.width; tlc.width = Math.round(r.width * dpr); tlc.height = Math.round(tlh * dpr); tctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+function tlScale() { return Math.max(endT(), project.limit, 1); }
+function tx(t) { return LBL + (tlw - LBL - TL_PAD) * t / tlScale(); }
+/** 줄: Plan(경로·기다리기) · Speed(계획 속도) · Replay(실제) · Ghost · Marker·충돌은 Plan 위에. */
+function drawTl() {
+  colors(); tctx.clearRect(0, 0, tlw, tlh);
+  var rows = [{ k: 'plan', label: 'Plan' }, { k: 'speed', label: 'Speed' }];
+  if (replay) rows.push({ k: 'replay', label: 'Replay' });
+  if (otl) rows.push({ k: 'ghost', label: 'Ghost' });
+  var rh = Math.min(18, (tlh - 22) / rows.length), y = 2;
+  tctx.font = '11px ' + C.font;
+  rows.forEach(function (r) { r.y = y; y += rh; tctx.fillStyle = C.muted; tctx.fillText(r.label, 0, r.y + rh * 0.7); });
+  var T = tlScale(), step = T > 40 ? 10 : T > 12 ? 5 : 1;
+  tctx.strokeStyle = C.tile; tctx.lineWidth = 1; tctx.fillStyle = C.faint;
+  for (var t = 0; t <= T + 1e-9; t += step) { var x = tx(t); line(tctx, x, 0, x, y); var lab = t + 's'; var w = tctx.measureText(lab).width; tctx.fillText(lab, Math.min(Math.max(x - w / 2, LBL), tlw - w), tlh - 3); }
+  rows.forEach(function (r) {
+    var y0 = r.y + 3, h = rh - 6;
+    if (r.k === 'plan') {
+      tl.items.forEach(function (it) {
+        var on = it.path === cur, a = tx(it.t0), b = tx(it.t1), c = tx(it.t2);
+        tctx.fillStyle = on ? C.blue : C['grey-path']; rr(tctx, a, y0, Math.max(2, b - a - 1), h, 3); tctx.fill();
+        if (c > b + 1) { tctx.strokeStyle = C['grey-path']; tctx.setLineDash([3, 2]); tctx.strokeRect(b + 0.5, y0 + 0.5, c - b - 2, h - 1); tctx.setLineDash([]); }
+        if (b - a > 44) { tctx.save(); rr(tctx, a, y0, b - a, h, 3); tctx.clip(); tctx.fillStyle = '#fff'; tctx.font = '600 10px ' + C.font; tctx.fillText(project.paths[it.path].name, a + 5, y0 + h * 0.78); tctx.restore(); }
+      });
+      tctx.fillStyle = C.yellow; acts.forEach(function (a) { var x = tx(a.t); tctx.beginPath(); tctx.moveTo(x, y0 - 2); tctx.lineTo(x + 4, y0 + 3); tctx.lineTo(x, y0 + 8); tctx.lineTo(x - 4, y0 + 3); tctx.closePath(); tctx.fill(); });
+      tctx.fillStyle = C.red; coll.forEach(function (c) { tctx.fillRect(tx(c.t0), y0 + h + 1, Math.max(3, tx(c.t1) - tx(c.t0)), 2); });
+      if (prefs.game === 'biobuzz') { // 오토 30 s 뒤 전환 8 s (G403: 이때 움직이면 안 됨)
+        var a8 = tx(project.limit), b8 = tx(Math.min(project.limit + 8, tlScale()));
+        if (b8 > a8) { tctx.save(); tctx.globalAlpha = 0.18; tctx.fillStyle = C.yellow; tctx.fillRect(a8, y0 - 2, b8 - a8, h + 4); tctx.restore(); tctx.fillStyle = C.muted; tctx.font = '10px ' + C.font; tctx.fillText('전환 8s', a8 + 3, y0 + h * 0.75); }
+        rules.forEach(function (r) { if (r.t0 == null) return; tctx.fillStyle = r.level === 'error' ? C.red : C.yellow; tctx.fillRect(tx(r.t0), y0 + h + 4, Math.max(3, tx(r.t1) - tx(r.t0)), 3); });
+      }
+    } else if (r.k === 'speed') {
+      // 계획 속도 (경로마다 속도표) · 최고 속도에 맞춘 높이
+      var vmax = 0; tl.items.forEach(function (it) { if (it.a && it.a.limits) vmax = Math.max(vmax, it.a.limits.maxVel); });
+      tctx.strokeStyle = C.blue; tctx.lineWidth = 1.5; tctx.beginPath(); var started = false;
+      tl.items.forEach(function (it) {
+        var a = it.a; if (!a || !a.prof) return; var P = a.prof;
+        for (var i = 0; i < P.times.length; i += Math.max(1, Math.floor(P.times.length / 200))) { var xx = tx(it.t0 + P.times[i]), yy = y0 + h - h * (P.speeds[i] / (vmax || 1)); if (started) tctx.lineTo(xx, yy); else { tctx.moveTo(xx, yy); started = true; } }
+        tctx.lineTo(tx(it.t1), y0 + h); if (it.t2 > it.t1) tctx.lineTo(tx(it.t2), y0 + h);
+      });
+      tctx.stroke();
+      if (replay && vmax) { tctx.strokeStyle = C.ink; tctx.globalAlpha = 0.7; tctx.lineWidth = 1; tctx.beginPath(); replay.samples.forEach(function (s, i) { var xx = tx(s.t), yy = y0 + h - h * Math.min(1.2, G.toM(s.v, U()) / vmax); if (i) tctx.lineTo(xx, yy); else tctx.moveTo(xx, yy); }); tctx.stroke(); tctx.globalAlpha = 1; }
+    } else if (r.k === 'replay') {
+      tctx.fillStyle = C.surface; tctx.strokeStyle = C.ink; tctx.lineWidth = 1; rr(tctx, tx(0), y0, Math.max(2, tx(replay.duration) - tx(0)), h, 3); tctx.stroke();
+      replay.events.forEach(function (ev) {
+        var x = tx(ev.t), col = /collision|blocked|failed/.test(ev.type) ? C.red : ev.type === 'marker' ? C.yellow : C.ink;
+        tctx.fillStyle = col; tctx.beginPath(); tctx.arc(x, y0 + h / 2, 3.2, 0, Math.PI * 2); tctx.fill();
+      });
+    } else if (r.k === 'ghost') {
+      tctx.fillStyle = C.ghost; otl.items.forEach(function (it) { if (it.t1 > it.t0) { tctx.globalAlpha = 0.6; rr(tctx, tx(it.t0), y0 + 2, Math.max(2, tx(it.t1) - tx(it.t0) - 1), h - 4, 2); tctx.fill(); tctx.globalAlpha = 1; } });
+    }
+  });
+  var lx = tx(project.limit); tctx.strokeStyle = tl.total > project.limit ? C.red : C.muted; tctx.setLineDash([3, 3]); line(tctx, lx, 0, lx, y); tctx.setLineDash([]);
+  var px = tx(play.t); tctx.strokeStyle = C.ink; tctx.lineWidth = 2; line(tctx, px, 0, px, y + 2);
+}
+function timeAtTl(e) { var r = tlc.getBoundingClientRect(); return Math.max(0, Math.min(endT(), (e.clientX - r.left - LBL) / (tlw - LBL - TL_PAD) * tlScale())); }
+var tlDrag = false;
+tlc.addEventListener('pointerdown', function (e) { pause(); tlDrag = true; tlc.setPointerCapture(e.pointerId); play.t = timeAtTl(e); frame(); });
+tlc.addEventListener('pointermove', function (e) { if (tlDrag) { play.t = timeAtTl(e); frame(); } });
+tlc.addEventListener('pointerup', function () { tlDrag = false; });
+
+function frame() {
+  draw(); drawTl();
+  $('tlTime').textContent = play.t.toFixed(1) + ' s';
+  var me = tl.items.length ? G.poseAt(project, tl, play.t) : null, txt = '';
+  if (me) txt = project.paths[me.path].name + ' · x ' + r1(me.x) + ' y ' + r1(me.y) + ' · ' + Math.round(me.h * 180 / Math.PI) + '°' + (me.phase === 'wait' && play.t > 0 && play.t < tl.total ? ' · Wait' : '');
+  if (replay && play.t > 0) { var rp = G.replayAt(replay, play.t); if (rp && me) txt += ' · 실제와 ' + r1(Math.hypot(me.x - rp.x, me.y - rp.y)) + ' ' + U(); }
+  $('tlPose').textContent = txt;
+}
+function tick(now) {
+  if (!play.on) return;
+  play.t += Math.min(0.1, (now - play.last) / 1000) * play.speed; play.last = now;
+  if (play.t >= endT()) { if (play.loop) play.t = 0; else { play.t = endT(); pause(); } }
+  frame(); if (play.on) requestAnimationFrame(tick);
+}
+function start() { if (!endT()) return; if (play.t >= endT() - 1e-6) play.t = 0; play.on = true; play.last = performance.now(); $('tlIcon').innerHTML = '<path d="M5 3.5v9M11 3.5v9" stroke-width="2.4"/>'; requestAnimationFrame(tick); }
+function pause() { if (!play.on) return; play.on = false; $('tlIcon').innerHTML = '<path d="M5 3.5v9l7-4.5z" fill="currentColor" stroke="none"/>'; frame(); }
+$('tlPlay').onclick = function () { if (play.on) pause(); else start(); };
+$('tlLoop').onclick = function () { play.loop = !play.loop; $('tlLoop').classList.toggle('primary', play.loop); };
+$('tlSpeed').onchange = function () { play.speed = Number($('tlSpeed').value); };
+
+// ---------------------------------------------------------------- 패널
+
+function changed(commit, fast) { analyzeAll(); if (fast) cardTitles(); else panel(); top(); hint(); sugButton(); frame(); if (commit) saveJson(STORE, project); }
+
+function top() {
+  var over = tl.total > project.limit, b = $('budget');
+  b.className = 'chip num ' + (over ? 'bad' : tl.total ? 'ok' : '');
+  b.lastChild.textContent = tl.total ? 'Auto ' + tl.total.toFixed(1) + ' / ' + project.limit + ' s' + (over ? ' · ' + (tl.total - project.limit).toFixed(1) + ' s 넘음' : '') : 'Auto 비어 있음';
+  $('tlTotal').textContent = '/ ' + endT().toFixed(1) + ' s';
+  var rc0 = $('ruleChip'); rc0.hidden = !rules.length; rc0.lastChild.textContent = '규칙 경고 ' + rules.length;
+  $('bUndo').disabled = !undo.length; $('bRedo').disabled = !redo.length;
+  var rc = $('robotChip');
+  rc.className = 'chip hide-s ' + (robotState.status === 'ok' ? 'ok' : robotState.status === 'fail' ? 'bad' : '');
+  rc.lastChild.textContent = robotState.status === 'ok' ? 'Robot ' + robotState.version : robotState.status === 'fail' ? 'Robot 연결 안 됨' : 'Robot';
+}
+function setHint(t) { $('hint').textContent = t; }
+function hint() {
+  var p = path(), n = p.points.length, t;
+  if (tool === 'ruler') t = 'Ruler · 필드를 끌어서 거리·각도 (R로 끄기)';
+  else if (!n) t = '필드를 누르거나 위 Command에 「앞으로 24」처럼 써 보세요';
+  else if (sel === null) t = '점을 누르면 Inspector에서 Heading·Marker · Space로 재생';
+  else if (sel === 'start') t = 'Start · 끌어서 위치, 꼭지로 방향 (Shift 15°씩)';
+  else t = 'Waypoint ' + (sel + 1) + ' · 화살표로 미세 조정, Shift+화살표 크게';
+  setHint(t);
+}
+
+function sugButton() {
+  var b = $('sugBtn'), total = sugs.reduce(function (s, x) { return s + x.saved; }, 0);
+  var was = b.hidden; b.hidden = !sugs.length; if (was !== b.hidden) setTimeout(resize);
+  if (sugs.length) b.textContent = 'Faster −' + total.toFixed(1) + ' s · 제안 ' + sugs.length;
+  if (!$('sugPop').hidden) sugPop();
+}
+function sugPop() {
+  var box = $('sugPop');
+  if (!sugs.length) { box.hidden = true; return; }
+  box.innerHTML = '<div class="tiny" style="margin:0 4px 6px">Suggestions · 고친 경로를 실제로 다시 계산해서 빨라지는 것만 (필드 밖 등 새 문제가 생기면 빼요)</div>' +
+    sugs.map(function (s, i) { return '<div class="sug"><b class="num">−' + s.saved.toFixed(2) + ' s</b><span style="flex:1">' + esc(project.paths[s.path].name) + ' · ' + esc(s.text) + '</span><button class="sm" data-i="' + i + '">Apply</button></div>'; }).join('') +
+    (sugs.length > 1 ? '<div class="row" style="justify-content:flex-end;margin-top:6px"><button class="sm primary" data-all>모두 적용</button></div>' : '');
+  box.querySelectorAll('[data-i]').forEach(function (bt) { bt.onclick = function () { snapshot(); sugs[Number(bt.getAttribute('data-i'))].apply(project); changed(true); }; });
+  var all = box.querySelector('[data-all]');
+  if (all) all.onclick = function () { snapshot(); var guard = 0; while (guard++ < 20) { analyzeAll(); if (!sugs.length) break; sugs[0].apply(project); } changed(true); };
+}
+$('sugBtn').onclick = function () { $('sugPop').hidden = !$('sugPop').hidden; sugPop(); };
+function closePops() { $('sugPop').hidden = true; }
+
+var HEAD_OPTS = [['keep', 'Keep · 방향 그대로'], ['tangent', 'Tangent · 가는 쪽 보기'], ['reverse', 'Reverse · 뒤로 가기'], ['linear', 'Linear · 돌면서 가서 이 방향'], ['constant', 'Constant · 처음부터 이 방향']];
+var WHEN_OPTS = [['middle', 'Middle 가는 중간에'], ['before', 'Before 도착 조금 전'], ['arrive', 'Arrive 도착하면']];
+var WHAT_OPTS = [['servo', 'Servo 서보 위치'], ['motor', 'Motor 모터 출력'], ['motorPos', 'Motor to position 팔 위치(틱)'], ['name', 'Name only 이름표만']];
+function options(list, v) { return list.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === v ? ' selected' : '') + '>' + o[1] + '</option>'; }).join(''); }
+function dirName(v) { return { 0: '→ 0°', 90: '↑ 90°', 180: '← 180°', '-90': '↓ −90°' }[v]; }
+
+function panel() {
+  var ul = $('plist'); ul.innerHTML = '';
+  project.paths.forEach(function (p, i) {
+    var li = document.createElement('li'); li.className = (i === cur ? 'on' : '') + (p.hidden ? ' hid' : '');
+    var it = tl.items[i], tt = it ? it.t1 - it.t0 : 0;
+    li.innerHTML = '<span class="pdot"></span><span class="nm">' + esc(p.name) + '</span><span class="t num">' + (tt ? tt.toFixed(1) + ' s' : '-') + (p.wait > 0 ? ' +' + p.wait : '') + '</span>' +
+      (i === cur ? '<button class="icon" data-more title="이 경로: 복제·뒤집기·순서·지우기" aria-label="경로 메뉴"><svg class="i" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r=".6"/><circle cx="8" cy="8" r=".6"/><circle cx="12.5" cy="8" r=".6"/></svg></button>' : '') + '<button class="icon" data-eye title="' + (p.hidden ? 'Show' : 'Hide') + '" aria-label="' + (p.hidden ? '보이기' : '숨기기') + '"><svg class="i" viewBox="0 0 16 16">' +
+      (p.hidden ? '<path d="M2 2l12 12"/><path d="M6.5 4.3A6 6 0 0 1 8 4c3.5 0 6 4 6 4a10 10 0 0 1-1.6 2M10 11.6A6 6 0 0 1 8 12c-3.5 0-6-4-6-4a10 10 0 0 1 2.2-2.6"/>' : '<path d="M2 8s2.5-4 6-4 6 4 6 4-2.5 4-6 4-6-4-6-4z"/><circle cx="8" cy="8" r="1.8"/>') + '</svg></button>';
+    li.onclick = function (e) { if (e.target.closest('[data-more]')) { $('pActs').hidden = !$('pActs').hidden; return; } if (e.target.closest('[data-eye]')) return; cur = i; sel = null; changed(false); };
+    li.querySelector('[data-eye]').onclick = function () { snapshot(); p.hidden = !p.hidden; changed(true); };
+    ul.appendChild(li);
+  });
+  $('pWait').value = path().wait > 0 ? path().wait : 0;
+  $('bDelPath').disabled = project.paths.length < 2; $('bUp').disabled = cur === 0; $('bDown').disabled = cur === project.paths.length - 1;
+  document.querySelectorAll('#newShape button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-v') === prefs.newShape); });
+  $('limit').value = project.limit;
+  replayBox(); ghostBox();
+  var cards = $('cards'); cards.innerHTML = '';
+  cards.appendChild(startCard());
+  path().points.forEach(function (q, i) { cards.appendChild(pointCard(q, i)); });
+  if (!path().points.length) { var e = document.createElement('div'); e.className = 'tiny'; e.textContent = '아직 Waypoint가 없어요. 필드를 누르거나 Command에 써 보세요.'; cards.appendChild(e); }
+  warnings();
+  if (!$('mCode').hidden) codeBody();
+}
+
+function replayBox() {
+  var box = $('replayBox');
+  if (!replay) {
+    box.innerHTML = '<div class="box"><p class="tiny" style="margin:0 0 8px">로봇 로그(.grlog)를 필드에 끌어다 놓거나 열면, 실제로 달린 길이 흰 로봇으로 계획 위에 겹쳐 재생돼요. 로그는 <b>192.168.43.1:8080/girigocha</b>에서.</p><button class="sm" id="bLog">Open .grlog</button></div>';
+    $('bLog').onclick = function () { $('fileLog').click(); };
+    return;
+  }
+  var g = rgap;
+  box.innerHTML = '<div class="tiny">' + esc(replay.file) + (replay.opmode ? ' · ' + esc(replay.opmode) : '') + '</div>' +
+    '<div class="stat"><div><b class="num">' + replay.duration.toFixed(1) + ' s</b><span>실제 시간</span></div>' +
+    (g ? '<div><b class="num">' + r1(g.max) + '</b><span>최대 차이 ' + U() + ' (' + g.maxAt.toFixed(1) + ' s)</span></div><div><b class="num">' + r1(g.mean) + '</b><span>평균 차이</span></div>' : '') + '</div>' +
+    replay.events.slice(0, 6).map(function (ev) { return '<div class="w ' + (/collision|blocked|failed/.test(ev.type) ? 'error' : ev.type === 'marker' ? 'warn' : 'info') + '"><span class="st"></span><span class="num">' + ev.t.toFixed(1) + ' s · ' + esc(ev.text) + '</span></div>'; }).join('') +
+    (replay.events.length > 6 ? '<div class="tiny">외 ' + (replay.events.length - 6) + '개 · Timeline의 점</div>' : '') +
+    replay.warnings.map(function (w) { return '<div class="w warn"><span class="st"></span><span>' + esc(w) + '</span></div>'; }).join('') +
+    '<div class="row" style="margin-top:8px"><button class="sm" id="bLog">Other log</button><button class="sm" id="bLogOff">Remove</button></div>';
+  $('bLog').onclick = function () { $('fileLog').click(); };
+  $('bLogOff').onclick = function () { replay = null; changed(false); };
+}
+function loadReplay(file) {
+  file.text().then(function (t) {
+    try { replay = G.parseGrlog(t, project); replay.file = file.name; play.t = 0; changed(false); settingsPanel(); $('dSettings').hidden = false; }
+    catch (e) { alert('Replay · ' + e.message); }
+  });
+}
+
+function ghostBox() {
+  var box = $('ghostBox');
+  if (!other) {
+    box.innerHTML = '<div class="box"><p class="tiny" style="margin:0 0 8px">파트너·상대 팀의 프로젝트 파일(.json)을 불러와 같이 달려요. 부딪히는 시각을 적색으로 알려 줘요.</p><button class="sm" id="bGhost">Load project</button></div>';
+    $('bGhost').onclick = function () { $('fileGhost').click(); };
+    return;
+  }
+  box.innerHTML = '<div class="box"><b>' + esc(other.name) + '</b> <span class="tiny num">' + (otl ? otl.total.toFixed(1) + ' s' : '') + '</span>' +
+    '<div class="w ' + (coll.length ? 'error' : 'ok') + '" style="margin:6px 0 8px"><span class="st"></span><span>' + (coll.length ? coll[0].t0.toFixed(1) + ' s에 부딪혀요' + (coll.length > 1 ? ' (외 ' + (coll.length - 1) + '번)' : '') : '부딪히지 않아요') + '</span></div>' +
+    '<div class="row"><button class="sm" id="oFlipY">Mirror ↕</button><button class="sm" id="oFlipX">Mirror ↔</button><button class="sm" id="oDel">Remove</button></div></div>';
+  $('oFlipY').onclick = function () { other.project.paths.forEach(function (p) { G.mirrorPath(other.project, p, 'y'); }); saveJson(OTHER, other); changed(false); };
+  $('oFlipX').onclick = function () { other.project.paths.forEach(function (p) { G.mirrorPath(other.project, p, 'x'); }); saveJson(OTHER, other); changed(false); };
+  $('oDel').onclick = function () { other = null; saveJson(OTHER, null); changed(false); };
+}
+
+function cardTitles() {
+  var p = path(), st = document.querySelector('[data-card=start] .ttl span');
+  if (st) st.textContent = '(' + r1(p.start.x) + ', ' + r1(p.start.y) + ') · ' + Math.round(p.start.h) + '°';
+  p.points.forEach(function (q, i) { var el = document.querySelector('[data-card="' + i + '"] .ttl span'); if (el) el.textContent = pointSummary(q); });
+}
+function pointSummary(q) {
+  var hm = { keep: '', tangent: ' · Tangent', reverse: ' · Reverse', linear: ' · Linear ' + Math.round(q.heading.deg || 0) + '°', constant: ' · Constant ' + Math.round(q.heading.deg || 0) + '°' }[q.heading.mode] || '';
+  return '(' + r1(q.x) + ', ' + r1(q.y) + ') · ' + (q.curve ? 'Curve' : 'Line') + hm + (q.actions.length ? ' · Marker ' + q.actions.length : '');
+}
+
+function startCard() {
+  var p = path(), d = document.createElement('div'), on = sel === 'start';
+  d.className = 'card' + (on ? ' on' : ''); d.setAttribute('data-card', 'start');
+  d.innerHTML = '<div class="head"><div class="badge start">S</div><div class="ttl"><b>Start <span class="tiny">출발</span></b><span class="num"></span></div></div>' +
+    (on ? '<div class="body">' +
+      '<div class="q"><label>Position 로봇을 놓을 곳 (' + U() + ')</label><div class="row">x <input type="number" data-k="x" value="' + r1(p.start.x) + '"> y <input type="number" data-k="y" value="' + r1(p.start.y) + '"></div></div>' +
+      '<div class="q"><label>Heading 로봇 앞 방향</label><div class="row"><input type="number" step="5" data-k="h" value="' + Math.round(p.start.h) + '">°</div><div class="row" style="margin-top:6px">' + [0, 90, 180, -90].map(function (v) { return '<button class="sm" data-h="' + v + '">' + dirName(v) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="q"><label>Marker 출발하자마자</label><div data-acts></div><button class="sm" data-addact>+ Marker</button></div>' +
+      '<div class="q"><label>Path name</label><input data-k="name" value="' + esc(p.name) + '" style="width:170px"></div></div>' : '');
+  d.querySelector('.head').onclick = function () { sel = on ? null : 'start'; panel(); hint(); draw(); };
+  if (on) {
+    bindInputs(d, function (k, v) { if (k === 'name') p.name = v || p.name; else p.start[k] = Number(v); });
+    d.querySelectorAll('[data-h]').forEach(function (b) { b.onclick = function () { snapshot(); p.start.h = Number(b.getAttribute('data-h')); changed(true); }; });
+    actions(d.querySelector('[data-acts]'), p.startActions, true);
+    d.querySelector('[data-addact]').onclick = function () { snapshot(); p.startActions.push({ when: 'leave', type: 'servo', device: 'servo', value: 1 }); changed(true); };
+  }
+  d.querySelector('.ttl span').textContent = '(' + r1(p.start.x) + ', ' + r1(p.start.y) + ') · ' + Math.round(p.start.h) + '°';
+  return d;
+}
+
+function pointCard(q, i) {
+  var d = document.createElement('div'), on = sel === i, needDeg = q.heading.mode === 'linear' || q.heading.mode === 'constant';
+  d.className = 'card' + (on ? ' on' : ''); d.setAttribute('data-card', String(i));
+  d.innerHTML = '<div class="head"><div class="badge">' + (i + 1) + '</div><div class="ttl"><b>Waypoint ' + (i + 1) + '</b><span class="num">' + esc(pointSummary(q)) + '</span></div>' +
+    '<button class="icon" data-del title="Delete" aria-label="이 점 지우기"><svg class="i" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>' +
+    (on ? '<div class="body">' +
+      '<div class="q"><label>Segment 여기까지 가는 길</label><div class="seg" data-shape><button data-v="line"' + (q.curve ? '' : ' class="on"') + '>Line</button><button data-v="curve"' + (q.curve ? ' class="on"' : '') + '>Curve 부드럽게</button></div>' +
+      (prefs.advanced && q.curve && (q.c1 || q.c2) ? ' <button class="sm" data-autoc>Auto shape</button>' : '') + '</div>' +
+      '<div class="q"><label>Heading 가는 동안 로봇 방향</label><select data-hmode style="width:100%">' + options(HEAD_OPTS, q.heading.mode) + '</select>' +
+      (needDeg ? '<div class="row" style="margin-top:6px"><input type="number" step="5" data-k="deg" value="' + Math.round(q.heading.deg || 0) + '">° <span class="tiny">필드의 꼭지로도</span></div><div class="row" style="margin-top:6px">' + [0, 90, 180, -90].map(function (v) { return '<button class="sm" data-h="' + v + '">' + dirName(v) + '</button>'; }).join('') + '</div>' : '') + '</div>' +
+      '<div class="q"><label>Position (' + U() + ')</label><div class="row">x <input type="number" data-k="x" value="' + r1(q.x) + '"> y <input type="number" data-k="y" value="' + r1(q.y) + '"></div></div>' +
+      '<div class="q"><label>Markers 할 일 (팔·집게·흡입기)</label><div data-acts></div><button class="sm" data-addact>+ Marker</button></div>' +
+      (prefs.advanced ? '<div class="q"><label>Advanced</label><div class="row">Max speed <input type="number" min="0" data-k="maxSpeed" placeholder="-" value="' + (q.maxSpeed > 0 ? r1(q.maxSpeed) : '') + '"> ' + U() + '/s</div><label class="row" style="margin-top:6px"><input type="checkbox" data-push' + (q.pushing ? ' checked' : '') + '> Pushing 물체 밀며 가기</label></div>' : '') +
+      '</div>' : '');
+  d.querySelector('.head').onclick = function (e) { if (e.target.closest('[data-del]')) return; sel = on ? null : i; panel(); hint(); draw(); };
+  d.querySelector('[data-del]').onclick = function () { removePoint(i); };
+  if (on) {
+    d.querySelectorAll('[data-shape] button').forEach(function (b) { b.onclick = function () { snapshot(); q.curve = b.getAttribute('data-v') === 'curve'; if (q.curve && q.heading.mode === 'keep') q.heading = { mode: 'tangent' }; changed(true); }; });
+    var ac = d.querySelector('[data-autoc]'); if (ac) ac.onclick = function () { snapshot(); delete q.c1; delete q.c2; changed(true); };
+    d.querySelector('[data-hmode]').onchange = function (e) { snapshot(); var a = cache[cur], hd = a && a.geo ? G.geoHeading(a.geo, a.geo.start[i + 1]) : 0; q.heading = { mode: e.target.value, deg: q.heading.deg != null ? q.heading.deg : Math.round(hd * 180 / Math.PI) }; changed(true); };
+    d.querySelectorAll('[data-h]').forEach(function (b) { b.onclick = function () { snapshot(); q.heading.deg = Number(b.getAttribute('data-h')); changed(true); }; });
+    bindInputs(d, function (k, v) { if (k === 'deg') q.heading.deg = Number(v); else if (k === 'maxSpeed') q.maxSpeed = Number(v) > 0 ? Number(v) : null; else q[k] = Number(v); });
+    var pu = d.querySelector('[data-push]'); if (pu) pu.onchange = function () { snapshot(); q.pushing = pu.checked; changed(true); };
+    actions(d.querySelector('[data-acts]'), q.actions, false);
+    d.querySelector('[data-addact]').onclick = function () { snapshot(); q.actions.push({ when: 'arrive', type: 'servo', device: 'servo', value: 1 }); changed(true); };
+  }
+  return d;
+}
+function bindInputs(root, set) {
+  root.querySelectorAll('input[data-k]').forEach(function (el) {
+    el.addEventListener('change', function () { if (el.type === 'number' && el.value !== '' && !isFinite(Number(el.value))) return; snapshot(); set(el.getAttribute('data-k'), el.value); changed(true); });
+  });
+}
+function actions(box, list, isStart) {
+  list.forEach(function (a, j) {
+    var d = document.createElement('div'); d.className = 'mk';
+    var valLabel = a.type === 'servo' ? 'Position 0~1' : a.type === 'motor' ? 'Power −1~1' : 'Ticks';
+    d.innerHTML = '<div class="row">' + (isStart ? '<span class="tiny">Leave 출발하자마자</span>' : '<select data-f="when">' + options(WHEN_OPTS, a.when) + '</select>') +
+      '<select data-f="type">' + options(WHAT_OPTS, a.type) + '</select><button class="icon" data-x title="Delete" aria-label="이 Marker 지우기"><svg class="i" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>' +
+      (a.type === 'name' ? '<div class="row"><span class="tiny">Name</span><input data-f="name" value="' + esc(a.name || '') + '" style="width:130px"></div><div class="tiny">Java robot.takeMarker("이름") · Blocks 「마커 지났나?」</div>'
+        : '<div class="row"><span class="tiny">Device</span><input data-f="device" value="' + esc(a.device || '') + '" style="width:96px" placeholder="config name" aria-label="장치 이름 (Configure Robot)"><span class="tiny">' + valLabel + '</span><input type="number" step="' + (a.type === 'motorPos' ? 10 : 0.1) + '" data-f="value" value="' + (a.value == null ? '' : a.value) + '" style="width:64px"></div>' +
+          (a.type === 'motorPos' ? '<div class="row"><span class="tiny">Power</span><input type="number" step="0.1" data-f="power" value="' + (a.power == null ? 0.8 : a.power) + '" style="width:64px"></div>' : ''));
+    d.querySelectorAll('[data-f]').forEach(function (el) {
+      el.addEventListener('change', function () {
+        snapshot(); var f = el.getAttribute('data-f'); a[f] = el.type === 'number' ? Number(el.value) : el.value;
+        if (f === 'type') { if (a.type === 'name') a.name = a.name || ('marker' + (j + 1)); else { a.device = a.device || { servo: 'servo', motor: 'intake', motorPos: 'arm' }[a.type]; a.value = a.type === 'motorPos' ? 300 : 1; } }
+        changed(true);
+      });
+    });
+    d.querySelector('[data-x]').onclick = function () { snapshot(); list.splice(j, 1); changed(true); };
+    box.appendChild(d);
+  });
+}
+/** BIOBUZZ 필드를 켰을 때 로봇(크기 그대로)이 HIVE에 닿는 시간대. */
+function hiveHits() {
+  if (prefs.game !== 'biobuzz' || !tl.items.length) return [];
+  var F = G.BIOBUZZ, b = bounds(), k = project.field.size / (2 * F.half), c = (b.lo + b.hi) / 2, h = F.hive;
+  var hive = { x: c + (h.xMin + h.xMax) / 2 * k, y: c + (h.yMin + h.yMax) / 2 * k, h: 0, L: (h.xMax - h.xMin) * k, W: (h.yMax - h.yMin) * k };
+  var spans = [], cur = null;
+  for (var t = 0; t <= tl.total + 1e-9; t += 0.05) {
+    var q = G.poseAt(project, tl, t), hit = q && G.overlap({ x: q.x, y: q.y, h: q.h, L: project.robot.length, W: project.robot.width }, hive);
+    if (hit && !cur) cur = { t0: t, t1: t }; if (hit) cur.t1 = t; if (!hit && cur) { spans.push(cur); cur = null; }
+  }
+  if (cur) spans.push(cur);
+  return spans;
+}
+function warnings() {
+  var box = $('warnings'), w = [];
+  // BIOBUZZ: 매뉴얼 규칙 번호와 함께 (출발 위치·상대 진영·HIVE·전환 시간·이른 FLOWER 득점)
+  rules.forEach(function (r) { w.push({ x: { level: r.level, text: r.rule + ' · ' + r.text } }); });
+  if (prefs.game !== 'biobuzz' && tl.total > project.limit) w.push({ x: { level: 'error', text: '오토 ' + tl.total.toFixed(1) + ' s가 제한 ' + project.limit + ' s보다 ' + (tl.total - project.limit).toFixed(1) + ' s 길어요' } });
+  if (prefs.game !== 'biobuzz') hiveHits().forEach(function (c) { w.push({ x: { level: 'error', text: (c.t1 > c.t0 ? c.t0.toFixed(1) + '~' + c.t1.toFixed(1) + ' s에' : c.t0.toFixed(1) + ' s에') + ' HIVE에 닿아요 — 로봇이 지나갈 수 없는 곳이에요' } }); });
+  coll.forEach(function (c) { w.push({ x: { level: 'error', text: c.t0.toFixed(1) + '~' + c.t1.toFixed(1) + ' s에 ' + other.name + gwa(other.name) + ' 부딪혀요' } }); });
+  if (rgap && rgap.max > 5 * (U() === 'cm' ? 1 : U() === 'in' ? 0.4 : 0.01)) w.push({ x: { level: 'warn', text: 'Replay: 계획과 실제가 최대 ' + r1(rgap.max) + ' ' + U() + ' 달라요 (' + rgap.maxAt.toFixed(1) + ' s)' } });
+  project.paths.forEach(function (p, i) { ((cache[i] || {}).warnings || []).forEach(function (x) { w.push({ p: p.name, x: x }); }); });
+  project.paths.forEach(function (p) { if (!p.points.length) w.push({ p: p.name, x: { level: 'info', text: 'Waypoint가 없어요' } }); });
+  $('diagSec').hidden = !w.length; box.innerHTML = '';
+  w.forEach(function (o) { var d = document.createElement('div'); d.className = 'w ' + o.x.level; d.innerHTML = '<span class="st"></span><span>' + esc((o.p && project.paths.length > 1 ? '[' + o.p + '] ' : '') + o.x.text.replace(/(\d+)번 구간 시작/, 'Waypoint $1로 갈 때').replace(/(\d+)번 구간/, 'Waypoint $1')) + '</span>'; box.appendChild(d); });
+}
+
+// ---------------------------------------------------------------- 왼쪽 판 조작
+
+$('bAddPath').onclick = function () {
+  snapshot(); var li = project.paths.length - 1, last = project.paths[li], a = cache[li];
+  var e = last.points.length ? last.points[last.points.length - 1] : last.start, h = a && a.geo ? G.geoHeading(a.geo, a.geo.length) * 180 / Math.PI : last.start.h;
+  project.paths.push(G.newPath('Path' + (project.paths.length + 1), e.x, e.y, Math.round(h))); cur = project.paths.length - 1; sel = null; changed(true);
+};
+$('bDup').onclick = function () { snapshot(); var c = JSON.parse(JSON.stringify(path())); c.name = path().name + ' copy'; project.paths.splice(cur + 1, 0, c); cur++; sel = null; changed(true); };
+$('bFlipY').onclick = function () { snapshot(); G.mirrorPath(project, path(), 'y'); changed(true); };
+$('bFlipX').onclick = function () { snapshot(); G.mirrorPath(project, path(), 'x'); changed(true); };
+$('bUp').onclick = function () { if (cur < 1) return; snapshot(); var p = project.paths.splice(cur, 1)[0]; project.paths.splice(cur - 1, 0, p); cur--; changed(true); };
+$('bDown').onclick = function () { if (cur >= project.paths.length - 1) return; snapshot(); var p = project.paths.splice(cur, 1)[0]; project.paths.splice(cur + 1, 0, p); cur++; changed(true); };
+$('bDelPath').onclick = function () { if (project.paths.length < 2 || !confirm('「' + path().name + '」' + eul(path().name) + ' 지울까요? (Undo로 살릴 수 있어요)')) return; snapshot(); project.paths.splice(cur, 1); cur = Math.max(0, cur - 1); sel = null; changed(true); };
+$('pWait').onchange = function () { var v = Number($('pWait').value); snapshot(); path().wait = v > 0 ? v : 0; changed(true); };
+$('limit').onchange = function () { var v = Number($('limit').value); if (v > 0) { snapshot(); project.limit = v; changed(true); } };
+$('newShape').addEventListener('click', function (e) { var v = e.target.getAttribute && e.target.getAttribute('data-v'); if (!v) return; prefs.newShape = v; saveJson(PREFS, prefs); panel(); });
+
+$('tGrid').onclick = function () { prefs.grid = !prefs.grid; saveJson(PREFS, prefs); tools(); draw(); };
+$('tDrum').onclick = function () { prefs.drum = !prefs.drum; saveJson(PREFS, prefs); tools(); draw(); };
+$('tRuler').onclick = function () { tool = tool === 'ruler' ? null : 'ruler'; if (!tool) ruler = null; tools(); hint(); draw(); };
+function cmdOpen(on) { $('cmdBar').hidden = !on; $('tCmd').classList.toggle('on', on); if (!on) $('cmdHelp').hidden = true; resize(); if (on) $('cmd').focus(); }
+$('tCmd').onclick = function () { cmdOpen($('cmdBar').hidden); };
+$('tMore').onclick = function () { $('moreTools').hidden = !$('moreTools').hidden; $('tMore').classList.toggle('on', !$('moreTools').hidden); };
+$('tImage').onclick = function () { $('fileImage').click(); };
+$('tPng').onclick = function () { cv.toBlob(function (b) { if (!b) return; var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (path().name || 'girigocha') + '.png'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); }); };
+function tools() { $('tGrid').classList.toggle('on', prefs.grid); $('tDrum').classList.toggle('on', prefs.drum); $('tRuler').classList.toggle('on', tool === 'ruler'); $('tImage').classList.toggle('on', !!fieldImg); }
+function loadImage(src) { if (!src) { fieldImg = null; return; } var im = new Image(); im.onload = function () { fieldImg = im; tools(); draw(); }; im.src = src; }
+$('fileImage').addEventListener('change', function () { var f = this.files[0]; if (!f) return; var rd = new FileReader(); rd.onload = function () { if (!saveJson(IMG, String(rd.result))) alert('그림이 커서 이 브라우저에 기억하지 못해요 · 이번에만 보여요'); loadImage(String(rd.result)); }; rd.readAsDataURL(f); this.value = ''; });
+$('fileGhost').addEventListener('change', function () {
+  var f = this.files[0]; if (!f) return;
+  f.text().then(function (t) { try { var p = JSON.parse(t); if (p.format !== 'girigocha-editor') throw new Error('기리고차 에디터 프로젝트가 아니에요'); other = { name: (f.name || 'Ghost').replace(/\.json$/i, ''), project: migrate(p) }; saveJson(OTHER, other); changed(false); } catch (e) { alert('Ghost · ' + e.message); } });
+  this.value = '';
+});
+$('fileLog').addEventListener('change', function () { var f = this.files[0]; if (f) loadReplay(f); this.value = ''; });
+
+// 끌어다 놓기: .grlog → Replay, .json → 프로젝트 열기
+var well = $('well'), dragDepth = 0;
+['dragenter', 'dragover'].forEach(function (ev) { window.addEventListener(ev, function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') >= 0) { e.preventDefault(); $('drop').hidden = false; } }); });
+window.addEventListener('dragleave', function (e) { if (e.relatedTarget === null) $('drop').hidden = true; });
+window.addEventListener('drop', function (e) {
+  e.preventDefault(); $('drop').hidden = true;
+  var f = e.dataTransfer.files[0]; if (!f) return;
+  if (/\.(grlog|jsonl|txt)$/i.test(f.name)) loadReplay(f);
+  else if (/\.json$/i.test(f.name)) f.text().then(function (t) { try { var p = JSON.parse(t); if (p.format !== 'girigocha-editor') throw new Error('기리고차 에디터 프로젝트가 아니에요'); if (!confirm('「' + f.name + '」' + eul(f.name) + ' 열까요? (지금 작업은 Undo로 돌아올 수 있어요)')) return; snapshot(); project = migrate(p); cur = 0; sel = null; resize(); changed(true); } catch (er) { alert(er.message); } });
+});
+void well;
+
+// ---------------------------------------------------------------- Send to robot
+
+/** 로봇이 없으면 오래 기다리지 않게 4초에 끊는다. */
+function fetchT(url, opt) {
+  var ctl = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (ctl) ctl.abort(); }, 4000);
+  return fetch(url, Object.assign({}, opt || {}, ctl ? { signal: ctl.signal } : {})).finally(function () { clearTimeout(t); });
+}
+function robotUrl(p) { return 'http://' + prefs.robotAddr.replace(/^https?:\/\//, '').replace(/\/$/, '') + p; }
+function sendBody(result) {
+  var name = path().name, json = null, err = null;
+  try { json = G.routineJson(project, $('sendName') ? $('sendName').value : project.routineName || name); } catch (e) { err = e.message; }
+  $('sendBody').innerHTML =
+    '<p class="tiny" style="margin-top:0">경로를 로봇에 바로 넣어요. 코드·Blocks·빌드 없이 Driver Station의 「기리고차 경로 실행」에서 달리고, 팀 코드에서는 <b>「보낸 경로 달리기」</b> 블록이나 <code>robot.runRoutine("이름", this, true)</code>로 불러요.</p>' +
+    '<div class="kv"><label for="sendName">Routine name</label><input id="sendName" value="' + esc(project.routineName || '오토1') + '">' +
+    '<label for="robotAddr">Robot address</label><input id="robotAddr" value="' + esc(prefs.robotAddr) + '"></div>' +
+    '<div class="steps"><div class="stepline"><span class="n">1</span><span>노트북을 로봇 Wi‑Fi에 연결 (Driver Station처럼)</span></div><div class="stepline"><span class="n">2</span><span>Send · 브라우저가 「로컬 네트워크 접근」을 물으면 허용</span></div><div class="stepline"><span class="n">3</span><span>Driver Station → 「기리고차 경로 실행」 → ▲▼로 고르고 ▶</span></div></div>' +
+    (err ? '<div class="w error"><span class="st"></span><span>' + esc(err) + '</span></div>' : '<div class="tiny">Path ' + json.paths.length + '개 · Auto ' + tl.total.toFixed(1) + ' s · Marker ' + acts.length + '개 · 단위 ' + U() + '</div>') +
+    '<div class="row" style="margin-top:12px"><button class="primary" id="doSend"' + (err ? ' disabled' : '') + '>Send</button><button id="doCheck">Check robot</button><button id="doDownload"' + (err ? ' disabled' : '') + '>Download file</button></div>' +
+    (result ? '<div class="result">' + result + '</div>' : '') +
+    '<p class="tiny" style="margin-bottom:0">Send가 막히면: Download file → 로봇 페이지 <b>' + esc(robotUrl('/girigocha')) + '</b>의 「올리기」로 같은 파일을 넣어도 돼요.</p>';
+  $('sendName').onchange = function () { project.routineName = $('sendName').value.trim() || '오토1'; saveJson(STORE, project); };
+  $('robotAddr').onchange = function () { prefs.robotAddr = $('robotAddr').value.trim() || '192.168.43.1:8080'; saveJson(PREFS, prefs); };
+  $('doCheck').onclick = function () { checkRobot(true); };
+  $('doDownload').onclick = function () {
+    var j = G.routineJson(project, $('sendName').value), blob = new Blob([JSON.stringify(j, null, 2)], { type: 'application/json' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = (j.name || 'auto') + '.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  };
+  $('doSend').onclick = function () {
+    project.routineName = $('sendName').value.trim() || '오토1'; saveJson(STORE, project);
+    var j = G.routineJson(project, project.routineName);
+    sendBody('<span class="tiny">보내는 중…</span>');
+    fetchT(robotUrl('/girigocha/routine'), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(j) })
+      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.error || '로봇이 받지 않았어요');
+        robotState.status = 'ok'; top();
+        sendBody('<div class="w ok"><span class="st"></span><span>「' + esc(r.name) + '」' + eul(r.name) + ' 보냈어요 (Path ' + r.paths + '개). Driver Station → 「기리고차 경로 실행」에서 고르세요.</span></div>');
+        checkRobot(false);
+      })
+      .catch(function (e) {
+        robotState.status = 'fail'; top();
+        sendBody('<div class="w error"><span class="st"></span><span>보내지 못했어요: ' + esc(e.message) + ' · 로봇 Wi‑Fi에 연결됐는지, 주소가 맞는지 확인하세요. 안 되면 Download file로.</span></div>');
+      });
+  };
+}
+function checkRobot(show) {
+  fetchT(robotUrl('/girigocha/routines')).then(function (r) { return r.json(); }).then(function (r) {
+    robotState = { status: 'ok', version: r.version || '', routines: r.routines || [] }; top();
+    if (show) sendBody('<div class="w ok"><span class="st"></span><span>로봇 연결됨 · 기리고차 ' + esc(r.version || '') + ' · 보낸 경로 ' + (r.routines || []).length + '개' + ((r.routines || []).length ? ': ' + r.routines.slice(0, 5).map(function (x) { return esc(x.name); }).join(', ') : '') + '</span></div>');
+  }).catch(function () { robotState.status = 'fail'; top(); if (show) sendBody('<div class="w error"><span class="st"></span><span>로봇에 닿지 않아요 · 로봇 Wi‑Fi 연결과 주소(' + esc(prefs.robotAddr) + ')를 확인하세요. 기리고차 0.10 이상이어야 해요.</span></div>'); });
+}
+$('bSend').onclick = function () { sendBody(null); openModal('mSend'); };
+
+// ---------------------------------------------------------------- Code·Examples·Settings·File
+
+function blockKind(n) { if (/^방향/.test(n)) return 'k-heading'; if (/^마커/.test(n)) return 'k-marker'; if (/달리기|기다리기/.test(n)) return 'k-run'; if (/경로|직선|곡선|위치 설정/.test(n)) return 'k-path'; return ''; }
+function codeBody() {
+  var b = $('codeBody'), list, html = '';
+  document.querySelectorAll('#codeKind button').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === prefs.codeKind); });
+  if (prefs.codeKind === 'blocks') {
+    html += '<p class="tiny" style="margin-top:0">블록 하나로 끝내려면: <b>Send to robot</b> 후 「보낸 경로 달리기」 블록. 직접 쌓으려면 아래 순서대로 (Java Classes → girigocha.ftc.GirigochaBlocks).</p><div class="blocks">';
+    try { list = G.blocksList(project); } catch (e) { list = [['오류: ' + e.message]]; }
+    list.forEach(function (bl) { html += '<div class="bl ' + blockKind(bl[0]) + '"><b>' + esc(bl[0]) + '</b>' + bl.slice(1).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>'; });
+    b.innerHTML = html + '</div>';
+  } else {
+    var opmode = prefs.javaKind !== 'snippet', code;
+    try { code = opmode ? G.javaOpMode(project) : G.javaSnippet(project); } catch (e) { code = '코드를 만들 수 없어요: ' + e.message; }
+    b.innerHTML = '<div class="row"><div class="seg" id="javaKind"><button data-v="opmode"' + (opmode ? ' class="on"' : '') + '>OpMode file</button><button data-v="snippet"' + (opmode ? '' : ' class="on"') + '>Paths only</button></div><button class="primary" id="bCopy">Copy</button><span class="tiny" id="copied"></span></div>' +
+      '<div class="tiny" style="margin-top:8px">' + (opmode ? 'TeamCode에 MyGirigochaAuto.java로 저장 → Driver Station에 「기리고차 오토」.' : '팀 OpMode 안, robot을 만든 다음에.') + ' 단위 ' + U() + '.</div><pre id="code"></pre>';
+    $('code').textContent = code;
+    b.querySelectorAll('#javaKind button').forEach(function (x) { x.onclick = function () { prefs.javaKind = x.getAttribute('data-v'); saveJson(PREFS, prefs); codeBody(); }; });
+    $('bCopy').onclick = function () { var done = function () { $('copied').textContent = 'Copied'; }, manual = function () { var r = document.createRange(); r.selectNodeContents($('code')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); $('copied').textContent = '⌘/Ctrl+C'; }; if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, manual); else manual(); };
+  }
+}
+$('codeKind').addEventListener('click', function (e) { var v = e.target.getAttribute && e.target.getAttribute('data-v'); if (!v) return; prefs.codeKind = v; saveJson(PREFS, prefs); codeBody(); });
+function openModal(id) { $(id).hidden = false; var f = $(id).querySelector('button'); if (f) f.focus(); }
+document.querySelectorAll('.modal').forEach(function (m) { m.addEventListener('click', function (e) { if (e.target === m || e.target.hasAttribute('data-close')) m.hidden = true; }); });
+$('bCode').onclick = function () { codeBody(); openModal('mCode'); };
+$('bFile').onclick = function () { openModal('mFile'); };
+$('bExamples').onclick = function () { $('mFile').hidden = true; openModal('mExamples'); exampleList(); };
+$('bSettings').onclick = function () { settingsPanel(); $('dSettings').hidden = false; };
+$('bCloseSettings').onclick = function () { $('dSettings').hidden = true; };
+function exampleList() {
+  var box = $('exList'); box.innerHTML = '';
+  G.examples().forEach(function (ex) {
+    var b = document.createElement('button'); b.className = 'ex'; var c = document.createElement('canvas'); b.appendChild(c); var t = document.createElement('b'); t.textContent = ex.title; b.appendChild(t);
+    b.onclick = function () { snapshot(); var p = JSON.parse(JSON.stringify(ex.path)); if (U() !== 'cm') G.convertUnits({ units: 'cm', paths: [p], field: { size: 0 }, robot: {} }, U()); if (!path().points.length) project.paths[cur] = p; else { project.paths.push(p); cur = project.paths.length - 1; } sel = null; $('mExamples').hidden = true; changed(true); };
+    box.appendChild(b); requestAnimationFrame(function () { miniPreview(c, ex.path); });
+  });
+  var h = document.createElement('p'); h.className = 'tiny'; h.style.gridColumn = '1 / -1'; h.style.margin = '6px 0 0';
+  h.innerHTML = '<b>BIOBUZZ 대표 오토</b> · 로봇1이 열리고 로봇2는 Ghost로 같이 달려요. 흡입·발사 1.5 s는 가정값이에요';
+  box.appendChild(h);
+  G.biobuzzAutos().forEach(function (ex) {
+    var b = document.createElement('button'); b.className = 'ex'; var c = document.createElement('canvas'); b.appendChild(c);
+    var t = document.createElement('b'); t.textContent = ex.title; b.appendChild(t);
+    var n = document.createElement('span'); n.className = 'tiny'; n.textContent = ex.note; b.appendChild(n);
+    b.onclick = function () {
+      if (project.paths.some(function (q) { return q.points.length; }) && !confirm('지금 작업을 「' + ex.title + '」(으)로 바꿀까요? (Undo로 돌아올 수 있어요)')) return;
+      snapshot();
+      project = migrate(JSON.parse(JSON.stringify(ex.r1))); cur = 0; sel = null; play.t = 0;
+      other = { name: '로봇2', project: migrate(JSON.parse(JSON.stringify(ex.r2))) }; saveJson(OTHER, other);
+      prefs.game = 'biobuzz'; saveJson(PREFS, prefs);
+      $('mExamples').hidden = true; resize(); changed(true);
+    };
+    box.appendChild(b); requestAnimationFrame(function () { miniAuto(c, ex); });
+  });
+}
+/** 대표 오토 미리보기: 필드·HIVE 위에 로봇1(파랑 선)과 로봇2(회색 선). */
+function miniAuto(c, ex) {
+  var r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; if (!r.width) return;
+  c.width = r.width * dpr; c.height = r.height * dpr; var x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var F = G.BIOBUZZ, sz = r.height - 12, ox = (r.width - sz) / 2, oy = 6, sc = sz / (2 * F.half);
+  var px = function (v) { return ox + (v + F.half) * sc; }, py = function (v) { return oy + (F.half - v) * sc; };
+  x.strokeStyle = C.faint || '#3A3F49'; x.lineWidth = 1; x.strokeRect(ox, oy, sz, sz);
+  x.fillStyle = C['grey-path'] || '#5D6470'; x.globalAlpha = 0.5; x.fillRect(px(F.hive.xMin), py(F.hive.yMax), (F.hive.xMax - F.hive.xMin) * sc, (F.hive.yMax - F.hive.yMin) * sc); x.globalAlpha = 1;
+  [[ex.r2, C.ghost || '#A7ACB6', 1.5], [ex.r1, C.blue || '#2F6FED', 2.5]].forEach(function (d) {
+    var p = d[0]; x.strokeStyle = d[1]; x.lineWidth = d[2]; x.lineCap = 'round';
+    p.paths.forEach(function (q) { var a = G.analyze(p, q); if (!a.geo) return; x.beginPath(); for (var s = 0; s <= a.geo.length + 1e-9; s += a.geo.length / 60) { var g = G.geoPoint(a.geo, s), gx = px(G.fromM(g[0], 'in')), gy = py(G.fromM(g[1], 'in')); if (s) x.lineTo(gx, gy); else x.moveTo(gx, gy); } x.stroke(); });
+  });
+}
+function miniPreview(c, p) {
+  var r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; if (!r.width) return;
+  c.width = r.width * dpr; c.height = r.height * dpr; var x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var a = G.analyze({ units: 'cm', field: { size: 365.76, origin: 'center' }, robot: G.defaultRobot(), paths: [p] }, p); if (!a.geo) return;
+  var pts = [], minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9;
+  for (var s = 0; s <= a.geo.length; s += a.geo.length / 120) { var q = G.geoPoint(a.geo, s); pts.push(q); minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); }
+  var sc = Math.min((r.width - 30) / Math.max(0.1, maxx - minx), (r.height - 30) / Math.max(0.1, maxy - miny));
+  var fx = function (v) { return 15 + (v - minx) * sc + ((r.width - 30) - (maxx - minx) * sc) / 2; }, fy = function (v) { return r.height - 15 - (v - miny) * sc - ((r.height - 30) - (maxy - miny) * sc) / 2; };
+  x.strokeStyle = C.blue || '#2F6FED'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); pts.forEach(function (q, i) { if (i) x.lineTo(fx(q[0]), fy(q[1])); else x.moveTo(fx(q[0]), fy(q[1])); }); x.stroke();
+  x.fillStyle = C.ink || '#F3F4F6'; x.fillRect(fx(pts[0][0]) - 4, fy(pts[0][1]) - 4, 8, 8);
+}
+function settingsPanel() {
+  $('rl').value = r1(project.robot.length); $('rw').value = r1(project.robot.width); $('pod').value = String(prefs.pod);
+  $('game').value = prefs.game || ''; $('fs').value = r1(project.field.size); $('forigin').value = project.field.origin; $('snap').value = prefs.snap;
+  $('showSpeed').checked = prefs.showSpeed; $('advanced').checked = prefs.advanced; $('imgAlpha').value = prefs.imgAlpha;
+  var lim = G.limits(project); $('robotInfo').textContent = 'Max ' + Math.round(G.fromM(lim.maxVel, U())) + ' ' + U() + '/s · ' + (project.robot.kV > 0 ? 'robot.json 측정값' : '측정 전 기본값 (goBILDA 312 RPM)');
+}
+$('rl').onchange = function () { var v = Number($('rl').value); if (v > 0) { snapshot(); project.robot.length = v; changed(true); } };
+$('rw').onchange = function () { var v = Number($('rw').value); if (v > 0) { snapshot(); project.robot.width = v; changed(true); } };
+$('pod').onchange = function () { prefs.pod = Number($('pod').value); saveJson(PREFS, prefs); draw(); };
+$('fs').onchange = function () { var v = Number($('fs').value); if (v > 0) { snapshot(); project.field.size = v; resize(); changed(true); } };
+$('game').onchange = function () { prefs.game = $('game').value; saveJson(PREFS, prefs); draw(); };
+$('forigin').onchange = function () { snapshot(); project.field.origin = $('forigin').value; resize(); changed(true); };
+$('snap').onchange = function () { prefs.snap = $('snap').value; saveJson(PREFS, prefs); };
+$('imgAlpha').oninput = function () { prefs.imgAlpha = Number($('imgAlpha').value); saveJson(PREFS, prefs); draw(); };
+$('bClearImg').onclick = function () { fieldImg = null; saveJson(IMG, null); tools(); draw(); };
+$('showSpeed').onchange = function () { prefs.showSpeed = $('showSpeed').checked; saveJson(PREFS, prefs); draw(); };
+$('advanced').onchange = function () { prefs.advanced = $('advanced').checked; saveJson(PREFS, prefs); panel(); draw(); };
+$('bRobot').onclick = function () { $('fileRobot').click(); };
+$('fileRobot').addEventListener('change', function () {
+  var f = this.files[0]; if (!f) return;
+  f.text().then(function (t) { try { var r = G.robotFromJson(t, project); snapshot(); G.convertUnits(project, r.units); var len = project.robot.length, wid = project.robot.width; project.robot = r.robot; project.robot.length = len; project.robot.width = wid; settingsPanel(); resize(); changed(true); } catch (e) { alert('robot.json · ' + e.message); } });
+  this.value = '';
+});
+$('bSave').onclick = function () { var blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (path().name || 'girigocha') + '.json'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); };
+$('bOpen').onclick = function () { $('fileOpen').click(); };
+$('fileOpen').addEventListener('change', function () { var f = this.files[0]; if (!f) return; f.text().then(function (t) { try { var p = JSON.parse(t); if (p.format !== 'girigocha-editor') throw new Error('기리고차 에디터 프로젝트가 아니에요'); snapshot(); project = migrate(p); cur = 0; sel = null; $('mFile').hidden = true; resize(); changed(true); } catch (e) { alert(e.message); } }); this.value = ''; });
+$('bNew').onclick = function () { if (!confirm('모두 지우고 새로 시작할까요? (Undo로 살릴 수 있어요)')) return; snapshot(); project = migrate(freshProject()); cur = 0; sel = null; play.t = 0; $('mFile').hidden = true; resize(); changed(true); };
+function doUndo() { if (!undo.length) return; redo.push(JSON.stringify(project)); project = migrate(JSON.parse(undo.pop())); cur = Math.min(cur, project.paths.length - 1); sel = null; changed(true); }
+function doRedo() { if (!redo.length) return; undo.push(JSON.stringify(project)); project = migrate(JSON.parse(redo.pop())); cur = Math.min(cur, project.paths.length - 1); sel = null; changed(true); }
+$('bUndo').onclick = doUndo; $('bRedo').onclick = doRedo;
+
+var nudging = false, nudgeT = null;
+document.addEventListener('keydown', function (e) {
+  var tag = e.target.tagName;
+  if (e.key === 'Escape') { document.querySelectorAll('.modal').forEach(function (m) { m.hidden = true; }); $('dSettings').hidden = true; closePops(); $('cmdHelp').hidden = true; $('moreTools').hidden = true; $('tMore').classList.remove('on'); if (!$('cmd').value && !$('cmdBar').hidden) cmdOpen(false); if (preview) { preview = null; draw(); } if (tool) { tool = null; ruler = null; tools(); } if (tag !== 'INPUT') { sel = null; panel(); } hint(); draw(); return; }
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  var mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) doRedo(); else doUndo(); }
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && typeof sel === 'number') { e.preventDefault(); removePoint(sel); }
+  else if (e.key === ' ') { e.preventDefault(); $('tlPlay').click(); }
+  else if (e.key === '/') { e.preventDefault(); cmdOpen(true); }
+  else if (e.key.indexOf('Arrow') === 0 && sel !== null) {
+    e.preventDefault(); var q = sel === 'start' ? path().start : path().points[sel], st = snapStep() * (e.shiftKey ? 10 : 1);
+    if (!nudging) snapshot(); nudging = true; clearTimeout(nudgeT); nudgeT = setTimeout(function () { nudging = false; }, 600);
+    if (e.key === 'ArrowLeft') q.x = r1(q.x - st); if (e.key === 'ArrowRight') q.x = r1(q.x + st); if (e.key === 'ArrowUp') q.y = r1(q.y + st); if (e.key === 'ArrowDown') q.y = r1(q.y - st);
+    changed(true);
+  }
+  else if (e.key === '[') { if (cur > 0) { cur--; sel = null; changed(false); } }
+  else if (e.key === ']') { if (cur < project.paths.length - 1) { cur++; sel = null; changed(false); } }
+  else if (e.key === 'r' || e.key === 'R') $('tRuler').click();
+  else if (e.key === 'g' || e.key === 'G') $('tGrid').click();
+});
+window.addEventListener('resize', resize);
+
+// ---------------------------------------------------------------- 데모 (?demo=1) — 가이드 사진·처음 보는 사람용, 저장하지 않음
+
+var Q = new URLSearchParams(location.search);
+if (Q.get('demo')) {
+  saveJson = function () { return true; }; // 사용자 작업을 덮어쓰지 않는다
+  prefs.game = ''; // 데모 경로는 경기와 상관없는 예시 — 필드 요소 없이
+  project = G.newProject('cm'); project.limit = 30; // 데모 좌표는 cm로 적고 끝에서 inch로 바꾼다
+  var ex = G.examples();
+  project.paths = [JSON.parse(JSON.stringify(ex[3].path)), JSON.parse(JSON.stringify(ex[2].path))];
+  project.paths[1].name = '돌아오기'; project.paths[1].start = { x: 90, y: 60, h: 45 };
+  project.paths[1].points = [{ x: 60, y: 120, curve: false, heading: { mode: 'linear', deg: 90 }, actions: [] }, { x: -60, y: 120, curve: false, heading: { mode: 'keep' }, actions: [{ when: 'middle', type: 'motor', device: 'intake', value: 1 }] }, { x: -120, y: 60, curve: false, heading: { mode: 'linear', deg: 0 }, actions: [] }];
+  project.paths[0].wait = 1;
+  project.routineName = '데모 오토';
+  analyzeAll();
+  // 계획에서 조금씩 벗어난 가짜 주행 기록 (실제 로그 대신)
+  var L = [JSON.stringify({ k: 'header', schema: 1, team: '데모', units: 'in', opmode: '기리고차경로실행' }), JSON.stringify({ k: 'evt', t: 0, type: 'routine_start' })];
+  for (var t = 0; t <= tl.total + 0.4; t += 0.03) { var q = G.poseAt(project, tl, Math.max(0, t - 0.18)), dr = t > 2 && t < 6 ? Math.sin((t - 2) / 4 * Math.PI) * 7 : 0; L.push(JSON.stringify({ k: 's', t: t, x: q.x / 100, y: (q.y + dr) / 100, h: q.h, vx: 0.4, vy: 0 })); }
+  acts.forEach(function (a) { L.push(JSON.stringify({ k: 'evt', t: a.t + 0.05, type: 'marker', name: a.name })); });
+  L.push(JSON.stringify({ k: 'evt', t: 4.1, type: 'pushed' }));
+  replay = G.parseGrlog(L.join('\n'), project); replay.file = 'demo.grlog';
+  var op = JSON.parse(JSON.stringify(project)); op.paths = [JSON.parse(JSON.stringify(ex[1].path))]; op.paths[0].start = { x: 110, y: -120, h: 180 };
+  op.paths[0].points = [{ x: 30, y: -30, curve: true, heading: { mode: 'tangent' }, actions: [] }, { x: -40, y: 30, curve: true, heading: { mode: 'tangent' }, actions: [] }];
+  other = { name: '파트너 로봇', project: op };
+  G.convertUnits(project, 'in'); project = migrate(project); analyzeAll();
+  replay = G.parseGrlog(L.join('\n'), project); replay.file = 'demo.grlog';
+  play.t = Number(Q.get('t') || 3.2);
+}
+
+// ?example=④ — 가이드에서 BIOBUZZ 대표 오토를 바로 연다. 사용자 작업을 덮어쓰지 않게 저장하지 않는다
+var exQ = Q.get('example') && G.biobuzzAutos().filter(function (e) { return e.id === Q.get('example'); })[0];
+if (exQ) {
+  saveJson = function () { return true; };
+  project = migrate(JSON.parse(JSON.stringify(exQ.r1))); cur = 0; sel = null; play.t = 0;
+  other = { name: '로봇2', project: migrate(JSON.parse(JSON.stringify(exQ.r2))) };
+  prefs.game = 'biobuzz';
+}
+
+analyzeAll(); panel(); top(); hint(); tools(); sugButton(); resize(); frame();
+if (exQ) $('budget').insertAdjacentHTML('afterend', '<span class="chip" style="background:var(--yellow);color:var(--on-yellow);font-weight:600">예시 · 저장 안 함</span>');
+if (Q.get('demo')) {
+  $('budget').insertAdjacentHTML('afterend', '<span class="chip" style="background:var(--yellow);color:var(--on-yellow);font-weight:600">Demo · 저장 안 함</span>');
+  if (Q.get('pop') === 'sug') { $('sugPop').hidden = false; sugPop(); }
+  if (Q.get('dialog') === 'send') $('bSend').click();
+  if (Q.get('dialog') === 'code') $('bCode').click();
+  if (Q.get('cmd')) { cmdOpen(true); $('cmd').value = Q.get('cmd'); $('cmdBar').requestSubmit(); }
+  if (Q.get('sel')) { sel = Number(Q.get('sel')); panel(); draw(); }
+}
+})();
+</script>
+</body>
+</html>

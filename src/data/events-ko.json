@@ -1,0 +1,7 @@
+{
+  "_note": "국내 FTC 대회의 한글 이름·장소. 공식 데이터는 영문이라 여기서 바꿔 보여 준다. 새 대회가 생기면 추가",
+  "KRCMP": { "name": "South Korea Championship (KRC)", "venue": "대전컨벤션센터" },
+  "KRSUS": { "venue": "수원북중학교" },
+  "KRYES": { "venue": "경북전문대학교" },
+  "KRULOS": { "name": "Premier Robot League (비시즌)", "venue": "울산컨벤션센터" }
+}

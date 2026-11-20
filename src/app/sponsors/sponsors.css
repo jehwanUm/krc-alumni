@@ -1,0 +1,19 @@
+/* sponsors.astro에서 옮김. 이 페이지 안에서만 쓰이게 .pg-sponsors 아래에 둔다 (CSS 중첩). */
+.pg-sponsors {
+  .dim { color: var(--mut); }
+  .sp { background: var(--panel); border: 1px solid var(--line); padding: 20px; margin-bottom: 16px; scroll-margin-top: 24px; } /* taste-skill-ignore */
+  .sp:target { border-color: var(--ink); }
+  .sp-top { display: flex; gap: 16px; align-items: center; }
+  .sp-logo { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-weight: 700; font-size: 20px; background: var(--bg); flex: none; }
+  .sp h3 { margin: 0; font-size: 20px; }
+  .sp-top p { margin: 2px 0 0; font-size: 14px; }
+  .sp-teams { margin-top: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .sp-team { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); background: var(--bg); transition: border-color .15s; } /* taste-skill-ignore */
+  .sp-team:hover { border-color: var(--ink); }
+  .sp-team .avatar { width: 48px; height: 48px; }
+  .sp-team > span { display: flex; flex-direction: column; gap: 2px; font-size: 14px; min-width: 0; }
+  .sp-team b { font-size: 15px; }
+  .res { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; margin-top: 2px; }
+  @media (max-width: 1000px) { .sp-teams { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 640px) { .sp-teams { grid-template-columns: 1fr; } }
+}

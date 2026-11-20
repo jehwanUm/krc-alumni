@@ -1,0 +1,858 @@
+{
+ "_note": "팀 한글 소속·지역·후원사. 공식 영문 이름(nameFull)에서 만든 초안이라 checked=false. 운영진이 확인하면 true로. 빈 소속은 공식 데이터에 없음.",
+ "teams": {
+  "9746": {
+   "school": "상트페테르부르크 물리수학 리세움 30",
+   "region": "러시아 상트페테르부르크",
+   "sponsors": [
+    "Starline"
+   ],
+   "official": "Starline & St. Petersburg Governor Physics and Mathematics Lyceum #30",
+   "checked": false
+  },
+  "9747": {
+   "school": "홈스쿨",
+   "region": "인천 남동구",
+   "sponsors": [],
+   "official": "Home School",
+   "checked": false
+  },
+  "11044": {
+   "school": "상트페테르부르크 물리수학 리세움 30",
+   "region": "러시아 상트페테르부르크",
+   "sponsors": [
+    "Starline"
+   ],
+   "official": "Starline&St. Petersburg Governor Physics and Mathematics Lyceum #30",
+   "checked": false
+  },
+  "11125": {
+   "school": "브랭섬홀 아시아",
+   "region": "제주 서귀포",
+   "sponsors": [],
+   "official": "Branksome Hall Asia",
+   "checked": false
+  },
+  "21159": {
+   "school": "마곡중학교 · 공항고등학교",
+   "region": "서울",
+   "sponsors": [],
+   "official": "Magok Middle School & Kong Hang High School",
+   "checked": false
+  },
+  "23013": {
+   "school": "한솔고등학교",
+   "region": "세종",
+   "sponsors": [],
+   "official": "hansol high school",
+   "checked": false
+  },
+  "23020": {
+   "school": "운천고등학교",
+   "region": "오산",
+   "sponsors": [],
+   "official": "Uncheon High School",
+   "checked": false
+  },
+  "23021": {
+   "school": "대영중학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "대영중학교",
+   "checked": false
+  },
+  "23022": {
+   "school": "대영중학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "Daeyoung Middle School",
+   "checked": false
+  },
+  "23024": {
+   "school": "대영중학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "대영중학교",
+   "checked": false
+  },
+  "23029": {
+   "school": "안양고등학교",
+   "region": "안양",
+   "sponsors": [],
+   "official": "anyang high school",
+   "checked": false
+  },
+  "23031": {
+   "school": "로봇앤코딩 (학원)",
+   "region": "서울 은평구",
+   "sponsors": [],
+   "official": "Robot And Coding",
+   "checked": false
+  },
+  "23033": {
+   "school": "춘천한샘고등학교",
+   "region": "춘천",
+   "sponsors": [],
+   "official": "Hansame Highschool",
+   "checked": false
+  },
+  "23035": {
+   "school": "선정고등학교",
+   "region": "서울 은평구",
+   "sponsors": [],
+   "official": "Sunjung High School",
+   "checked": false
+  },
+  "23232": {
+   "school": "커뮤니티 팀",
+   "region": "일본 지바",
+   "sponsors": [],
+   "official": "Family/Community",
+   "checked": false
+  },
+  "24906": {
+   "school": "운천고등학교",
+   "region": "오산",
+   "sponsors": [
+    "KLA"
+   ],
+   "official": "KLA Foundation&Uncheon High School",
+   "checked": false
+  },
+  "25235": {
+   "school": "",
+   "region": "세종",
+   "sponsors": [],
+   "official": "j",
+   "checked": false
+  },
+  "25306": {
+   "school": "문경여자고등학교",
+   "region": "문경",
+   "sponsors": [],
+   "official": "Mungyeong girls' high school",
+   "checked": false
+  },
+  "25307": {
+   "school": "성지고등학교",
+   "region": "용인",
+   "sponsors": [],
+   "official": "sungji high school",
+   "checked": false
+  },
+  "25308": {
+   "school": "영주제일고등학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "yeongjujeil high school",
+   "checked": false
+  },
+  "25309": {
+   "school": "한국과학영재학교",
+   "region": "부산 부산진구",
+   "sponsors": [
+    "과학기술정보통신부",
+    "KAIST"
+   ],
+   "official": "Korea Science Academy of KAIST/Ministry of Science and ICT/Korea Advanced Institute of Science and Technology&Korea Science Academy of KAIST",
+   "checked": false
+  },
+  "25315": {
+   "school": "대영고등학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "Daeyoung High School",
+   "checked": false
+  },
+  "25316": {
+   "school": "대영중학교",
+   "region": "영주",
+   "sponsors": [
+    "노벨리스 코리아"
+   ],
+   "official": "Novelis KOREA&Daeyoung Middle School",
+   "checked": false
+  },
+  "25317": {
+   "school": "대전과학고등학교",
+   "region": "대전 유성구",
+   "sponsors": [],
+   "official": "Daejeon Science High School",
+   "checked": false
+  },
+  "25318": {
+   "school": "수원하이텍고등학교",
+   "region": "수원",
+   "sponsors": [],
+   "official": "Suwon Hi-tech High School",
+   "checked": false
+  },
+  "25319": {
+   "school": "수원하이텍고등학교",
+   "region": "수원",
+   "sponsors": [],
+   "official": "Suwon Hi-tech High School",
+   "checked": false
+  },
+  "25320": {
+   "school": "수원하이텍고등학교",
+   "region": "수원",
+   "sponsors": [],
+   "official": "Suwon Hi-tech High School",
+   "checked": false
+  },
+  "25321": {
+   "school": "수원하이텍고등학교",
+   "region": "수원",
+   "sponsors": [],
+   "official": "Suwon Hi-tech High School",
+   "checked": false
+  },
+  "25322": {
+   "school": "대전과학고등학교",
+   "region": "구리",
+   "sponsors": [],
+   "official": "Daejeon Science High School",
+   "checked": false
+  },
+  "25323": {
+   "school": "동탄고등학교",
+   "region": "화성",
+   "sponsors": [],
+   "official": "Dongtan High School",
+   "checked": false
+  },
+  "25324": {
+   "school": "동탄고등학교",
+   "region": "오산",
+   "sponsors": [
+    "KLA"
+   ],
+   "official": "KLA & Dongtan High School",
+   "checked": false
+  },
+  "25326": {
+   "school": "영주여자고등학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "yeong ju girls highschool",
+   "checked": false
+  },
+  "25327": {
+   "school": "안양고등학교",
+   "region": "안양",
+   "sponsors": [],
+   "official": "Anyanghighscool",
+   "checked": false
+  },
+  "25328": {
+   "school": "스마트러닝 (학원)",
+   "region": "안산",
+   "sponsors": [],
+   "official": "SMARTLEARNING",
+   "checked": false
+  },
+  "25329": {
+   "school": "대전과학고등학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Daejeon science high school & Daejeon science high school",
+   "checked": false
+  },
+  "25330": {
+   "school": "천안월봉고등학교",
+   "region": "천안",
+   "sponsors": [],
+   "official": "천안월봉고등학교 & 천안월봉고등학교",
+   "checked": false
+  },
+  "25331": {
+   "school": "천안월봉고등학교",
+   "region": "천안",
+   "sponsors": [],
+   "official": "천안월봉고등학교",
+   "checked": false
+  },
+  "25333": {
+   "school": "대전과학고등학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Daejeon Science High School",
+   "checked": false
+  },
+  "25335": {
+   "school": "신흥고등학교",
+   "region": "동두천",
+   "sponsors": [],
+   "official": "신흥고등학교",
+   "checked": false
+  },
+  "25336": {
+   "school": "안양고등학교",
+   "region": "안양",
+   "sponsors": [],
+   "official": "안양고등학교",
+   "checked": false
+  },
+  "25338": {
+   "school": "금계중학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "keumgye middle school",
+   "checked": false
+  },
+  "25339": {
+   "school": "예산고등학교",
+   "region": "예산",
+   "sponsors": [],
+   "official": "Yesan High School",
+   "checked": false
+  },
+  "25340": {
+   "school": "서해고등학교",
+   "region": "시흥",
+   "sponsors": [],
+   "official": "seohae high school",
+   "checked": false
+  },
+  "25341": {
+   "school": "영광고등학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "yeongkwang high school",
+   "checked": false
+  },
+  "25342": {
+   "school": "하누리국제학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Hanuri International School",
+   "checked": false
+  },
+  "25343": {
+   "school": "춘천한샘고등학교",
+   "region": "춘천",
+   "sponsors": [],
+   "official": "춘천한샘고등학교",
+   "checked": false
+  },
+  "25344": {
+   "school": "동산여자중학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "동산여자중학교",
+   "checked": false
+  },
+  "25345": {
+   "school": "춘천한샘고등학교",
+   "region": "춘천",
+   "sponsors": [],
+   "official": "춘천한샘고등학교",
+   "checked": false
+  },
+  "25346": {
+   "school": "광덕고등학교",
+   "region": "서구",
+   "sponsors": [],
+   "official": "Gwangdeok High School",
+   "checked": false
+  },
+  "25347": {
+   "school": "",
+   "region": "포항",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "25348": {
+   "school": "영주중학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "Yeongju Middle School",
+   "checked": false
+  },
+  "25350": {
+   "school": "대전과학고등학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Daejeon Science High School for the Gifted",
+   "checked": false
+  },
+  "25360": {
+   "school": "세종과학예술영재학교",
+   "region": "세종",
+   "sponsors": [],
+   "official": "Sejong Academy of Science and Art",
+   "checked": false
+  },
+  "25361": {
+   "school": "동아마이스터고등학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Dongah Meister High School",
+   "checked": false
+  },
+  "25362": {
+   "school": "대전중앙중학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Daejeon Jungang Middle School",
+   "checked": false
+  },
+  "26214": {
+   "school": "커뮤니티 팀",
+   "region": "일본 삿포로",
+   "sponsors": [],
+   "official": "Family/Community",
+   "checked": false
+  },
+  "26272": {
+   "school": "센슈대학 마쓰도 중·고등학교",
+   "region": "일본 마쓰도",
+   "sponsors": [],
+   "official": "Senshu University Matsudo Junior and Senior High School",
+   "checked": false
+  },
+  "28366": {
+   "school": "홈스쿨",
+   "region": "인천 남동구",
+   "sponsors": [],
+   "official": "Home School",
+   "checked": false
+  },
+  "28611": {
+   "school": "광휘고등학교",
+   "region": "광명",
+   "sponsors": [],
+   "official": "Gwanghwi high school",
+   "checked": false
+  },
+  "28612": {
+   "school": "",
+   "region": "광주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "28613": {
+   "school": "방교중학교",
+   "region": "화성",
+   "sponsors": [],
+   "official": "Banggyo Middle School",
+   "checked": false
+  },
+  "28615": {
+   "school": "",
+   "region": "김포",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "28625": {
+   "school": "풍암중학교",
+   "region": "광주 서구",
+   "sponsors": [],
+   "official": "pungam middle school",
+   "checked": false
+  },
+  "28636": {
+   "school": "서연고등학교",
+   "region": "화성 동탄",
+   "sponsors": [],
+   "official": "서연고등학교",
+   "checked": false
+  },
+  "28638": {
+   "school": "동원고등학교",
+   "region": "수원",
+   "sponsors": [],
+   "official": "Dongwon high school",
+   "checked": false
+  },
+  "28639": {
+   "school": "천안월봉고등학교",
+   "region": "천안",
+   "sponsors": [],
+   "official": "Cheonan Wolbong High School",
+   "checked": false
+  },
+  "28641": {
+   "school": "천안월봉고등학교",
+   "region": "천안",
+   "sponsors": [],
+   "official": "Cheonan Wolbong High School",
+   "checked": false
+  },
+  "28646": {
+   "school": "라온고등학교",
+   "region": "평택",
+   "sponsors": [],
+   "official": "RAON HIGH SCHOOL",
+   "checked": false
+  },
+  "28648": {
+   "school": "망포 (확인 필요)",
+   "region": "경기",
+   "sponsors": [],
+   "official": "mangpo",
+   "checked": false
+  },
+  "28649": {
+   "school": "라온고등학교",
+   "region": "평택",
+   "sponsors": [],
+   "official": "RAON HIGH SCHOOL",
+   "checked": false
+  },
+  "28651": {
+   "school": "안양고등학교",
+   "region": "안양",
+   "sponsors": [],
+   "official": "Anyang Highschool",
+   "checked": false
+  },
+  "28657": {
+   "school": "영광고등학교",
+   "region": "영주",
+   "sponsors": [],
+   "official": "yeonggwanghighschool",
+   "checked": false
+  },
+  "28663": {
+   "school": "",
+   "region": "용인",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "28664": {
+   "school": "",
+   "region": "용인",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "28665": {
+   "school": "풍천중학교",
+   "region": "안동",
+   "sponsors": [],
+   "official": "PUNGCHEON MIDDLE SCHOOL",
+   "checked": false
+  },
+  "28666": {
+   "school": "용인홍천고등학교",
+   "region": "용인",
+   "sponsors": [],
+   "official": "YongInHongCheon High School",
+   "checked": false
+  },
+  "28667": {
+   "school": "성지고등학교",
+   "region": "용인",
+   "sponsors": [],
+   "official": "성지고등학교",
+   "checked": false
+  },
+  "28669": {
+   "school": "금파공업고등학교",
+   "region": "광주 북구",
+   "sponsors": [],
+   "official": "KUMPA Technical High School",
+   "checked": false
+  },
+  "28685": {
+   "school": "",
+   "region": "광주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "28691": {
+   "school": "수원북중학교",
+   "region": "수원",
+   "sponsors": [],
+   "official": "suwonbuk middle school",
+   "checked": false
+  },
+  "28752": {
+   "school": "",
+   "region": "수원",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "28754": {
+   "school": "커뮤니티 팀",
+   "region": "대전 유성구",
+   "sponsors": [],
+   "official": "Family/Community",
+   "checked": false
+  },
+  "28755": {
+   "school": "커뮤니티 팀",
+   "region": "세종",
+   "sponsors": [],
+   "official": "Family/Community",
+   "checked": false
+  },
+  "31093": {
+   "school": "",
+   "region": "일본 구마토리",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32337": {
+   "school": "",
+   "region": "일본 도쿄 네리마",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32461": {
+   "school": "",
+   "region": "수원",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32485": {
+   "school": "",
+   "region": "안성",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32523": {
+   "school": "",
+   "region": "용인",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32682": {
+   "school": "",
+   "region": "일본 도쿄 미나토",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32683": {
+   "school": "",
+   "region": "화성",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "32846": {
+   "school": "",
+   "region": "용인",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33604": {
+   "school": "",
+   "region": "평택",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33678": {
+   "school": "",
+   "region": "일본 나라",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33701": {
+   "school": "",
+   "region": "일본 스기토",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33757": {
+   "school": "",
+   "region": "일본 도쿄 분쿄",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33863": {
+   "school": "",
+   "region": "영주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33892": {
+   "school": "",
+   "region": "영주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33903": {
+   "school": "",
+   "region": "예천",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33918": {
+   "school": "",
+   "region": "영주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33921": {
+   "school": "",
+   "region": "영주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33952": {
+   "school": "",
+   "region": "서울",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33955": {
+   "school": "",
+   "region": "서울 중구",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33957": {
+   "school": "한국에너지마이스터고등학교",
+   "region": "삼척",
+   "sponsors": [],
+   "official": "korea energy meister highschool & korea energy meister highschool",
+   "checked": false
+  },
+  "33966": {
+   "school": "",
+   "region": "제주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33978": {
+   "school": "",
+   "region": "서울 용산구",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "33979": {
+   "school": "대전대신고등학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "daejeon daeshin high school",
+   "checked": false
+  },
+  "33980": {
+   "school": "",
+   "region": "제주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34049": {
+   "school": "",
+   "region": "전주",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34056": {
+   "school": "",
+   "region": "익산",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34061": {
+   "school": "",
+   "region": "용인",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34062": {
+   "school": "충북과학고등학교",
+   "region": "청주",
+   "sponsors": [],
+   "official": "Chungbuk Science High School",
+   "checked": false
+  },
+  "34076": {
+   "school": "마송고등학교",
+   "region": "김포",
+   "sponsors": [],
+   "official": "MASONG HIGH SCHOOL & MASONG HIGH SCHOOL",
+   "checked": false
+  },
+  "34099": {
+   "school": "",
+   "region": "",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34100": {
+   "school": "",
+   "region": "성남 분당",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34101": {
+   "school": "",
+   "region": "성남 분당",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34104": {
+   "school": "대전과학고등학교",
+   "region": "대전",
+   "sponsors": [],
+   "official": "Daejeon Science High School & Daejeon Science High School",
+   "checked": false
+  },
+  "34105": {
+   "school": "",
+   "region": "대전",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34106": {
+   "school": "",
+   "region": "대전",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34107": {
+   "school": "",
+   "region": "대전",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  },
+  "34119": {
+   "school": "",
+   "region": "서울 동대문구",
+   "sponsors": [],
+   "official": null,
+   "checked": false
+  }
+ }
+}
