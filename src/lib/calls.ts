@@ -66,7 +66,10 @@ export async function queueView(at?: number, tick = false) {
   if (tick) await callsOn(live).catch((e) => console.error('자동 호출 실패', e));
   const { ev, t, d } = live;
   // 리허설로 시각을 되돌렸을 때 그 뒤에 기록된 호출은 안 보이게
-  const [arr, logs] = await Promise.all([arrivals.list(ev), log.list(ev).then((ls) => ls.filter((x) => Date.parse(x.at) <= t))]);
+  // 저장소가 끊겨도 경기 목록은 보여 준다 (도착·호출 기록만 빠지고 화면에 경고)
+  let store = '';
+  const fail = (e: unknown) => { store = (e as Error).message; return [] as never[]; };
+  const [arr, logs] = await Promise.all([arrivals.list(ev).catch(fail), log.list(ev).then((ls) => ls.filter((x) => Date.parse(x.at) <= t)).catch(fail)]);
   const names: Record<number, string> = Object.fromEntries((d.rankings ?? []).map((r: any) => [r.team, r.name]));
   const divs = divsOf(d.matches).map((v) => {
     const ms = inDiv(d.matches, v), s = states(ms, t);
@@ -87,5 +90,5 @@ export async function queueView(at?: number, tick = false) {
         }, {}) };
     }) };
   });
-  return { event: d.event, now: new Date(t).toISOString(), divisions: divs };
+  return { event: d.event, now: new Date(t).toISOString(), divisions: divs, store };
 }

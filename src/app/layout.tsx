@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import { IBM_Plex_Sans_KR, IBM_Plex_Mono } from 'next/font/google';
 import Nav from '../components/Nav';
-import { NAV } from '../lib/nav';
+import { NAV, COMPETITION_ONLY } from '../lib/nav';
 import JsonLd from '../components/JsonLd';
 import { SITE, SITE_NAME, abs } from '../lib/meta';
 import '../styles/lab.css';
@@ -31,16 +31,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <JsonLd data={[org]} />
         <header className="hdr"><div className="in">
-          <Link className="logo" href="/">KRC Alumni</Link>
+          <Link className="logo" href={COMPETITION_ONLY ? '/live' : '/'}>KRC Alumni</Link>
           <Nav />
-          <div className="right"><Link className="btn" href="/alumni#discord">Discord</Link><Link className="btn pri" href="/login">팀 로그인</Link></div>
+          <div className="right">{!COMPETITION_ONLY && <Link className="btn" href="/alumni#discord">Discord</Link>}<Link className="btn pri" href="/login">팀 로그인</Link></div>
         </div></header>
         {children}
         <footer className="ftr"><div className="in">
           <span>KRC Alumni · Korea Robot Championship 동문회</span>
           <nav aria-label="바닥 메뉴">
             {NAV.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
-            <Link href="/sponsors">후원 기업</Link><Link href="/mentoring">멘토링</Link>
+            {!COMPETITION_ONLY && <><Link href="/sponsors">후원 기업</Link><Link href="/mentoring">멘토링</Link></>}
           </nav>
         </div></footer>
       </body>

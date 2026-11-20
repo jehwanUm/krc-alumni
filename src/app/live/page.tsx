@@ -7,6 +7,7 @@ import { logoFor } from '@/lib/logos';
 import eventsKo from '@/data/events-ko.json';
 import ops from '@/data/ops-schedule.json';
 import { LiveBoot } from './LiveBoot';
+import { EventTabs } from './EventTabs';
 import './live.css';
 
 // 대회 페이지. 평상시: 다음 대회 + 지난 KRC 결과 + 국내 대회 (서버 HTML, ISR 10분).
@@ -49,6 +50,7 @@ export default async function Page() {
           <span className="label">Competition · KRC</span>
           <h1>대회</h1>
           <p>KRC 일정과 지난 대회 결과, 국내 FTC 대회를 모았어요. 대회 당일에는 이 페이지가 실시간 화면으로 바뀌어요.</p>
+          <EventTabs cur="KRCMP" />
         </div></section>
 
         <section className="sec"><div className="in"><div><span className="label">§01</span><h2>다음 대회</h2></div><div className="body">
@@ -149,6 +151,7 @@ export default async function Page() {
           <div className="livebar"><span className="dot"></span><span id="liveClock">LIVE</span></div>
           <h1 id="ev">대회 Live</h1>
           <p id="meta">경기 일정, 결과, 순위가 30초마다 새로 고쳐져요.</p>
+          <EventTabs cur={lc.event} />
         </div></section>
 
         <section className="sec wide"><div className="in"><div><span className="label">§01</span><h2>우리 팀</h2></div><div className="body">

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Team = { n: number; name: string; arrived: string | null; firstCall: string | null };
 type QM = { key: string; label: string; state: 'wait' | 'live' | 'done'; start: string | null; actual: string | null; red: Team[]; blue: Team[]; calls: Record<string, { at: string; teams: number[] }> };
-type View = { event: { name: string } | null; now: string; divisions: { div: string; matches: QM[] }[] };
+type View = { event: { name: string } | null; now: string; divisions: { div: string; matches: QM[] }[]; store?: string };
 type Ask = { title: string; teams: number[]; match: QM };
 
 const KST = (ms: number) => new Date(ms + 9 * 3600e3).toISOString().slice(0, 19);
@@ -106,6 +106,7 @@ export function QueueApp() {
           {divs.map((d) => <button type="button" key={d.div} aria-pressed={d === cur} onClick={() => setDiv(d.div)}>{divLabel(d.div)}</button>)}
         </div></div>}
         {err && <p className="note err">연결이 끊겨 마지막 화면을 보여 주고 있어요. {err}</p>}
+        {view.store && <p className="note err">저장소에 연결되지 않아 도착 체크·호출 기록이 저장되지 않고, 자동 호출도 멈춰 있어요. 운영진에게 알려 주세요. ({view.store})</p>}
 
         <section className={`find-list${finding.length ? '' : ' clear'}`}>
           {finding.length ? <>
