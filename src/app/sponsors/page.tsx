@@ -26,15 +26,15 @@ export default async function Page() {
       <section className="page-head"><div className="in">
         <span className="label">Sponsors</span>
         <h1>후원 기업</h1>
-        <p>KRC 팀을 후원하는 기업과 기관이에요. 장학 프로그램과 후원으로 학생들이 로봇을 만들고 대회에 나가요.</p>
+        <p>KRC 팀이 FTC 공식 팀 정보에 적어 둔 후원 기업과 기관이에요. 후원 내용은 각 팀과 후원사가 밝힌 범위만 실어요.</p>
       </div></section>
 
-      <section className="sec wide"><div className="in"><div><span className="label">§01</span><h2>KRC 팀을 후원하는 곳</h2></div><div className="body">
+      <section className="sec wide"><div className="in"><div><span className="label">§01</span><h2>팀이 밝힌 후원사</h2></div><div className="body">
         {error ? <p className="note">후원 정보를 불러오지 못했어요. {error}</p> : sponsors.map((s) => (
           <article className="sp" id={sponsorId(s.name)} key={s.name}>
             <div className="sp-top">
               <div className="sp-logo" aria-hidden="true">{s.name.slice(0, 1)}</div>
-              <div><h3>{s.name}</h3><p className="dim">후원 팀 {s.teams.length} · 장학 프로그램 확인 전</p></div>
+              <div><h3>{s.name}</h3><p className="dim">후원사로 적은 팀 {s.teams.length}</p></div>
             </div>
             <div className="sp-teams">
               {s.teams.map((t) => {

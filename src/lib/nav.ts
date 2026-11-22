@@ -8,3 +8,7 @@ const ALL = [
   ['/live', '대회'], ['/teams', '팀'], ['/auto', '오토'], ['/learn', '배움'], ['/alumni', '동문회'], ['/krc', 'Korea Robot Championship'],
 ] as const;
 export const NAV: readonly (readonly [string, string])[] = COMPETITION_ONLY ? ALL.filter(([h]) => h === '/live' || h === '/teams') : ALL;
+
+// 동문회 링크. 비어 있으면 버튼을 숨기고 「준비 중」으로 보여 준다
+export const DISCORD_URL = '';
+export const JOIN_URL = '';

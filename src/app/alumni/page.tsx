@@ -1,4 +1,5 @@
 import { meta } from '@/lib/meta';
+import { DISCORD_URL, JOIN_URL } from '@/lib/nav';
 
 export const metadata = meta('/alumni');
 
@@ -23,15 +24,15 @@ export default function Page() {
       </div></section>
       <section className="sec" id="join"><div className="in">
         <div><span className="label">§03</span><h2>동문 가입</h2></div>
-        <div className="body"><p>KRC에 참가한 적이 있다면 누구나 동문이에요. 가입 신청서는 곧 열려요.</p></div>
+        <div className="body"><p>KRC에 참가한 적이 있다면 누구나 동문이에요.</p>{JOIN_URL ? <p><a className="btn pri" href={JOIN_URL} rel="external">동문 가입 신청 →</a></p> : <p className="note">가입 신청은 준비 중이에요.</p>}</div>
       </div></section>
       <section className="sec" id="discord"><div className="in">
         <div><span className="label">§04</span><h2>Discord</h2></div>
-        <div className="body"><p>질문과 대화는 동문회 Discord에서 나눠요. 초대 링크는 곧 열려요.</p></div>
+        <div className="body"><p>질문과 대화는 동문회 Discord에서 나눠요.</p>{DISCORD_URL ? <p><a className="btn" href={DISCORD_URL} rel="external">Discord 들어가기 →</a></p> : <p className="note">Discord는 준비 중이에요.</p>}</div>
       </div></section>
       <section className="sec" id="contact"><div className="in">
         <div><span className="label">§05</span><h2>연락</h2></div>
-        <div className="body"><p>연락 창구는 곧 안내해요.</p></div>
+        <div className="body"><p className="note">연락 창구는 준비 중이에요.</p></div>
       </div></section>
     </main>
   );

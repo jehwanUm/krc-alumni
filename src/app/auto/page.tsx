@@ -6,7 +6,7 @@ import './auto.css';
 export const metadata = meta('/auto');
 
 // 오토: 페이지를 열면 바로 경로 에디터(기리고차 Path Editor, public/editor — `npm run sync-editor`로 girigocha 저장소에서 복사).
-// 저장·공개 범위·공유 코드·Ghost 불러오기는 팀 로그인과 서버 저장소가 생기면(11월 중순) 켠다.
+// 저장·공개 범위·공유 코드·Ghost 불러오기는 팀 로그인과 서버 저장소가 생기면 켠다.
 export default function Page() {
   return (
     <main className="pg-auto">
@@ -34,7 +34,7 @@ export default function Page() {
               <div className="gb"><b>공유 코드</b><input placeholder="예: K7Q-2MX" disabled /><span className="dim small">다른 팀이 준 코드를 넣으면 그 경로가 Ghost로 떠요.</span></div>
               <div className="gb"><b>팀 번호로 찾기</b><input placeholder="예: 25316" inputMode="numeric" disabled /><span className="dim small">그 팀이 우리에게 공개한 경로가 나와요.</span></div>
               <div className="gb"><b>대회 동맹 자동</b><span className="dim small">대회 당일 대진이 나오면 다음 경기 동맹의 공개 경로가 자동으로 들어와요.</span></div>
-              <p className="note">Ghost 공유는 팀 로그인이 열리는 11월 중순에 켜져요.</p>
+              <p className="note">Ghost 공유는 팀 로그인이 열리면 켜져요.</p>
             </aside>
           </div>
           <p className="dim small">로그인 없이 그려 볼 수 있어요. 경로는 이 브라우저에 저장돼요. 기리고차 팀은 에디터의 「Send to robot」으로 로봇에 바로 보내고, 다른 라이브러리는 File에서 좌표를 내보내요.</p>

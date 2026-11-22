@@ -176,7 +176,6 @@ export default async function Page({ params }: Props) {
                 <div>
                   <h3>{s}</h3>
                   <dl>
-                    <dt>장학 프로그램</dt><dd className="dim">확인 전</dd>
                     <dt>같은 후원사 팀</dt><dd>{sameSponsor[s] ?? 1}팀</dd>
                   </dl>
                   <p className="more"><Link href={`/sponsors#${sponsorId(s)}`}>후원 기업 페이지에서 보기 →</Link></p>
