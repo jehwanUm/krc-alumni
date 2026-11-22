@@ -10,5 +10,5 @@ const ALL = [
 export const NAV: readonly (readonly [string, string])[] = COMPETITION_ONLY ? ALL.filter(([h]) => h === '/live' || h === '/teams') : ALL;
 
 // 동문회 링크. 비어 있으면 버튼을 숨기고 「준비 중」으로 보여 준다
-export const DISCORD_URL = '';
+export const DISCORD_URL = 'https://discord.gg/UUmKQchB3X';
 export const JOIN_URL = '';
