@@ -22,7 +22,7 @@ const KO = eventsKo as Record<string, { name?: string; venue?: string }>;
 
 export default async function Page() {
   const cfg = config();
-  const live = isEventDay();
+  const live = isEventDay(Date.now(), null);   // 첫 화면은 KRC. 지역 대회 날 Live는 ?live=1 (대회 탭·QR 시작 페이지에서 연결)
   let sum: Awaited<ReturnType<typeof getEventSummary>> | null = null, error = '';
   let seasons: { season: number; events: Awaited<ReturnType<typeof getKoreanEvents>> }[] = [];
   try {

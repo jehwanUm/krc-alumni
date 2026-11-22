@@ -9,7 +9,7 @@ function start(): (() => void) | undefined {
   const main = document.querySelector<HTMLElement>('main.pg-live')!;
   const params = new URLSearchParams(location.search);
   const replayAt = params.get('replay');
-  if (main.dataset.live !== '1' && !replayAt) return;
+  if (main.dataset.live !== '1' && !replayAt && !params.has('live')) return;
   document.getElementById('normal')!.hidden = true;
   document.getElementById('live')!.hidden = false;
   return startLive();

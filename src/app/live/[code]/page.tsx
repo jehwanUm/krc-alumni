@@ -8,7 +8,7 @@ import { EventTabs } from '../EventTabs';
 import { MyTeam } from '../MyTeam';
 import '../live.css';
 
-// 지역 대회 한 곳: 일정·장소, 참가 팀, (올라오면) 순위와 경기. 대회 당일 실시간 화면은 /live
+// 지역 대회 한 곳: 일정·장소, 참가 팀, (올라오면) 순위와 경기. 대회 당일 실시간 화면은 /live?live=1
 export const revalidate = 300;
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const code = (await params).code.toUpperCase();
@@ -39,7 +39,7 @@ export default async function Page({ params }: { params: Promise<{ code: string 
         {r.sponsor && <p className="sponsor"><span className="chip yel">Sponsor</span> {r.sponsor}</p>}
         <p>{r.start === r.end ? r.start : `${r.start} – ${r.end.slice(5)}`} · {KO[r.event]?.venue ?? ev?.venue ?? ''} · 참가 {teams.length}팀</p>
         <MyTeam names={Object.fromEntries(teams.map((t) => [t.teamNumber, String(t.nameShort ?? '').trim()]))} />
-        {today && <p><Link className="btn pri" href="/live">지금 Live 보기 →</Link></p>}
+        {today && <p><Link className="btn pri" href="/live?live=1">지금 Live 보기 →</Link></p>}
         <EventTabs cur={r.event} />
       </div></section>
 

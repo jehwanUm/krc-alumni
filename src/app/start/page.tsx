@@ -19,7 +19,7 @@ export default async function Page() {
         <span className="label">{r ? r.title : 'KRC'}</span>
         <h1>우리 팀 설정</h1>
         <p>팀 번호를 넣으면 이 휴대폰에 우리 팀이 저장돼요. 대회 날에는 우리 팀 경기와 대진표가 바로 보여요.</p>
-        <StartForm teams={list} next={r ? (live ? '/live' : `/live/${r.event}`) : '/live'} live={live} />
+        <StartForm teams={list} next={r ? (live ? '/live?live=1' : `/live/${r.event}`) : '/live'} live={live} />
       </div></section>
     </main>
   );
