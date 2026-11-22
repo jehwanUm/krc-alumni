@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="hdr"><div className="in">
           <Link className="logo" href={COMPETITION_ONLY ? '/live' : '/'}>KRC Alumni</Link>
           <Nav />
-          <div className="right">{!COMPETITION_ONLY && DISCORD_URL && <a className="btn" href={DISCORD_URL} rel="external">Discord</a>}<Link className="btn pri" href="/login">팀 로그인</Link></div>
+          <div className="right">{!COMPETITION_ONLY && DISCORD_URL && <a className="btn" href={DISCORD_URL} rel="external">Discord</a>}<Link className="btn pri" href="/login">로그인</Link></div>
         </div></header>
         {children}
         <footer className="ftr"><div className="in">

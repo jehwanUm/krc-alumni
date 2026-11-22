@@ -29,7 +29,8 @@ export const PAGES: PageInfo[] = [
   { path: "/sponsors", section: "동문회", title: "후원 기업", desc: "KRC(Korea Robot Championship) 팀을 후원하는 기업과 기관, 후원 팀과 성적. KRC 동문회와 함께하는 기업의 협업·장학 프로그램." },
   { path: "/mentoring", section: "동문회", title: "멘토링", desc: "KRC 동문 멘토와 팀을 잇는 멘토링 매칭: 설계, 코딩, 전략, 3D 모델링." },
   { path: "/links", section: "동문회", title: "링크 모음", desc: "KRC 동문회 인스타그램 프로필 링크 모음: 지금 받는 신청서, 기리고차 가이드, 경로 에디터, 홈페이지.", noindex: true },
-  { path: "/login", section: "계정", title: "팀 로그인", desc: "KRC 팀 계정 로그인: 팀원이 각자 카카오·구글 계정으로 들어와 우리 팀 페이지와 오토 경로를 관리해요.", noindex: true },
+  { path: "/login", section: "계정", title: "로그인 · 회원가입", desc: "KRC 참가 학생과 동문의 홈페이지 계정. 가입 신청 후 운영진이 확인하면 로그인할 수 있어요.", noindex: true },
+  { path: "/admin/members", section: "계정", title: "가입 신청 관리", desc: "운영진 전용: 회원가입 신청 확인과 승인.", noindex: true },
 ];
 
 export function page(path: string) {

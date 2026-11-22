@@ -6,7 +6,9 @@ export type SubRow = { endpoint: string; team: number; sub: any };
 export type Arrival = { event: string; match: string; team: number; at: string };
 export type LogRow = { key: string; event: string; match: string; team: number; stage: '1' | '2' | 'manual'; at: string };
 
-type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[] };
+export type Member = { id: string; email: string; pw: string; name: string; school: string; team: string; verify: string; role: string; intro: string; status: 'pending' | 'approved' | 'rejected'; admin: boolean; created_at: string; decided_at: string | null; decided_by: string | null };
+
+type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[] };
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
 const env = () => ({ url: process.env.SUPABASE_URL?.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() });
 
@@ -77,5 +79,38 @@ export const log = {
       db.push_log.push(...fresh); save(db); return fresh;
     }
     return rest('push_log?on_conflict=key', { method: 'POST', body: JSON.stringify(rows), prefer: 'resolution=ignore-duplicates,return=representation' });
+  },
+};
+
+// 홈페이지 회원 (가입 → 운영진 승인 → 로그인)
+export const members = {
+  async byEmail(email: string): Promise<Member | null> {
+    if (local()) return load().members?.find((m) => m.email === email) ?? null;
+    return (await rest(`members?email=${eq(email)}&select=*`))?.[0] ?? null;
+  },
+  async byId(id: string): Promise<Member | null> {
+    if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+    if (local()) return load().members?.find((m) => m.id === id) ?? null;
+    return (await rest(`members?id=${eq(id)}&select=*`))?.[0] ?? null;
+  },
+  async list(): Promise<Member[]> {
+    if (local()) return [...(load().members ?? [])].reverse();
+    return rest('members?select=*&order=created_at.desc');
+  },
+  // 같은 이메일이 있으면 false
+  async create(m: Omit<Member, 'id' | 'status' | 'admin' | 'created_at' | 'decided_at' | 'decided_by'>): Promise<boolean> {
+    if (local()) {
+      const db = load(); db.members ??= [];
+      if (db.members.some((x) => x.email === m.email)) return false;
+      db.members.push({ ...m, id: crypto.randomUUID(), status: 'pending', admin: false, created_at: new Date().toISOString(), decided_at: null, decided_by: null });
+      save(db); return true;
+    }
+    try { await rest('members', { method: 'POST', body: JSON.stringify(m) }); return true; }
+    catch (e) { if (String(e).includes(' 409')) return false; throw e; }
+  },
+  async decide(id: string, status: 'approved' | 'rejected' | 'pending', by: string) {
+    const patch = { status, decided_at: new Date().toISOString(), decided_by: by };
+    if (local()) { const db = load(); const m = db.members?.find((x) => x.id === id); if (m) Object.assign(m, patch); return save(db); }
+    await rest(`members?id=${eq(id)}`, { method: 'PATCH', body: JSON.stringify(patch) });
   },
 };
