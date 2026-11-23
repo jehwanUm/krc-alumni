@@ -13,5 +13,5 @@ export const NAV: readonly (readonly [string, string])[] = COMPETITION_ONLY ? AL
 export const DISCORD_URL = 'https://discord.gg/UUmKQchB3X';
 export const JOIN_URL = '';
 // 개인정보 보호책임자 (개인정보처리방침에 실린다). 비어 있으면 Discord로 문의 안내
-export const PRIVACY_OWNER = '';
-export const PRIVACY_EMAIL = '';
+export const PRIVACY_OWNER = '엄제환';
+export const PRIVACY_EMAIL = 'jh.um@fest.or.kr';
