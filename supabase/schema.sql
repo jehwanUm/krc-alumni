@@ -52,3 +52,20 @@ alter table members add column if not exists fails int not null default 0;
 alter table members add column if not exists locked_until timestamptz;
 alter table members add column if not exists reset_hash text;
 alter table members add column if not exists reset_exp timestamptz;
+
+-- 팀 설정 (2026-11-23 추가): 회원 ↔ 팀 번호(관리자가 승인할 때 지정), 팀원이 고치는 팀 페이지 내용
+alter table members add column if not exists team_no int;            -- 가입 때 적은 팀 번호 (승인 전엔 신청일 뿐)
+alter table members add column if not exists team_leader boolean not null default false;   -- 팀장: 팀 설정·팀원 승인/내보내기
+create table if not exists team_profiles (
+  team int primary key,
+  school text not null default '', region text not null default '',
+  intro text not null default '', robot_name text not null default '',
+  logo_url text, robot_url text,                    -- Supabase Storage 공개 주소 (버킷 team-images)
+  instagram text not null default '', youtube text not null default '', web text not null default '', email text not null default '',
+  sponsors text[] not null default '{}',
+  sponsors_ok boolean not null default true,        -- 팀이 후원사를 바꾸면 false → 운영진 확인 후 true
+  updated_at timestamptz not null default now(), updated_by text
+);
+alter table team_profiles enable row level security;
+-- 사진: 공개 읽기 버킷. 쓰기는 서버(service_role)만
+insert into storage.buckets (id, name, public) values ('team-images', 'team-images', true) on conflict (id) do nothing;

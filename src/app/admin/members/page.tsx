@@ -1,12 +1,15 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { meta } from '@/lib/meta';
-import { members } from '@/lib/store';
+import { members, teamProfiles } from '@/lib/store';
 import { MEMBER_COOKIE } from '@/lib/member';
 import { memberFrom } from '@/lib/session';
 import { mailReady } from '@/lib/mail';
 import { getDirectory } from '@/lib/teams';
 import { Decide } from './Decide';
+import { TeamAssign } from './TeamAssign';
+import { SponsorCheck } from './SponsorCheck';
+import { teamKo } from '@/lib/teams';
 import '../../login/login.css';
 
 // 운영진: 가입 신청 확인. 팀 이름이 KRC 참가 팀 명단(FTC 공식 기록)에 있으면 표시해서 비교를 돕는다
@@ -20,8 +23,10 @@ const norm = (s: string) => s.toLowerCase().replace(/[\s._-]/g, '');
 export default async function Page() {
   const me = await memberFrom((await cookies()).get(MEMBER_COOKIE)?.value);
   if (!me?.admin) redirect('/login');
-  const [list, dir] = await Promise.all([members.list(), getDirectory().catch(() => null)]);
-  const match = (team: string) => (dir?.teams ?? []).filter((t) => norm(t.name) === norm(team) || String(t.n) === team.trim()).map((t) => `${t.n} ${t.name} (${t.seasons.join('·')})`);
+  const [list, dir, pend] = await Promise.all([members.list(), getDirectory().catch(() => null), teamProfiles.unchecked().catch(() => [])]);
+  const hits = (team: string) => (dir?.teams ?? []).filter((t) => norm(t.name) === norm(team) || String(t.n) === team.trim());
+  const match = (team: string) => hits(team).map((t) => `${t.n} ${t.name} (${t.seasons.join('·')})`);
+  const nameOf = (n: number) => dir?.teams.find((t) => t.n === n)?.name ?? '';
   const order = { pending: 0, rejected: 1, approved: 2 } as const;
   const rows = [...list].sort((a, b) => order[a.status] - order[b.status]);
   return (
@@ -32,6 +37,16 @@ export default async function Page() {
         <p>대기 {list.filter((m) => m.status === 'pending').length}명 · 승인 {list.filter((m) => m.status === 'approved').length}명. 팀 명단과 비교해 지금 참가 학생이면 승인하고, 졸업생은 참가 증빙을 이메일로 받은 뒤 승인해요.</p>
         <p className="dim small">{mailReady() ? '승인·거절하면 본인에게 알림 메일이 가요.' : '알림 메일은 아직 설정 전이에요. 승인·거절 뒤 본인에게 직접 알려 주세요.'}</p>
       </div></section>
+      {pend.length > 0 && <section className="sec wide"><div className="in"><div className="body mlist">
+        <h2>후원사 확인 대기</h2>
+        {pend.map((t) => (
+          <article className="mrow pending" key={t.team}>
+            <div className="mhead"><b>{t.team} {nameOf(t.team)}</b><span className="dim small">{t.updated_by}</span></div>
+            <dl className="kv"><dt>지금 공개</dt><dd>{teamKo(t.team).sponsors.join(', ') || '없음'}</dd><dt>팀이 바꾼 목록</dt><dd>{t.sponsors.join(', ') || '없음'}</dd></dl>
+            <div className="row"><SponsorCheck team={t.team} /></div>
+          </article>
+        ))}
+      </div></div></section>}
       <section className="sec wide"><div className="in"><div className="body mlist">
         {rows.length === 0 && <p className="dim">가입 신청이 없어요.</p>}
         {rows.map((m) => {
@@ -45,8 +60,10 @@ export default async function Page() {
                 {m.role && <><dt>역할</dt><dd>{m.role}</dd></>}
                 {m.intro && <><dt>소개</dt><dd>{m.intro}</dd></>}
                 <dt>이메일</dt><dd><a href={`mailto:${m.email}`}>{m.email}</a></dd>
+                <dt>팀 연결</dt><dd>{m.team_no ? <><a href={`/teams/${m.team_no}`}>{m.team_no} {nameOf(m.team_no)}</a>{m.team_leader && <span className="chip blue">팀장</span>}</> : <span className="dim">없음</span>}</dd>
                 {m.decided_by && <><dt>처리</dt><dd className="dim">{m.decided_by} · {m.decided_at && kst(m.decided_at)}</dd></>}
               </dl>
+              <TeamAssign id={m.id} teamNo={m.team_no} leader={m.team_leader} hint={hits(m.team).map((t) => t.n)} />
               <Decide id={m.id} status={m.status} admin={m.admin} self={m.id === me!.id} />
             </article>
           );

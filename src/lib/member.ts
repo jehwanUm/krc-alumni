@@ -61,11 +61,12 @@ export function parseProfile(b: any): { data?: Profile; error?: string } {
   return d.name && d.school && d.team ? { data: d } : { error: '이름·학교·팀은 비울 수 없어요' };
 }
 
-export type SignupIn = Profile & { verify: string; email: string; pw: string; agree: boolean };
+export type SignupIn = Profile & { verify: string; email: string; pw: string; agree: boolean; team_no: number | null };
+export const teamNo = (v: unknown) => { const n = Number(String(v ?? '').trim()); return Number.isInteger(n) && n > 0 && n < 100000 ? n : null; };
 // 입력 정리 + 검사. 틀리면 error에 화면에 띄울 문장
 export function parseSignup(b: any): { data?: SignupIn; error?: string } {
   const p = parseProfile(b);
-  const d: SignupIn = { ...(p.data ?? { name: '', school: '', team: '', role: '', intro: '' }), verify: str(b?.verify, 500), email: str(b?.email, 120).toLowerCase(), pw: String(b?.pw ?? ''), agree: b?.agree === true };
+  const d: SignupIn = { ...(p.data ?? { name: '', school: '', team: '', role: '', intro: '' }), verify: str(b?.verify, 500), email: str(b?.email, 120).toLowerCase(), pw: String(b?.pw ?? ''), agree: b?.agree === true, team_no: teamNo(b?.team_no) };
   if (!p.data || !d.verify) return { error: '필수 항목을 모두 채워 주세요' };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return { error: '이메일 주소를 확인해 주세요' };
   const e = pwError(d.pw);
@@ -73,3 +74,20 @@ export function parseSignup(b: any): { data?: SignupIn; error?: string } {
   if (!d.agree) return { error: '개인정보 수집·이용에 동의해야 가입할 수 있어요' };
   return { data: d };
 }
+
+// 팀 설정 권한: 운영진 관리자, 또는 그 팀의 승인된 팀장
+export const canManageTeam = (m: Pick<Member, 'admin' | 'team_leader' | 'team_no' | 'status'> | null, n: number) =>
+  !!m && m.status === 'approved' && (m.admin || (m.team_leader && m.team_no === n));
+
+// 팀 설정 입력 정리. 링크는 http(s)만, 이메일은 형식만 본다
+const url = (v: unknown) => { const u = str(v, 200); return /^https?:\/\/\S+$/.test(u) ? u : ''; };
+export function parseTeamForm(f: FormData) {
+  const g = (k: string) => f.get(k);
+  const sponsors = [...new Set(String(g('sponsors') ?? '').split('\n').map((s) => s.trim().slice(0, 60)).filter(Boolean))].slice(0, 10);
+  const email = str(g('email'), 120);
+  return {
+    school: str(g('school'), 80), region: str(g('region'), 40), intro: str(g('intro'), 500), robot_name: str(g('robot_name'), 40),
+    instagram: url(g('instagram')), youtube: url(g('youtube')), web: url(g('web')), email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '', sponsors,
+  };
+}
+export const IMG_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };

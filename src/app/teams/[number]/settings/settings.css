@@ -29,3 +29,11 @@
   .pv-links { font-size: 13px; color: var(--blue-ink); }
   @media (max-width: 900px) { .tset { grid-template-columns: 1fr; } .pv { position: static; } .grid { grid-template-columns: 1fr; } }
 }
+.pg-tset {
+  .roster { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .roster h2 { margin: 0 0 6px; font-size: 20px; }
+  .roster h3 { margin: 20px 0 8px; font-size: 15px; color: var(--mut); }
+  .mate { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: var(--panel); }
+  .mate.pending { border-color: var(--blue); }
+  .mate .row { margin: 0; display: flex; gap: 6px; }
+}

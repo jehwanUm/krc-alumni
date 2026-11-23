@@ -32,3 +32,13 @@
   .small { font-size: 13px; margin-left: auto; }
   @media (max-width: 640px) { .bdx { grid-template-columns: 1fr; } .small { display: none; } }
 }
+/* 팀장이 올린 소개·로봇 */
+.pg-team {
+  .intro { display: grid; grid-template-columns: minmax(0, 280px) 1fr; gap: 20px; align-items: start; margin-bottom: 16px; }
+  .intro .robot { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+  .intro p { margin: 0 0 8px; } .intro .txt { white-space: pre-wrap; line-height: 1.7; }
+  .edit { margin: 8px 0 0; font-size: 13px; }
+  .edit a { color: var(--mut); }
+  .links { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+  @media (max-width: 640px) { .intro { grid-template-columns: 1fr; } }
+}

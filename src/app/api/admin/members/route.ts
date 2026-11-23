@@ -30,6 +30,12 @@ export async function POST(req: Request) {
     await members.update(m.id, { admin: !!b.on });
     return Response.json({ ok: true });
   }
+  if (b.action === 'team') {
+    const team_no = b.team_no == null || b.team_no === '' ? null : Number(b.team_no);
+    if (team_no !== null && !(Number.isInteger(team_no) && team_no > 0 && team_no < 100000)) return bad('팀 번호를 확인해 주세요');
+    await members.update(m.id, { team_no, team_leader: team_no !== null && !!b.leader });
+    return Response.json({ ok: true });
+  }
   if (b.action === 'reset') {
     const t = newResetToken();
     await members.update(m.id, { reset_hash: resetHash(t), reset_exp: new Date(Date.now() + RESET_MIN * 60e3).toISOString() });

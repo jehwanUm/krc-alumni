@@ -6,6 +6,7 @@ import { meta, abs } from '@/lib/meta';
 import JsonLd from '@/components/JsonLd';
 import { config, getTeam, getKrcHistory, getTeamMatches, KRC_SEASONS } from '@/lib/ftc';
 import { teamKo, sponsorId, getDirectory } from '@/lib/teams';
+import { teamProfiles } from '@/lib/store';
 import { logoFor, hasOwnLogo } from '@/lib/logos';
 import { NEXT } from '@/lib/krc';
 import { BreakdownToggle } from './BreakdownToggle';
@@ -23,7 +24,10 @@ const sl = (y: number) => `${y}–${String(y + 1).slice(2)}`;
 const load = cache(async (n: number) => {
   let team: any = null, history: Awaited<ReturnType<typeof getKrcHistory>> = [], matches: Record<number, any[]> = {}, sameSponsor: Record<string, number> = {}, error = '';
   const cfg = config();
-  const ko = teamKo(n);
+  // 팀장이 고친 팀 설정이 있으면 소속·지역·후원사(운영진 확인 후)를 덮어쓴다
+  const p = await teamProfiles.get(n).catch(() => null);
+  const base = teamKo(n);
+  const ko = { ...base, school: p?.school || base.school, region: p?.region || base.region, sponsors: p?.sponsors_ok ? p.sponsors : base.sponsors };
   try {
     // 이번 시즌(신생 팀 포함) → 개발 기준 시즌 → 지난 KRC 시즌 순으로 찾는다
     for (const season of new Set([NEXT.season, cfg.season, ...[...KRC_SEASONS].reverse()])) { team = await getTeam({ ...cfg, season }, n); if (team) break; }
@@ -38,7 +42,7 @@ const load = cache(async (n: number) => {
     }
   } catch (e) { error = (e as Error).message; }
   const name = String(team?.nameShort ?? `팀 ${n}`).trim();
-  return { team, history, matches, sameSponsor, error, ko, name };
+  return { team, history, matches, sameSponsor, error, ko, name, p };
 });
 
 const num = async (params: Props['params']) => {
@@ -57,12 +61,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const n = await num(params);
-  const { team, history, matches, sameSponsor, error, ko, name } = await load(n);
+  const { team, history, matches, sameSponsor, error, ko, name, p } = await load(n);
+  const logo = p?.logo_url ?? logoFor(n).src, ownLogo = !!p?.logo_url || hasOwnLogo(n);
+  const links = p ? ([['인스타그램', p.instagram], ['유튜브', p.youtube], ['홈페이지', p.web]] as const).filter(([, u]) => u) : [];
   if (!team && !error) notFound();
   const org = [ko.school, ko.region].filter(Boolean).join(' · ') || [team?.city, team?.country].filter(Boolean).join(' · ');
   const won = (m: any) => (m.redScore == null ? null : m.red.includes(n) ? m.redScore > m.blueScore : m.blueScore > m.redScore);
   const ld = team ? [{ '@context': 'https://schema.org', '@type': 'SportsTeam', name, sport: 'Robotics (FIRST Tech Challenge)',
-    identifier: String(n), ...(hasOwnLogo(n) && { logo: abs(logoFor(n).src) }), memberOf: { '@type': 'SportsOrganization', name: 'FIRST Tech Challenge' },
+    identifier: String(n), ...(ownLogo && { logo: logo.startsWith('http') ? logo : abs(logo) }), memberOf: { '@type': 'SportsOrganization', name: 'FIRST Tech Challenge' },
     location: org, ...(ko.school && { affiliation: { '@type': 'EducationalOrganization', name: ko.school } }),
     ...(ko.sponsors.length && { sponsor: ko.sponsors.map((s) => ({ '@type': 'Organization', name: s })) }),
     award: history.flatMap((h) => h.awards.map((a) => `${a} (KRC ${sl(h.season)})`)) }] : [];
@@ -73,7 +79,7 @@ export default async function Page({ params }: Props) {
       <JsonLd data={ld} />
       <section className="page-head"><div className="in">
         <div className="team-head">
-          <img className="avatar lg" src={logoFor(n).src} width="136" height="136" alt={hasOwnLogo(n) ? `${name} 팀 로고` : ''} />
+          <img className="avatar lg" src={logo} width="136" height="136" alt={ownLogo ? `${name} 팀 로고` : ''} />
           <div>
             <span className="label">Team {n}</span>
             <h1>{n} {name}</h1>
@@ -87,10 +93,18 @@ export default async function Page({ params }: Props) {
       ) : (
         <>
           <section className="sec"><div className="in"><div><span className="label">§01</span><h2>팀 소개 · 로봇</h2></div><div className="body">
-            <div className="empty">
-              <div className="ph">로봇 사진</div>
-              <div><p><b>아직 팀 소개가 없어요.</b></p><p className="dim">팀 관리자가 로그인하면 소개글과 올해 로봇 사진을 올릴 수 있어요.</p></div>
-            </div>
+            {p?.intro || p?.robot_url ? (
+              <div className="intro">
+                {p.robot_url && <img className="robot" src={p.robot_url} alt={p.robot_name ? `로봇 ${p.robot_name}` : `${name} 로봇`} loading="lazy" />}
+                <div>{p.robot_name && <p><b>{p.robot_name}</b></p>}{p.intro && <p className="txt">{p.intro}</p>}</div>
+              </div>
+            ) : (
+              <div className="empty">
+                <div className="ph">로봇 사진</div>
+                <div><p><b>아직 팀 소개가 없어요.</b></p><p className="dim">팀장이 로그인하면 소개글과 올해 로봇 사진을 올릴 수 있어요.</p></div>
+              </div>
+            )}
+            <p className="edit"><Link href={`/teams/${n}/settings`} prefetch={false}>팀 설정 (팀장) →</Link></p>
             <table className="tbl facts"><tbody>
               {team.rookieYear && <tr><th scope="row">창단</th><td>{team.rookieYear}</td></tr>}
               <tr><th scope="row">KRC 출전</th><td>{history.length}회</td></tr>
@@ -166,7 +180,11 @@ export default async function Page({ params }: Props) {
           </div></div></section>
 
           <section className="sec"><div className="in"><div><span className="label">§05</span><h2>SNS · 연락</h2></div><div className="body">
-            {team.website ? <p><a href={team.website} rel="external nofollow">{team.website}</a></p> : <p className="dim">팀이 인스타그램, 유튜브, 홈페이지 링크를 등록하면 여기에 나와요.</p>}
+            {links.length || p?.email || team.website ? <ul className="links">
+              {links.map(([l, u]) => <li key={l}><a href={u} rel="external nofollow noopener">{l}</a></li>)}
+              {!p?.web && team.website && <li><a href={team.website} rel="external nofollow noopener">{team.website}</a></li>}
+              {p?.email && <li><a href={`mailto:${p.email}`}>{p.email}</a></li>}
+            </ul> : <p className="dim">팀이 인스타그램, 유튜브, 홈페이지 링크를 등록하면 여기에 나와요.</p>}
           </div></div></section>
 
           <section className="sec"><div className="in"><div><span className="label">§06</span><h2>후원사</h2></div><div className="body">

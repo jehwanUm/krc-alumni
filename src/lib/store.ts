@@ -7,9 +7,10 @@ export type Arrival = { event: string; match: string; team: number; at: string }
 export type LogRow = { key: string; event: string; match: string; team: number; stage: '1' | '2' | 'manual'; at: string };
 
 export type Member = { id: string; email: string; pw: string; name: string; school: string; team: string; verify: string; role: string; intro: string; status: 'pending' | 'approved' | 'rejected'; admin: boolean; created_at: string; decided_at: string | null; decided_by: string | null;
-  sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null };
+  sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null;
+  team_no: number | null; team_leader: boolean };
 
-type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[] };
+type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[] };
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
 const env = () => ({ url: process.env.SUPABASE_URL?.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() });
 
@@ -100,16 +101,20 @@ export const members = {
     if (local()) return load().members?.find((m) => m.reset_hash === h) ?? null;
     return one(`reset_hash=${eq(h)}`);
   },
+  async byTeam(n: number): Promise<Member[]> {
+    if (local()) return (load().members ?? []).filter((m) => m.team_no === n);
+    return rest(`members?team_no=${eq(n)}&select=*&order=created_at`);
+  },
   async list(): Promise<Member[]> {
     if (local()) return [...(load().members ?? [])].reverse();
     return rest('members?select=*&order=created_at.desc');
   },
   // 같은 이메일이 있으면 false
-  async create(m: Pick<Member, 'email' | 'pw' | 'name' | 'school' | 'team' | 'verify' | 'role' | 'intro'>): Promise<boolean> {
+  async create(m: Pick<Member, 'email' | 'pw' | 'name' | 'school' | 'team' | 'verify' | 'role' | 'intro' | 'team_no'>): Promise<boolean> {
     if (local()) {
       const db = load(); db.members ??= [];
       if (db.members.some((x) => x.email === m.email)) return false;
-      db.members.push({ ...m, id: crypto.randomUUID(), status: 'pending', admin: false, created_at: new Date().toISOString(), decided_at: null, decided_by: null, sess: 0, fails: 0, locked_until: null, reset_hash: null, reset_exp: null });
+      db.members.push({ ...m, id: crypto.randomUUID(), status: 'pending', admin: false, created_at: new Date().toISOString(), decided_at: null, decided_by: null, sess: 0, fails: 0, locked_until: null, reset_hash: null, reset_exp: null, team_leader: false });
       save(db); return true;
     }
     try { await rest('members', { method: 'POST', body: JSON.stringify(m) }); return true; }
@@ -124,3 +129,38 @@ export const members = {
     await rest(`members?id=${eq(id)}`, { method: 'DELETE' });
   },
 };
+
+// 팀 설정: 팀장이 고치는 팀 페이지 내용 (표 team_profiles)
+export type TeamProfile = { team: number; school: string; region: string; intro: string; robot_name: string; logo_url: string | null; robot_url: string | null;
+  instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; updated_at: string; updated_by: string | null };
+export const teamProfiles = {
+  async get(team: number): Promise<TeamProfile | null> {
+    if (local()) return load().team_profiles?.find((t) => t.team === team) ?? null;
+    return (await rest(`team_profiles?team=${eq(team)}&select=*`))?.[0] ?? null;
+  },
+  async put(row: TeamProfile) {
+    if (local()) { const db = load(); db.team_profiles = [...(db.team_profiles ?? []).filter((t) => t.team !== row.team), row]; return save(db); }
+    await rest('team_profiles?on_conflict=team', { method: 'POST', body: JSON.stringify(row), prefer: 'resolution=merge-duplicates' });
+  },
+  async unchecked(): Promise<TeamProfile[]> {
+    if (local()) return (load().team_profiles ?? []).filter((t) => !t.sponsors_ok);
+    return rest('team_profiles?sponsors_ok=eq.false&select=*');
+  },
+  async checkSponsors(team: number) {
+    if (local()) { const db = load(); const t = db.team_profiles?.find((x) => x.team === team); if (t) t.sponsors_ok = true; return save(db); }
+    await rest(`team_profiles?team=${eq(team)}`, { method: 'PATCH', body: JSON.stringify({ sponsors_ok: true }) });
+  },
+};
+
+// 사진 올리기 → 공개 주소. 로컬 개발은 data: 주소로 대신한다
+// shortcut: 로컬은 파일 대신 data URL, 여러 사람이 로컬로 시험하게 되면 public/uploads로
+export async function uploadImage(path: string, bytes: ArrayBuffer, type: string): Promise<string> {
+  if (local()) return `data:${type};base64,${Buffer.from(bytes).toString('base64')}`;
+  const { url, key } = env();
+  const res = await fetch(`${url}/storage/v1/object/team-images/${path}`, {
+    method: 'POST', body: bytes,
+    headers: { apikey: key!, ...(key!.startsWith('eyJ') && { Authorization: `Bearer ${key}` }), 'Content-Type': type, 'x-upsert': 'true', 'cache-control': 'max-age=3600' },
+  });
+  if (!res.ok) throw new Error(`사진 저장 오류 ${res.status}: ${await res.text()}`);
+  return `${url}/storage/v1/object/public/team-images/${path}`;
+}
