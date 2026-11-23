@@ -68,7 +68,7 @@ export default function Page() {
       <section className="sec"><div className="in"><div><span className="label">§06</span><h2>운영 주체와 개인정보 보호책임자</h2></div><div className="body">
         <ul>
           <li>운영 주체: KRC 동문회 운영진 (비법인 임의단체, 창의공학교육협회와 별도로 운영)</li>
-          <li>개인정보 보호책임자: {PRIVACY_OWNER ? `${PRIVACY_OWNER} (KRC 동문회 운영진)` : 'KRC 동문회 운영진'} {PRIVACY_EMAIL && <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>}</li>
+          <li>개인정보 보호책임자: {PRIVACY_OWNER ? `${PRIVACY_OWNER} (KRC 동문회 운영진)` : 'KRC 동문회 운영진'} {PRIVACY_EMAIL && <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>} <span className="dim">(창의공학교육협회와 업무 협력을 위해, 협회의 확인을 받아 협회 도메인 메일을 함께 써요)</span></li>
         </ul>
       </div></div></section>
 

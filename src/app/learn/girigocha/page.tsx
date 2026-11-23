@@ -13,7 +13,7 @@ export default function Page() {
         <Link className="btn" href="/learn/girigocha/install">시작하기</Link>
         <small>베타 · FTC SDK 12.0 · 약 49 MB</small>
       </div>
-      <p className="dim small apknote">SHA-256 <code>{APK_SHA256}</code><br />로봇에 쓰기 전에 반드시 안전한 연습 공간에서 먼저 시험해 주세요. 충분히 시험하지 않고 써서 생긴 로봇 파손이나 안전사고는 동문회가 책임지지 않아요.</p>
+      <p className="dim small apknote">SHA-256 <code>{APK_SHA256}</code><br />기리고차 코드와 앱은 MIT 라이선스로 무료 공개해요. 로봇에 쓰기 전에 반드시 안전한 연습 공간에서 먼저 시험해 주세요. 충분히 시험하지 않고 써서 생긴 로봇 파손이나 안전사고는 동문회가 책임지지 않아요.</p>
 
       <h2>무엇을 해 주나요</h2>
       <ul>
