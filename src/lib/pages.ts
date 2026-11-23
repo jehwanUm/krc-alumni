@@ -30,6 +30,8 @@ export const PAGES: PageInfo[] = [
   { path: "/mentoring", section: "동문회", title: "멘토링", desc: "KRC 동문 멘토와 팀을 잇는 멘토링 매칭: 설계, 코딩, 전략, 3D 모델링." },
   { path: "/links", section: "동문회", title: "링크 모음", desc: "KRC 동문회 인스타그램 프로필 링크 모음: 지금 받는 신청서, 기리고차 가이드, 경로 에디터, 홈페이지.", noindex: true },
   { path: "/login", section: "계정", title: "로그인 · 회원가입", desc: "KRC 참가 학생과 동문의 홈페이지 계정. 가입 신청 후 운영진이 확인하면 로그인할 수 있어요.", noindex: true },
+  { path: "/login/reset", section: "계정", title: "비밀번호 재설정", desc: "운영진이 보낸 링크로 새 비밀번호를 정해요.", noindex: true },
+  { path: "/privacy", section: "안내", title: "개인정보처리방침", desc: "KRC 동문회 홈페이지가 모으는 개인정보와 보관·파기, 문의처." },
   { path: "/admin/members", section: "계정", title: "가입 신청 관리", desc: "운영진 전용: 회원가입 신청 확인과 승인.", noindex: true },
 ];
 

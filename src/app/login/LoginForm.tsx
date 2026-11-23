@@ -2,11 +2,23 @@
 import { useState } from 'react';
 
 // 로그인 / 회원가입 탭 (KRC Tech와 같은 항목). 서버: /api/auth/login, /api/auth/signup
-const RULES: [string, (p: string) => boolean][] = [
+export const RULES: [string, (p: string) => boolean][] = [
   ['8자 이상', (p) => p.length >= 8], ['영문 소문자', (p) => /[a-z]/.test(p)], ['영문 대문자', (p) => /[A-Z]/.test(p)], ['특수기호', (p) => /[^A-Za-z0-9\s]/.test(p)],
 ];
 
-async function post(url: string, body: unknown) {
+export const ok = (p: string) => RULES.every(([, f]) => f(p));
+
+// 비밀번호 + 확인 (규칙 칩 표시)
+export function PwField({ pw, setPw, pw2, setPw2, label = '비밀번호' }: { pw: string; setPw: (v: string) => void; pw2: string; setPw2: (v: string) => void; label?: string }) {
+  return <>
+    <label className="full"><span>{label} <i>*</i></span><input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="8자 이상 (영문 대·소문자, 특수기호 포함)" autoComplete="new-password" required />
+      <span className="rules">{RULES.map(([n, f]) => <span key={n} className={f(pw) ? 'on' : ''}>✓ {n}</span>)}</span></label>
+    <label className="full"><span>{label} 확인 <i>*</i></span><input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="한 번 더 입력해 주세요" autoComplete="new-password" required />
+      {pw2 && pw !== pw2 && <small className="bad">비밀번호가 달라요</small>}</label>
+  </>;
+}
+
+export async function post(url: string, body: unknown) {
   const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(j.error || '잠시 후 다시 시도해 주세요');
@@ -57,6 +69,7 @@ export function LoginForm() {
           <label className="full">비밀번호<input name="pw" type="password" autoComplete="current-password" required /></label>
           {err && <p className="err" role="alert">{err}</p>}
           <button className="btn pri full" disabled={busy}>{busy ? '확인 중…' : '로그인'}</button>
+          <details className="full forgot"><summary>비밀번호를 잊었어요</summary><p>운영진에게 가입한 이메일을 알려 주세요(<a href="/alumni#discord">Discord</a>). 30분 동안 쓸 수 있는 재설정 링크를 보내 드려요.</p></details>
         </form>
       ) : (
         <form onSubmit={signup} className="f">
@@ -68,20 +81,14 @@ export function LoginForm() {
           <label>역할<input name="role" placeholder="예: 하드웨어 제작" maxLength={60} /></label>
           <label>간단 소개<input name="intro" placeholder="담당 연구/개발 분야를 소개해 주세요" maxLength={300} /></label>
           <label className="full"><span>이메일 <i>*</i></span><input name="email" type="email" placeholder="engineer@krcalumni.com" autoComplete="email" required /></label>
-          <label className="full"><span>비밀번호 <i>*</i></span><input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="8자 이상 (영문 대·소문자, 특수기호 포함)" autoComplete="new-password" required />
-            <span className="rules">{RULES.map(([n, ok]) => <span key={n} className={ok(pw) ? 'on' : ''}>✓ {n}</span>)}</span></label>
-          <label className="full"><span>비밀번호 확인 <i>*</i></span><input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="비밀번호를 한 번 더 입력해 주세요" autoComplete="new-password" required />
-            {pw2 && pw !== pw2 && <small className="bad">비밀번호가 달라요</small>}</label>
+          <PwField pw={pw} setPw={setPw} pw2={pw2} setPw2={setPw2} />
           <label className="full agree"><input type="checkbox" name="agree" required />
-            <span>만 14세 이상이며, 개인정보 수집·이용에 동의해요. <small>수집: 이름·학교·팀·인증 내용·역할·소개·이메일 / 목적: 회원 확인과 동문회 안내 / 보관: 탈퇴 요청 시까지</small></span></label>
+            <span>만 14세 이상이며, 개인정보 수집·이용에 동의해요 (<a href="/privacy" target="_blank">개인정보처리방침</a>). <small>수집: 이름·학교·팀·인증 내용·역할·소개·이메일 / 목적: 회원 확인과 동문회 안내 / 보관: 탈퇴 요청 시까지</small></span></label>
           {err && <p className="err full" role="alert">{err}</p>}
-          <button className="btn pri full" disabled={busy || !RULES.every(([, ok]) => ok(pw)) || pw !== pw2}>{busy ? '보내는 중…' : '가입 신청'}</button>
+          <button className="btn pri full" disabled={busy || !ok(pw) || pw !== pw2}>{busy ? '보내는 중…' : '가입 신청'}</button>
         </form>
       )}
     </div>
   );
 }
 
-export function Logout() {
-  return <button className="btn" type="button" onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.reload(); }}>로그아웃</button>;
-}

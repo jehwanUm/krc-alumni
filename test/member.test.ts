@@ -10,11 +10,12 @@ test('비밀번호 해시', () => {
 });
 
 test('로그인 쿠키: 서명·만료', () => {
-  const id = '11111111-2222-3333-4444-555555555555', t = makeToken(id, 0);
-  assert.equal(readToken(t, 1000), id);
+  const id = '11111111-2222-3333-4444-555555555555', t = makeToken(id, 3, 0);
+  assert.deepEqual(readToken(t, 1000), { id, sess: 3 });
+  assert.equal(readToken(t.replace('.3.', '.4.'), 1000), null);   // 세션 버전을 바꿔 쓰면 서명이 안 맞음
   assert.equal(readToken(t, 31 * 864e5), null);                 // 30일 지나면 끝
   assert.equal(readToken(t.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A')), 1000), null);   // 서명 바뀌면 거절
-  assert.equal(readToken(`${id}.99999999999999.x`), null);
+  assert.equal(readToken(`${id}.0.99999999999999.x`), null);
   assert.equal(readToken(undefined), null);
 });
 

@@ -46,3 +46,9 @@ create table if not exists members (
 );
 create index if not exists members_status on members (status);
 alter table members enable row level security;
+-- 회원 계정 관리 (2026-11-23 추가): 세션 버전(비밀번호 바꾸면 다른 기기 로그아웃), 로그인 잠금, 비밀번호 재설정 링크
+alter table members add column if not exists sess int not null default 0;
+alter table members add column if not exists fails int not null default 0;
+alter table members add column if not exists locked_until timestamptz;
+alter table members add column if not exists reset_hash text;
+alter table members add column if not exists reset_exp timestamptz;
