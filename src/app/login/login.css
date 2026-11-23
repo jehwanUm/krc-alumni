@@ -70,3 +70,8 @@
 }
 .pg-login .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .pg-admin .mailbox { margin-top: 12px; padding: 14px; border: 1px solid var(--blue); border-radius: 8px; } .pg-admin .mailbox p { margin: 0 0 8px; }
+/* 로그인·회원가입·내 계정·재설정: PC에서 가운데 한 줄로 */
+.pg-login.center .page-head .in { max-width: calc(560px + 2 * var(--m)); }
+.pg-login.center .page-head .in > .label, .pg-login.center .page-head .in > h1, .pg-login.center .page-head .in > p { display: block; text-align: center; margin-inline: auto; }
+.pg-login.center .auth, .pg-login.center .sent, .pg-login.center .acct { margin-inline: auto; }
+.pg-login.center .done { justify-content: center; }

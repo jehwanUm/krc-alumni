@@ -13,7 +13,7 @@ export const metadata = meta('/login');
 export default async function Page() {
   const on = await memberFrom((await cookies()).get(MEMBER_COOKIE)?.value);
   return (
-    <main className="pg-login">
+    <main className="pg-login center">
       <section className="page-head"><div className="in">
         <span className="label">Account</span>
         <h1>{on ? `${on.name}님` : '로그인'}</h1>

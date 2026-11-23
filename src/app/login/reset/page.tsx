@@ -9,7 +9,7 @@ export const metadata = meta('/login/reset');
 export default async function Page({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
   const { t = '' } = await searchParams;
   return (
-    <main className="pg-login">
+    <main className="pg-login center">
       <section className="page-head"><div className="in">
         <span className="label">Account</span>
         <h1>비밀번호 재설정</h1>
