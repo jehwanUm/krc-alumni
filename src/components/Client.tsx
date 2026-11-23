@@ -17,33 +17,17 @@ export function DDay({ start, after, id }: { start: string; after: string; id?: 
   return <b id={id} suppressHydrationWarning>{v}</b>;
 }
 
-// 홈 버튼: 팀 번호를 이 기기에 저장해 두고(Live 화면과 같은 'krc-team'), 다음부터는 우리 팀으로 바로 간다.
-// shortcut: 팀 계정 로그인이 생기면 저장 대신 로그인으로 바꾼다
+// 홈 버튼: 로그인 쿠키로 자동 로그인 상태를 확인한다 (/api/me, 볼 때마다 로그인 30일 연장)
+// 로그인 + 팀 연결 → 우리 팀 페이지(대회 날엔 Live), 로그인만 → 내 계정, 로그인 안 함 → 로그인
+type Me = { login: boolean; team?: number | null; teamName?: string };
 export function TeamButton({ live }: { live: boolean }) {
-  const [team, setTeam] = useState(0);
-  const [edit, setEdit] = useState(false);
-  useEffect(() => { try { setTeam(Number(localStorage.getItem('krc-team')) || 0); } catch {} }, []);
-  const save = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const n = Number(new FormData(e.currentTarget).get('team'));
-    if (!Number.isInteger(n) || n <= 0 || n > 99999) return;
-    try { localStorage.setItem('krc-team', String(n)); } catch {}
-    setTeam(n); setEdit(false);
-  };
-  if (edit) return (
-    <form className="team-form" onSubmit={save}>
-      <label htmlFor="team-no" className="sr">팀 번호</label>
-      <input id="team-no" name="team" inputMode="numeric" pattern="[0-9]*" autoComplete="off" placeholder="팀 번호" defaultValue={team || ''} autoFocus />
-      <button className="btn pri" type="submit">저장</button>
-    </form>
-  );
-  if (!team) return <button className="btn pri" type="button" onClick={() => setEdit(true)}>우리 팀 연결하기</button>;
-  return (
-    <div className="team-go">
-      <Link className="btn pri" href={live ? `/live?team=${team}` : `/teams/${team}`}>{team} · {live ? '우리 팀 다음 경기' : '우리 팀 페이지'}</Link>
-      <button className="link" type="button" onClick={() => setEdit(true)}>팀 바꾸기</button>
-    </div>
-  );
+  const [me, setMe] = useState<Me | null>(null);
+  useEffect(() => { fetch('/api/me').then((r) => r.json()).then(setMe).catch(() => setMe({ login: false })); }, []);
+  if (!me) return <span className="btn pri ghost" aria-hidden="true">&nbsp;</span>;   // 자리만 잡아 화면이 덜컹이지 않게
+  if (!me.login) return <Link className="btn pri" href="/login">로그인</Link>;
+  if (!me.team) return <Link className="btn pri" href="/login">내 계정</Link>;
+  const t = `${me.team}${me.teamName ? ` ${me.teamName}` : ''}`;
+  return <Link className="btn pri" href={live ? `/live?live=1&team=${me.team}` : `/teams/${me.team}`}>{t} · {live ? '우리 팀 다음 경기' : '우리 팀 페이지'}</Link>;
 }
 
 // 홈 배경 회로 기판 (#pcb 캔버스)

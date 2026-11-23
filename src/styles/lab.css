@@ -162,3 +162,4 @@ mark.hl { background: var(--yel); color: #0E0F12; padding: 0 3px; border-radius:
   .made .cards3 { grid-template-columns: 1fr; }
   .for .rows3 > div { grid-template-columns: 1fr; gap: 8px; }
 }
+.home .btn.ghost { visibility: hidden; min-width: 200px; }

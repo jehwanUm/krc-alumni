@@ -45,7 +45,7 @@ export default function Page() {
         <h1 id="h1">KRC Alumni</h1>
         <p className="sub">The match ends. The team doesn&apos;t.</p>
         <p className="dd"><DDay id="dday" start={START} after="KRC 2027" /><span><em>KRC 2027</em>2027년 1월 29일(금) – 30일(토)</span></p>
-        <div className="cta"><TeamButton live={isEventDay()} /><Link className="btn" href="/login">회원가입</Link></div>
+        <div className="cta"><TeamButton live={isEventDay()} /></div>
       </div></section>
       <nav className="go" aria-label="바로가기">
         {GO.map(([href, h, d, c]) => <Link key={href} href={href} data-c={c}><b>{h}</b><span>{d}</span></Link>)}
