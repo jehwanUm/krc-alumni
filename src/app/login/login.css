@@ -48,3 +48,10 @@
   .link { margin-top: 10px; font-size: 13px; line-height: 1.6; }
   .link code { word-break: break-all; }
 }
+.pg-login {
+  .pwbox { position: relative; display: block; }
+  .pwbox input { width: 100%; padding-right: 48px !important; }
+  .eye { position: absolute; top: 0; right: 0; width: 48px; height: 50px; display: grid; place-items: center; border: 0; background: none; color: var(--mut); cursor: pointer; }
+  .eye:hover, .eye[aria-pressed='true'] { color: var(--ink); }
+  .eye:focus-visible { outline: 2px solid var(--blue); outline-offset: -4px; border-radius: 8px; }
+}

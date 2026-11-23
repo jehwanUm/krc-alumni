@@ -6,14 +6,29 @@ export const RULES: [string, (p: string) => boolean][] = [
   ['8자 이상', (p) => p.length >= 8], ['영문 소문자', (p) => /[a-z]/.test(p)], ['영문 대문자', (p) => /[A-Z]/.test(p)], ['특수기호', (p) => /[^A-Za-z0-9\s]/.test(p)],
 ];
 
+// 비밀번호 칸 + 눈 버튼 (누르면 입력한 글자가 보임)
+export function PwInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [show, setShow] = useState(false);
+  return (
+    <span className="pwbox">
+      <input {...props} type={show ? 'text' : 'password'} autoCapitalize="off" spellCheck={false} />
+      <button type="button" className="eye" onClick={() => setShow((v) => !v)} aria-label={show ? '비밀번호 숨기기' : '비밀번호 보기'} aria-pressed={show}>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />{show && <path d="M4 4l16 16" />}
+        </svg>
+      </button>
+    </span>
+  );
+}
+
 export const ok = (p: string) => RULES.every(([, f]) => f(p));
 
 // 비밀번호 + 확인 (규칙 칩 표시)
 export function PwField({ pw, setPw, pw2, setPw2, label = '비밀번호' }: { pw: string; setPw: (v: string) => void; pw2: string; setPw2: (v: string) => void; label?: string }) {
   return <>
-    <label className="full"><span>{label} <i>*</i></span><input type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="8자 이상 (영문 대·소문자, 특수기호 포함)" autoComplete="new-password" required />
+    <label className="full"><span>{label} <i>*</i></span><PwInput value={pw} onChange={(e) => setPw(e.target.value)} placeholder="8자 이상 (영문 대·소문자, 특수기호 포함)" autoComplete="new-password" required />
       <span className="rules">{RULES.map(([n, f]) => <span key={n} className={f(pw) ? 'on' : ''}>✓ {n}</span>)}</span></label>
-    <label className="full"><span>{label} 확인 <i>*</i></span><input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="한 번 더 입력해 주세요" autoComplete="new-password" required />
+    <label className="full"><span>{label} 확인 <i>*</i></span><PwInput value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="한 번 더 입력해 주세요" autoComplete="new-password" required />
       {pw2 && pw !== pw2 && <small className="bad">비밀번호가 달라요</small>}</label>
   </>;
 }
@@ -66,7 +81,7 @@ export function LoginForm() {
       {tab === 'login' ? (
         <form onSubmit={login} className="f">
           <label className="full">이메일<input name="email" type="email" autoComplete="email" required /></label>
-          <label className="full">비밀번호<input name="pw" type="password" autoComplete="current-password" required /></label>
+          <label className="full">비밀번호<PwInput name="pw" autoComplete="current-password" required /></label>
           {err && <p className="err" role="alert">{err}</p>}
           <button className="btn pri full" disabled={busy}>{busy ? '확인 중…' : '로그인'}</button>
           <details className="full forgot"><summary>비밀번호를 잊었어요</summary><p>운영진에게 가입한 이메일을 알려 주세요(<a href="/alumni#discord">Discord</a>). 30분 동안 쓸 수 있는 재설정 링크를 보내 드려요.</p></details>

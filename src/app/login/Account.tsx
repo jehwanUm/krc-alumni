@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { post, PwField, ok } from './LoginForm';
+import { post, PwField, PwInput, ok } from './LoginForm';
 
 type Me = { name: string; school: string; team: string; role: string; intro: string; admin: boolean };
 
@@ -42,7 +42,7 @@ export function Account({ me }: { me: Me }) {
           setPw(''); setPw2(''); (document.getElementById('cur') as HTMLInputElement).value = '';
           return '바꿨어요. 다른 기기에서는 로그아웃됐어요';
         })}>
-          <label className="full">현재 비밀번호<input id="cur" name="cur" type="password" autoComplete="current-password" required /></label>
+          <label className="full">현재 비밀번호<PwInput id="cur" name="cur" autoComplete="current-password" required /></label>
           <PwField pw={pw} setPw={setPw} pw2={pw2} setPw2={setPw2} label="새 비밀번호" />
           {msg.w && <p className="full msg" role="status">{msg.w}</p>}
           <button className="btn full" disabled={!ok(pw) || pw !== pw2}>비밀번호 바꾸기</button>
@@ -57,7 +57,7 @@ export function Account({ me }: { me: Me }) {
           location.assign('/');
         })}>
           <p className="full dim">탈퇴하면 이름·학교·팀·이메일 등 가입 정보가 바로 지워져요. 다시 쓰려면 새로 가입하고 승인받아야 해요.</p>
-          <label className="full">비밀번호 확인<input name="pw" type="password" autoComplete="current-password" required /></label>
+          <label className="full">비밀번호 확인<PwInput name="pw" autoComplete="current-password" required /></label>
           {msg.d && <p className="full msg" role="status">{msg.d}</p>}
           <button className="btn full danger">탈퇴하기</button>
         </form>
