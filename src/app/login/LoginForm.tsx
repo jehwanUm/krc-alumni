@@ -65,7 +65,7 @@ export function LoginForm() {
   if (sent) return (
     <div className="sent" role="status">
       <h2>가입 신청을 받았어요</h2>
-      <p>운영진이 대회 팀 명단과 비교해 확인한 뒤 승인하면 로그인할 수 있어요.</p>
+      <p>운영진이 대회 팀 명단과 비교해 확인한 뒤 승인하면 로그인할 수 있어요. 결과는 가입한 이메일로 알려 드려요.</p>
       <p className="dim">졸업생이라면 KRC에 참가했다는 걸 보여 줄 자료(대회 사진, 상장, 참가 확인서 등)를 이메일로 요청드릴 수 있어요.</p>
       <button className="btn" type="button" onClick={() => { setSent(false); setTab('login'); }}>로그인으로</button>
     </div>

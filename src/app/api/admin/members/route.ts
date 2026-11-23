@@ -1,7 +1,6 @@
 import { members } from '@/lib/store';
 import { newResetToken, resetHash, RESET_MIN } from '@/lib/member';
 import { memberOf } from '@/lib/session';
-import { sendMail } from '@/lib/mail';
 import { refreshTeam } from '@/lib/refresh';
 
 // 운영진: 승인·거절, 관리자 지정·해제, 비밀번호 재설정 링크, 회원 삭제. 승인된 관리자만
@@ -19,13 +18,7 @@ export async function POST(req: Request) {
   if (b.action === 'status' && ['approved', 'rejected', 'pending'].includes(b.status)) {
     await members.update(m.id, { status: b.status, decided_at: new Date().toISOString(), decided_by: me.email });
     refreshTeam(m.team_no);
-    const site = new URL(req.url).origin;
-    const mailed = b.status === 'approved'
-      ? await sendMail(m.email, '[KRC 동문회] 가입이 승인됐어요', `${m.name}님, KRC 동문회 홈페이지 가입이 승인됐어요.\n이제 로그인할 수 있어요: ${site}/login`)
-      : b.status === 'rejected'
-        ? await sendMail(m.email, '[KRC 동문회] 가입 신청 결과', `${m.name}님, 가입 신청을 확인하지 못했어요.\nKRC 참가 사실을 확인할 자료가 있으면 운영진에게 알려 주세요.`)
-        : false;
-    return Response.json({ ok: true, mailed });
+    return Response.json({ ok: true });
   }
   if (b.action === 'admin') {
     if (m.status !== 'approved') return bad('승인된 회원만 관리자로 지정할 수 있어요');

@@ -4,7 +4,6 @@ import { meta } from '@/lib/meta';
 import { members, teamProfiles } from '@/lib/store';
 import { MEMBER_COOKIE } from '@/lib/member';
 import { memberFrom } from '@/lib/session';
-import { mailReady } from '@/lib/mail';
 import { getDirectory } from '@/lib/teams';
 import { Decide } from './Decide';
 import { TeamAssign } from './TeamAssign';
@@ -35,7 +34,7 @@ export default async function Page() {
         <span className="label">Admin</span>
         <h1>가입 신청 관리</h1>
         <p>대기 {list.filter((m) => m.status === 'pending').length}명 · 승인 {list.filter((m) => m.status === 'approved').length}명. 팀 명단과 비교해 지금 참가 학생이면 승인하고, 졸업생은 참가 증빙을 이메일로 받은 뒤 승인해요.</p>
-        <p className="dim small">{mailReady() ? '승인·거절하면 본인에게 알림 메일이 가요.' : '알림 메일은 아직 설정 전이에요. 승인·거절 뒤 본인에게 직접 알려 주세요.'}</p>
+        <p className="dim small">승인·거절·재설정을 하면 보낼 메일이 채워진 채로 메일 앱에서 열려요. 대기 중인 졸업생에게는 「증빙 요청 메일」을 보내 주세요.</p>
       </div></section>
       {pend.length > 0 && <section className="sec wide"><div className="in"><div className="body mlist">
         <h2>후원사 확인 대기</h2>
@@ -84,7 +83,7 @@ export default async function Page() {
                 {m.decided_by && <><dt>처리</dt><dd className="dim">{m.decided_by} · {m.decided_at && kst(m.decided_at)}</dd></>}
               </dl>
               <TeamAssign id={m.id} teamNo={m.team_no} leader={m.team_leader} hint={hits(m.team).map((t) => t.n)} />
-              <Decide id={m.id} status={m.status} admin={m.admin} self={m.id === me!.id} />
+              <Decide id={m.id} status={m.status} admin={m.admin} self={m.id === me!.id} who={{ name: m.name, email: m.email }} />
             </article>
           );
         })}
