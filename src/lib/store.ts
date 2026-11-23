@@ -14,10 +14,11 @@ type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; member
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
 const env = () => ({ url: process.env.SUPABASE_URL?.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() });
 
-async function rest(path: string, init: RequestInit & { prefer?: string } = {}) {
+async function rest(path: string, init: RequestInit & { prefer?: string; next?: { revalidate?: number; tags?: string[] } } = {}) {
   const { url, key } = env();
   const res = await fetch(`${url}/rest/v1/${path}`, {
-    ...init, cache: 'no-store',
+    // 기본은 매번 새로. 공개 페이지(ISR)는 next 옵션으로 캐시
+    ...(init.next ? {} : { cache: 'no-store' as const }), ...init,
     // 예전 service_role 키(JWT, eyJ…)는 Authorization에도, 새 secret 키(sb_secret_…)는 apikey에만
     headers: { apikey: key!, ...(key!.startsWith('eyJ') && { Authorization: `Bearer ${key}` }), 'Content-Type': 'application/json', ...(init.prefer && { Prefer: init.prefer }) },
   });
@@ -133,10 +134,12 @@ export const members = {
 // 팀 설정: 팀장이 고치는 팀 페이지 내용 (표 team_profiles)
 export type TeamProfile = { team: number; school: string; region: string; intro: string; robot_name: string; logo_url: string | null; robot_url: string | null;
   instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; updated_at: string; updated_by: string | null };
+export const teamTag = (team: number) => `team-${team}`;
 export const teamProfiles = {
-  async get(team: number): Promise<TeamProfile | null> {
+  // cached: 공개 팀 페이지용 (10분 캐시, 저장하면 teamTag로 비움). 설정 화면·저장은 매번 새로
+  async get(team: number, cached = false): Promise<TeamProfile | null> {
     if (local()) return load().team_profiles?.find((t) => t.team === team) ?? null;
-    return (await rest(`team_profiles?team=${eq(team)}&select=*`))?.[0] ?? null;
+    return (await rest(`team_profiles?team=${eq(team)}&select=*`, cached ? { next: { revalidate: 600, tags: [teamTag(team)] } } : {}))?.[0] ?? null;
   },
   async put(row: TeamProfile) {
     if (local()) { const db = load(); db.team_profiles = [...(db.team_profiles ?? []).filter((t) => t.team !== row.team), row]; return save(db); }

@@ -1,5 +1,5 @@
-import { revalidatePath } from 'next/cache';
-import { teamProfiles, uploadImage } from '@/lib/store';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { teamProfiles, uploadImage, teamTag } from '@/lib/store';
 import { memberOf } from '@/lib/session';
 import { canManageTeam, parseTeamForm, IMG_TYPES } from '@/lib/member';
 import { teamKo } from '@/lib/teams';
@@ -38,6 +38,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ number:
     sponsors_ok: me!.admin || (!changed && (cur?.sponsors_ok ?? true)),
     updated_at: new Date().toISOString(), updated_by: me!.email,
   });
-  revalidatePath(`/teams/${n}`);
+  revalidateTag(teamTag(n), { expire: 0 }); revalidatePath(`/teams/${n}`);
   return Response.json({ ok: true, sponsorsPending: changed && !me!.admin });
 }

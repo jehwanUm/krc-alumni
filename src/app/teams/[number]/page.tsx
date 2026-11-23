@@ -25,7 +25,7 @@ const load = cache(async (n: number) => {
   let team: any = null, history: Awaited<ReturnType<typeof getKrcHistory>> = [], matches: Record<number, any[]> = {}, sameSponsor: Record<string, number> = {}, error = '';
   const cfg = config();
   // 팀장이 고친 팀 설정이 있으면 소속·지역·후원사(운영진 확인 후)를 덮어쓴다
-  const p = await teamProfiles.get(n).catch(() => null);
+  const p = await teamProfiles.get(n, true).catch(() => null);
   const base = teamKo(n);
   const ko = { ...base, school: p?.school || base.school, region: p?.region || base.region, sponsors: p?.sponsors_ok ? p.sponsors : base.sponsors };
   try {

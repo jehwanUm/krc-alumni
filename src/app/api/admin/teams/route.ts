@@ -1,5 +1,5 @@
-import { revalidatePath } from 'next/cache';
-import { teamProfiles } from '@/lib/store';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { teamProfiles, teamTag } from '@/lib/store';
 import { memberOf } from '@/lib/session';
 
 // 운영진: 팀이 바꾼 후원사 확인
@@ -10,6 +10,6 @@ export async function POST(req: Request) {
   const n = Number((await req.json().catch(() => ({})))?.team);
   if (!Number.isInteger(n) || !(await teamProfiles.get(n))) return Response.json({ error: '팀을 찾지 못했어요' }, { status: 400 });
   await teamProfiles.checkSponsors(n);
-  revalidatePath(`/teams/${n}`);
+  revalidateTag(teamTag(n), { expire: 0 }); revalidatePath(`/teams/${n}`);
   return Response.json({ ok: true });
 }
