@@ -136,3 +136,5 @@ main > .sec:nth-of-type(2) { animation-delay: .16s; } main > .sec:nth-of-type(3)
 @media (max-width: 640px) { .tscroll .tbl { min-width: 520px; } .hide-sm { display: none; } .tscroll.fit .tbl { min-width: 0; } }
 /* 우리 팀 번호: 형광펜 */
 mark.hl { background: var(--yel); color: #0E0F12; padding: 0 3px; border-radius: 2px; font-weight: 600; }
+.guide .body a { color: var(--blue-ink); text-decoration: underline; text-underline-offset: 3px; } /* 신생 팀 가이드: 자료 링크가 링크로 보이게 */
+.guide .body a:hover { color: var(--ink); }

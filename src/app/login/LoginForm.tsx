@@ -93,7 +93,7 @@ export function LoginForm() {
           <label><span>학교 <i>*</i></span><input name="school" placeholder="예: 창의공학교육협회" required maxLength={80} /></label>
           <label><span>소속 팀 이름 <i>*</i></span><input name="team" placeholder="예: KRC 동문회" required maxLength={80} /></label>
           <label className="full">FTC 팀 번호<input name="team_no" inputMode="numeric" pattern="[0-9]*" maxLength={5} placeholder="예: 25316" />
-            <small>지금 참가하는 팀이면 적어 주세요. 그 팀 팀장이 바로 승인할 수 있어요.</small></label>
+            <small>지금 참가하는 팀이면 적어 주세요. 운영진이 확인할 때 참고해요.</small></label>
           <label className="full"><span>팀 인증 신청 내용 <i>*</i></span><input name="verify" placeholder="예: 2026 시즌 구동계 파트 팀원 / 학번·기수 또는 팀장 확인 메모" required maxLength={500} />
             <small>졸업생은 참가한 시즌과 팀을 적어 주세요. 확인을 위해 증빙 자료를 요청할 수 있어요.</small></label>
           <label>역할<input name="role" placeholder="예: 하드웨어 제작" maxLength={60} /></label>

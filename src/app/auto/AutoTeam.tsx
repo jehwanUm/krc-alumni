@@ -71,7 +71,7 @@ export function AutoTeam() {
       <a className="btn pri" href="/login">로그인</a>
     </div>
   );
-  if (!st.team) return <div className="lock"><div><b>팀이 연결되면 저장할 수 있어요</b><p className="dim small">가입할 때 팀 번호를 적었다면 팀장 승인을 기다려 주세요. 아니면 운영진에게 팀 연결을 요청해 주세요.</p></div></div>;
+  if (!st.team) return <div className="lock"><div><b>팀이 연결되면 저장할 수 있어요</b><p className="dim small">가입할 때 팀 번호를 적었다면 운영진 승인을 기다려 주세요. 아니면 운영진에게 팀 연결을 요청해 주세요.</p></div></div>;
 
   return (
     <div className="mine">

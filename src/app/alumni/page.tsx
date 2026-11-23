@@ -24,7 +24,7 @@ export default function Page() {
       </div></section>
       <section className="sec" id="join"><div className="in">
         <div><span className="label">§03</span><h2>동문 가입</h2></div>
-        <div className="body"><p>KRC에 참가했거나 지금 참가하는 학생이면 누구나 가입할 수 있어요. 운영진이나 팀장이 확인한 뒤 승인해요.</p>{JOIN_URL ? <p><a className="btn pri" href={JOIN_URL}>회원가입 →</a></p> : <p className="note">가입 신청은 준비 중이에요.</p>}</div>
+        <div className="body"><p>KRC에 참가했거나 지금 참가하는 학생이면 누구나 가입할 수 있어요. 운영진이 확인한 뒤 승인해요.</p>{JOIN_URL ? <p><a className="btn pri" href={JOIN_URL}>회원가입 →</a></p> : <p className="note">가입 신청은 준비 중이에요.</p>}</div>
       </div></section>
       <section className="sec" id="discord"><div className="in">
         <div><span className="label">§04</span><h2>Discord</h2></div>

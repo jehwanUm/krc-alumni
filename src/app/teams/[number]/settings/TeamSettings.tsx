@@ -109,11 +109,11 @@ function Roster({ n, roster }: { n: number; roster: Mate[] }) {
   return (
     <section className="roster">
       <h2>팀원 관리</h2>
-      <p className="dim">가입할 때 팀 번호를 {n}으로 적은 사람이 여기 보여요. 우리 팀원이 맞으면 승인해 주세요. 졸업생은 운영진이 따로 확인해요.</p>
-      {pend.length > 0 && <><h3>가입 신청 {pend.length}</h3>{pend.map((m) => (
+      <p className="dim">가입할 때 팀 번호를 {n}으로 적은 사람이 여기 보여요. 가입 승인은 운영진이 해요. 우리 팀원이 아닌 사람이 있으면 운영진에게 알려 주세요.</p>
+      {pend.length > 0 && <><h3>운영진 승인 대기 {pend.length}</h3>{pend.map((m) => (
         <div className="mate pending" key={m.id}>
           <div><b>{m.name}</b> <span className="dim">{m.school}{m.role && ` · ${m.role}`}</span><br /><small>{m.verify}</small></div>
-          <div className="row"><button className="btn pri" disabled={busy} onClick={() => act(m.id, { action: 'approve' })}>승인</button><button className="btn" disabled={busy} onClick={() => act(m.id, { action: 'reject' }, `${m.name}님의 신청을 거절할까요?`)}>거절</button></div>
+          <div className="row"><button className="btn danger" disabled={busy} onClick={() => act(m.id, { action: 'remove' }, `${m.name}님은 우리 팀이 아닌가요? 팀 연결을 풀어요 (가입 신청은 운영진에게 남아요)`)}>우리 팀 아님</button></div>
         </div>
       ))}</>}
       <h3>팀원 {mates.length}</h3>
