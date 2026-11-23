@@ -16,3 +16,15 @@
   .btn.sm { height: 36px; font-size: 13px; padding: 0 12px; }
   @media (max-width: 1000px) { .edwrap { grid-template-columns: 1fr; } .ed { height: 640px; } }
 }
+/* 우리 팀 경로 · Ghost */
+.pg-auto {
+  .addrow { display: flex; gap: 6px; flex-wrap: wrap; } .addrow input { flex: 1; min-width: 140px; }
+  .save { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--line); background: var(--panel); margin-bottom: 14px; }
+  .save input, .save select, .alist select { height: 38px; border: 1px solid var(--line); padding: 0 10px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); }
+  .alist, .glist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .alist li { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); background: var(--panel); }
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .glist li { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  .linkbtn { border: 0; background: none; padding: 0; color: var(--blue-ink); cursor: pointer; font: inherit; text-align: left; }
+  .btn.danger { color: var(--red-ink); }
+}

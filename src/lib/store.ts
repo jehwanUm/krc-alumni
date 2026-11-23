@@ -10,7 +10,7 @@ export type Member = { id: string; email: string; pw: string; name: string; scho
   sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null;
   team_no: number | null; team_leader: boolean; show_on_team: boolean };
 
-type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[] };
+type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[]; autos?: Auto[] };
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
 const env = () => ({ url: process.env.SUPABASE_URL?.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() });
 
@@ -178,3 +178,41 @@ export async function uploadImage(path: string, bytes: ArrayBuffer, type: string
   if (!res.ok) throw new Error(`사진 저장 오류 ${res.status}: ${await res.text()}`);
   return `${url}/storage/v1/object/public/team-images/${path}`;
 }
+
+// 오토 경로 (표 autos). 목록은 project 없이 가볍게
+export type Visibility = 'private' | 'alliance' | 'teams' | 'public';
+export type Auto = { id: string; team: number; season: number; name: string; project: unknown; visibility: Visibility; share_teams: number[]; created_by: string | null; updated_by: string | null; created_at: string; updated_at: string };
+export type AutoMeta = Omit<Auto, 'project'>;
+const META = 'id,team,season,name,visibility,share_teams,created_by,updated_by,created_at,updated_at';
+const noProject = ({ project, ...m }: Auto): AutoMeta => m;
+export const AUTOS_TAG = 'autos-public';
+export const autos = {
+  async ofTeam(team: number): Promise<AutoMeta[]> {
+    if (local()) return (load().autos ?? []).filter((a) => a.team === team).map(noProject).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+    return rest(`autos?team=${eq(team)}&select=${META}&order=updated_at.desc`);
+  },
+  async get(id: string): Promise<Auto | null> {
+    if (!/^[0-9a-f-]{36}$/.test(id)) return null;
+    if (local()) return load().autos?.find((a) => a.id === id) ?? null;
+    return (await rest(`autos?id=${eq(id)}&select=*`))?.[0] ?? null;
+  },
+  // 모두에게 공개된 경로 (오토 모음·팀 목록·팀 페이지용, 10분 캐시)
+  async publicAll(): Promise<AutoMeta[]> {
+    if (local()) return (load().autos ?? []).filter((a) => a.visibility === 'public').map(noProject);
+    return rest(`autos?visibility=eq.public&select=${META}&order=updated_at.desc`, { next: { revalidate: 600, tags: [AUTOS_TAG] } });
+  },
+  async create(a: Pick<Auto, 'team' | 'season' | 'name' | 'project' | 'visibility' | 'share_teams' | 'created_by'>): Promise<string> {
+    const now = new Date().toISOString();
+    if (local()) { const db = load(); const id = crypto.randomUUID(); (db.autos ??= []).push({ ...a, id, updated_by: a.created_by, created_at: now, updated_at: now }); save(db); return id; }
+    return (await rest('autos?select=id', { method: 'POST', body: JSON.stringify({ ...a, updated_by: a.created_by }), prefer: 'return=representation' }))[0].id;
+  },
+  async update(id: string, patch: Partial<Pick<Auto, 'name' | 'project' | 'visibility' | 'share_teams' | 'updated_by'>>) {
+    const p = { ...patch, updated_at: new Date().toISOString() };
+    if (local()) { const db = load(); const a = db.autos?.find((x) => x.id === id); if (a) Object.assign(a, p); return save(db); }
+    await rest(`autos?id=${eq(id)}`, { method: 'PATCH', body: JSON.stringify(p) });
+  },
+  async remove(id: string) {
+    if (local()) { const db = load(); db.autos = (db.autos ?? []).filter((a) => a.id !== id); return save(db); }
+    await rest(`autos?id=${eq(id)}`, { method: 'DELETE' });
+  },
+};

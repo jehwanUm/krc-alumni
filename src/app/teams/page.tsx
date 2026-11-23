@@ -4,6 +4,8 @@ import { getDirectory, type DirTeam } from '@/lib/teams';
 import { getTeamsView } from '@/lib/directory';
 import type { SeasonResult } from '@/lib/ftc';
 import { TeamsBoot } from './TeamsBoot';
+import { autos } from '@/lib/store';
+import { NEXT } from '@/lib/krc';
 import './teams.css';
 
 // 서버가 FTC API로 HTML을 만들고 ISR로 10분 캐시. 시즌 탭·검색·정렬·카드/표 전환은 TeamsBoot가 같은 HTML을 다시 배치한다.
@@ -20,12 +22,13 @@ const perf = (r?: SeasonResult) => {
   if (r.worlds) s -= 1000;
   return s;
 };
-// 이번 시즌(FTC 시즌) 공개 오토 경로 수. shortcut: 오토 공유(로그인 이후)가 생기기 전까지 0, 생기면 DB에서 센다
-const autoCount = (_n: number) => 0;
 
 export default async function Page() {
   let dir: Awaited<ReturnType<typeof getTeamsView>> | null = null, error = '';
   try { dir = await getTeamsView(); } catch (e) { error = (e as Error).message; }
+  // 이번 시즌 「모두에게」 공개한 오토 경로 수
+  const pub = await autos.publicAll().catch(() => []);
+  const autoCount = (n: number) => pub.filter((a) => a.team === n && a.season === NEXT.season).length;
   const seasons = dir ? Object.keys(dir.res).map(Number).sort((a, b) => b - a) : [];
   const latest = seasons[0];
   const resOf = (t: DirTeam, s: number) => dir!.res[s]?.[t.n];

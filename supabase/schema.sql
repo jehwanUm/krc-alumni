@@ -70,3 +70,19 @@ alter table team_profiles enable row level security;
 -- 사진: 공개 읽기 버킷. 쓰기는 서버(service_role)만
 insert into storage.buckets (id, name, public) values ('team-images', 'team-images', true) on conflict (id) do nothing;
 alter table members add column if not exists show_on_team boolean not null default false;   -- 팀 페이지에 이름·역할 공개 (본인 선택)
+
+-- 오토 경로 (2026-11-23 추가): 팀원이 저장, 경로마다 공개 범위
+create table if not exists autos (
+  id uuid primary key default gen_random_uuid(),
+  team int not null,
+  season int not null,
+  name text not null,
+  project jsonb not null,                       -- 경로 에디터 프로젝트 (girigocha-editor-v2와 같은 모양)
+  visibility text not null default 'private',   -- private · alliance(대회에서 같은 동맹이 되면) · teams(지정 팀) · public
+  share_teams int[] not null default '{}',
+  created_by text, updated_by text,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+create index if not exists autos_team on autos (team);
+create index if not exists autos_public on autos (visibility) where visibility = 'public';
+alter table autos enable row level security;

@@ -6,7 +6,7 @@ import { meta, abs } from '@/lib/meta';
 import JsonLd from '@/components/JsonLd';
 import { config, getTeam, getKrcHistory, getTeamMatches, KRC_SEASONS } from '@/lib/ftc';
 import { teamKo, sponsorId, getDirectory } from '@/lib/teams';
-import { teamProfiles, members } from '@/lib/store';
+import { teamProfiles, members, autos } from '@/lib/store';
 import { logoFor, hasOwnLogo } from '@/lib/logos';
 import { NEXT } from '@/lib/krc';
 import { BreakdownToggle } from './BreakdownToggle';
@@ -25,7 +25,7 @@ const load = cache(async (n: number) => {
   let team: any = null, history: Awaited<ReturnType<typeof getKrcHistory>> = [], matches: Record<number, any[]> = {}, sameSponsor: Record<string, number> = {}, error = '';
   const cfg = config();
   // 팀장이 고친 팀 설정이 있으면 소속·지역·후원사(운영진 확인 후)를 덮어쓴다
-  const [p, mates] = await Promise.all([teamProfiles.get(n, true).catch(() => null), members.publicOfTeam(n).catch(() => [])]);
+  const [p, mates, pubAutos] = await Promise.all([teamProfiles.get(n, true).catch(() => null), members.publicOfTeam(n).catch(() => []), autos.publicAll().then((l) => l.filter((a) => a.team === n)).catch(() => [])]);
   const base = teamKo(n);
   const ko = { ...base, school: p?.school || base.school, region: p?.region || base.region, sponsors: p?.sponsors_ok ? p.sponsors : base.sponsors };
   try {
@@ -42,7 +42,7 @@ const load = cache(async (n: number) => {
     }
   } catch (e) { error = (e as Error).message; }
   const name = String(team?.nameShort ?? `팀 ${n}`).trim();
-  return { team, history, matches, sameSponsor, error, ko, name, p, mates };
+  return { team, history, matches, sameSponsor, error, ko, name, p, mates, pubAutos };
 });
 
 const num = async (params: Props['params']) => {
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const n = await num(params);
-  const { team, history, matches, sameSponsor, error, ko, name, p, mates } = await load(n);
+  const { team, history, matches, sameSponsor, error, ko, name, p, mates, pubAutos } = await load(n);
   const logo = p?.logo_url ?? logoFor(n).src, ownLogo = !!p?.logo_url || hasOwnLogo(n);
   const links = p ? ([['인스타그램', p.instagram], ['유튜브', p.youtube], ['홈페이지', p.web]] as const).filter(([, u]) => u) : [];
   if (!team && !error) notFound();
@@ -113,7 +113,9 @@ export default async function Page({ params }: Props) {
           </div></div></section>
 
           <section className="sec"><div className="in"><div><span className="label">§02</span><h2>공개 오토</h2></div><div className="body">
-            <p>이 팀이 공개한 경로가 아직 없어요.</p>
+            {pubAutos.length ? <ul className="links">{pubAutos.map((a) => <li key={a.id}><Link href="/auto#public" prefetch={false}>{a.name}</Link></li>)}</ul>
+              : <p>이 팀이 공개한 경로가 아직 없어요.</p>}
+            <p className="dim small">오토 페이지의 「공개 오토 모음」에서 Ghost로 겹쳐 볼 수 있어요.</p>
           </div></div></section>
 
           <section className="sec"><div className="in"><div><span className="label">§03</span><h2>KRC 기록</h2></div><div className="body">
