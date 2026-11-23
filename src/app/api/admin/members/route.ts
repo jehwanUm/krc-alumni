@@ -46,6 +46,7 @@ export async function POST(req: Request) {
   }
   if (b.action === 'delete') {
     await members.remove(m.id);
+    await members.scrub(m.email);
     refreshTeam(m.team_no);
     return Response.json({ ok: true });
   }

@@ -92,3 +92,8 @@ alter table team_profiles add column if not exists hidden boolean not null defau
 create table if not exists signup_log (id bigserial primary key, ip_hash text not null, at timestamptz not null default now());
 create index if not exists signup_log_at on signup_log (at);
 alter table signup_log enable row level security;
+
+-- 법률 검토 반영 (2026-11-23): 약관 동의 기록, 팀 사진 SNS 소개 동의
+alter table members add column if not exists agreed_at timestamptz;      -- 만 14세 이상·약관·개인정보 동의 시각
+alter table members add column if not exists terms_ver text;             -- 동의한 약관 시행일
+alter table team_profiles add column if not exists sns_ok boolean not null default false;   -- 동문회 SNS 소개에 써도 됨 (팀장이 켬)

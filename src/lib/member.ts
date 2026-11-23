@@ -3,6 +3,8 @@ import { scryptSync, randomBytes, createHmac, createHash, timingSafeEqual } from
 import type { Member } from './store';
 
 export const MEMBER_COOKIE = 'krc-member';
+// 가입 때 동의한 약관 시행일 (약관을 바꾸면 여기와 /terms가 같이 바뀐다)
+export const TERMS_VER = '2026-11-23';
 const DAYS = 30;
 export const LOCK_AFTER = 5, LOCK_MIN = 10, RESET_MIN = 30;
 
@@ -89,6 +91,7 @@ export function parseTeamForm(f: FormData) {
   return {
     school: str(g('school'), 80), region: str(g('region'), 40), intro: str(g('intro'), 500), robot_name: str(g('robot_name'), 40),
     instagram: url(g('instagram')), youtube: url(g('youtube')), web: url(g('web')), email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '', sponsors,
+    sns_ok: g('sns_ok') === '1',
   };
 }
 export const IMG_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };

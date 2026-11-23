@@ -42,7 +42,7 @@ export default async function Page({ params }: { params: Promise<{ number: strin
     school: p?.school || ko.school, region: p?.region || ko.region, intro: p?.intro ?? '', robot_name: p?.robot_name ?? '',
     logo: p?.logo_url ?? logoFor(n).src, robot: p?.robot_url ?? '', hasLogo: !!p?.logo_url,
     instagram: p?.instagram ?? '', youtube: p?.youtube ?? '', web: p?.web ?? '', email: p?.email ?? '',
-    sponsors: p ? p.sponsors : ko.sponsors, sponsorsPending: p?.sponsors_ok === false,
+    sponsors: p ? p.sponsors : ko.sponsors, sponsorsPending: p?.sponsors_ok === false, sns_ok: !!p?.sns_ok,
   };
   const roster = team.filter((m) => m.status !== 'rejected').map((m) => ({ id: m.id, name: m.name, school: m.school, role: m.role, verify: m.verify, status: m.status, leader: m.team_leader, me: m.id === me!.id, admin: m.admin }));
   return (

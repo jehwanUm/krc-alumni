@@ -12,6 +12,7 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => ({}));
   if (!checkPw(String(b?.pw ?? ''), me.pw)) { await new Promise((r) => setTimeout(r, 600)); return Response.json({ error: '비밀번호가 맞지 않아요' }, { status: 400 }); }
   await members.remove(me.id);
+  await members.scrub(me.email);
   refreshTeam(me.team_no);
   return Response.json({ ok: true }, { headers: { 'Set-Cookie': setCookie(req, '', 0) } });
 }

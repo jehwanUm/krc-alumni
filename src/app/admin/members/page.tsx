@@ -52,7 +52,7 @@ export default async function Page() {
         <p className="dim small">팀장이 저장하면 확인 없이 바로 공개돼요. 문제가 있으면 숨기거나 사진·소개를 지우세요.</p>
         {[...profs].sort((a, b) => b.updated_at.localeCompare(a.updated_at)).map((t) => (
           <article className={`mrow${t.hidden ? ' hiddenrow' : ''}`} key={t.team}>
-            <div className="mhead"><b><a href={`/teams/${t.team}`}>{t.team} {nameOf(t.team)}</a></b>{t.hidden && <span className="chip">숨김</span>}<span className="dim small">{kst(t.updated_at)} · {t.updated_by}</span></div>
+            <div className="mhead"><b><a href={`/teams/${t.team}`}>{t.team} {nameOf(t.team)}</a></b>{t.hidden && <span className="chip">숨김</span>}{t.sns_ok && <span className="chip blue">SNS 동의</span>}<span className="dim small">{kst(t.updated_at)} · {t.updated_by}</span></div>
             <div className="tprev">
               {t.logo_url && <img src={t.logo_url} width="56" height="56" alt="로고" />}
               {t.robot_url && <img src={t.robot_url} height="56" alt="로봇 사진" />}

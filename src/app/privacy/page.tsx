@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { meta } from '@/lib/meta';
-import { PRIVACY_OWNER, PRIVACY_EMAIL, DISCORD_URL } from '@/lib/nav';
+import { PRIVACY_OWNER, PRIVACY_EMAIL } from '@/lib/nav';
 
 // 개인정보처리방침. 바뀌면 시행일을 새로 적고 이전 내용은 git 기록으로 남긴다
 export const metadata = meta('/privacy');
@@ -30,24 +30,55 @@ export default function Page() {
       </div></div></section>
 
       <section className="sec"><div className="in"><div><span className="label">§02</span><h2>보관 기간과 파기</h2></div><div className="body">
-        <p>회원 정보는 탈퇴할 때까지 보관하고, 탈퇴하면 바로 지워요. 가입 신청이 거절되면 6개월 안에 지워요. 경기 호출 정보는 알림을 끄거나 대회 시즌이 끝나면 지워요.</p>
+        <ul>
+          <li>회원 정보는 탈퇴할 때까지 보관하고, 탈퇴하면 바로 지워요. 가입 신청이 거절되면 6개월 안에 지워요. 경기 호출 정보는 알림을 끄거나 대회 시즌이 끝나면 지워요. 가입 시도 기록은 하루 뒤에 지워요.</li>
+          <li>탈퇴하거나 보관 기간이 끝나면 지체 없이(원칙적으로 5일 안에) 파기해요. 전자 파일은 복구할 수 없는 방법으로 영구 삭제하고, 종이 문서가 있다면 분쇄해요.</li>
+          <li>탈퇴해도 팀 페이지에 올린 팀 소개·사진과 팀이 공유한 오토 경로는 팀 활동을 위해 남을 수 있어요. 여기에 남은 작성자 이메일은 탈퇴할 때 지워요.</li>
+        </ul>
       </div></div></section>
 
-      <section className="sec"><div className="in"><div><span className="label">§03</span><h2>제3자 제공 · 처리 위탁</h2></div><div className="body">
-        <p>개인정보를 다른 곳에 팔거나 제공하지 않아요. 홈페이지 운영을 위해 아래 서비스에 저장·처리를 맡겨요. 이 서비스들은 해외 클라우드 서버를 쓰기 때문에 정보가 국외에서 저장될 수 있어요.</p>
-        <ul><li>Supabase — 회원·알림 정보·팀 사진 저장</li><li>Vercel — 홈페이지 호스팅</li><li>Resend — 가입 승인 알림 메일 발송 (메일을 켠 경우)</li></ul>
+      <section className="sec"><div className="in"><div><span className="label">§03</span><h2>제3자 제공 · 처리 위탁 · 국외 이전</h2></div><div className="body">
+        <p>개인정보를 다른 곳에 팔거나 제공하지 않아요. 홈페이지를 운영하기 위해 아래 해외 클라우드 서비스에 저장·처리를 맡겨요. 서비스를 쓰는 동안 데이터가 네트워크를 통해 수시로 아래 국가의 서버로 전송·저장돼요. 이는 계약 이행을 위한 국외 처리위탁·보관이에요(개인정보 보호법 제28조의8 제1항 제3호).</p>
+        <table className="tbl"><thead><tr><th>이전받는 곳</th><th>국가</th><th>이전 항목</th><th>목적 · 보유 기간</th></tr></thead><tbody>
+          <tr><td>Supabase Inc.<br /><a href="mailto:privacy@supabase.com">privacy@supabase.com</a></td><td>싱가포르</td><td>회원가입 정보(이름·학교·팀·이메일·암호화한 비밀번호), 팀 사진·소개, 경기 호출 알림 정보, 오토 경로, 가입 시도 기록</td><td>데이터베이스·파일 저장 / 회원 탈퇴 또는 위탁 계약 종료 때까지</td></tr>
+          <tr><td>Vercel Inc.<br /><a href="mailto:privacy@vercel.com">privacy@vercel.com</a></td><td>대한민국(서울 리전)에서 실행, 회사는 미국</td><td>접속 기록, 로그인 쿠키, 화면을 만드는 과정의 데이터</td><td>홈페이지 호스팅·전송 / 서비스 종료 또는 위탁 계약 종료 때까지</td></tr>
+        </tbody></table>
+        <p className="dim small">가입 승인 알림 메일을 켜면 메일 발송 서비스를 이 표에 추가하고 미리 알려 드려요.</p>
       </div></div></section>
 
-      <section className="sec"><div className="in"><div><span className="label">§04</span><h2>내 정보 보기 · 고치기 · 지우기</h2></div><div className="body">
-        <p>로그인한 뒤 <Link href="/login">내 계정</Link>에서 정보를 고치거나 탈퇴할 수 있어요. 그 밖의 요청은 아래 연락처로 알려 주세요.</p>
-        <p>만 14세 미만은 회원으로 가입할 수 없어요.</p>
+      <section className="sec"><div className="in"><div><span className="label">§04</span><h2>개인정보를 안전하게 지키는 방법</h2></div><div className="body">
+        <ul>
+          <li>비밀번호는 운영진도 원래 내용을 알 수 없도록 단방향 암호화(해시)해서 저장해요.</li>
+          <li>비밀번호를 잊으면 한 번만 쓸 수 있고 30분 뒤 만료되는 재설정 링크를 발급해요. 비밀번호를 여러 번 틀리면 로그인을 잠시 막아요.</li>
+          <li>모든 통신은 HTTPS로 암호화하고, 개인정보에 접근할 수 있는 운영진 계정을 최소 인원으로 제한해요.</li>
+        </ul>
       </div></div></section>
 
-      <section className="sec"><div className="in"><div><span className="label">§05</span><h2>개인정보 보호책임자</h2></div><div className="body">
-        {PRIVACY_OWNER || PRIVACY_EMAIL
-          ? <p>{PRIVACY_OWNER} {PRIVACY_EMAIL && <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>}</p>
-          : <p>KRC 동문회 운영진 — {DISCORD_URL ? <a href={DISCORD_URL} rel="external">동문회 Discord</a> : '동문회 Discord'}로 문의해 주세요.</p>}
+      <section className="sec"><div className="in"><div><span className="label">§05</span><h2>내 정보 보기 · 고치기 · 지우기</h2></div><div className="body">
+        <ul>
+          <li>로그인한 뒤 <Link href="/login">내 계정</Link>에서 내 정보를 보고 고치거나 탈퇴(삭제)할 수 있어요.</li>
+          <li>회원 본인뿐 아니라 법정대리인(부모님)도 아래 이메일로 정보 열람·정정·삭제를 요청할 수 있어요. 요청을 받으면 10일 안에 처리 결과를 알려 드려요.</li>
+          <li>만 14세 미만은 회원으로 가입할 수 없어요.</li>
+        </ul>
       </div></div></section>
+
+      <section className="sec"><div className="in"><div><span className="label">§06</span><h2>운영 주체와 개인정보 보호책임자</h2></div><div className="body">
+        <ul>
+          <li>운영 주체: KRC 동문회 운영진 (비법인 임의단체, 창의공학교육협회와 별도로 운영)</li>
+          <li>개인정보 보호책임자: {PRIVACY_OWNER ? `${PRIVACY_OWNER} (KRC 동문회 운영진)` : 'KRC 동문회 운영진'} {PRIVACY_EMAIL && <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>}</li>
+        </ul>
+      </div></div></section>
+
+      <section className="sec"><div className="in"><div><span className="label">§07</span><h2>개인정보 침해 신고·상담</h2></div><div className="body">
+        <p>개인정보 침해로 도움이 필요하면 아래 기관에 문의할 수 있어요.</p>
+        <ul>
+          <li>개인정보분쟁조정위원회: 1833-6972 (<a href="https://www.kopico.go.kr" rel="external">www.kopico.go.kr</a>)</li>
+          <li>개인정보침해신고센터: 118 (<a href="https://privacy.kisa.or.kr" rel="external">privacy.kisa.or.kr</a>)</li>
+          <li>대검찰청: 1301 (<a href="https://www.spo.go.kr" rel="external">www.spo.go.kr</a>)</li>
+          <li>경찰청: 182 (<a href="https://ecrm.police.go.kr" rel="external">ecrm.police.go.kr</a>)</li>
+        </ul>
+      </div></div></section>
+
     </main>
   );
 }

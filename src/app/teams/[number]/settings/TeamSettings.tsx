@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-type Init = { school: string; region: string; intro: string; robot_name: string; logo: string; robot: string; hasLogo: boolean; instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsorsPending: boolean };
+type Init = { school: string; region: string; intro: string; robot_name: string; logo: string; robot: string; hasLogo: boolean; instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsorsPending: boolean; sns_ok: boolean };
 type Mate = { id: string; name: string; school: string; role: string; verify: string; status: string; leader: boolean; me: boolean; admin: boolean };
 const LINKS = [['instagram', '인스타그램', 'https://instagram.com/…'], ['youtube', '유튜브', 'https://youtube.com/@…'], ['web', '홈페이지', 'https://…'], ['email', '공개 연락 이메일', 'team@example.com']] as const;
 
@@ -22,6 +22,7 @@ export function TeamSettings({ n, name, init, roster }: { n: number; name: strin
     const f = new FormData();
     for (const k of ['school', 'region', 'intro', 'robot_name', 'instagram', 'youtube', 'web', 'email'] as const) f.set(k, v[k]);
     f.set('sponsors', v.sponsors.join('\n'));
+    if (v.sns_ok) f.set('sns_ok', '1');
     if (logoFile) f.set('logo', logoFile);
     if (robotFile) f.set('robot', robotFile);
     if (!v.robot) f.set('robot_clear', '1');
@@ -60,6 +61,7 @@ export function TeamSettings({ n, name, init, roster }: { n: number; name: strin
               {v.robot && <button type="button" className="btn" onClick={() => { setRobotFile(null); setV({ ...v, robot: '' }); }}>사진 빼기</button>}
             </div>
             <small className="full">3MB 이하. 사진에 학생 얼굴이 크게 나오면 팀원 동의를 받고 올려 주세요.</small>
+            <label className="full agree"><input type="checkbox" checked={v.sns_ok} onChange={(e) => setV({ ...v, sns_ok: e.target.checked })} /><span>[선택] 동문회 공식 SNS에서 우리 팀을 소개할 때 이 사진과 소개를 써도 돼요 <small>사진에 나온 팀원 모두의 동의를 받았을 때만 켜 주세요. 끄면 SNS에 쓰지 않아요.</small></span></label>
           </div></fieldset>
 
           <fieldset className="full"><legend>§04 SNS · 연락</legend><div className="grid">

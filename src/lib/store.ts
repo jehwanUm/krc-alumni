@@ -8,7 +8,7 @@ export type LogRow = { key: string; event: string; match: string; team: number; 
 
 export type Member = { id: string; email: string; pw: string; name: string; school: string; team: string; verify: string; role: string; intro: string; status: 'pending' | 'approved' | 'rejected'; admin: boolean; created_at: string; decided_at: string | null; decided_by: string | null;
   sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null;
-  team_no: number | null; team_leader: boolean; show_on_team: boolean };
+  team_no: number | null; team_leader: boolean; show_on_team: boolean; agreed_at?: string | null; terms_ver?: string | null };
 
 type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[]; autos?: Auto[]; signup_log?: { ip_hash: string; at: string }[] };
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
@@ -116,7 +116,7 @@ export const members = {
     return rest('members?select=*&order=created_at.desc');
   },
   // 같은 이메일이 있으면 false
-  async create(m: Pick<Member, 'email' | 'pw' | 'name' | 'school' | 'team' | 'verify' | 'role' | 'intro' | 'team_no'>): Promise<boolean> {
+  async create(m: Pick<Member, 'email' | 'pw' | 'name' | 'school' | 'team' | 'verify' | 'role' | 'intro' | 'team_no' | 'agreed_at' | 'terms_ver'>): Promise<boolean> {
     if (local()) {
       const db = load(); db.members ??= [];
       if (db.members.some((x) => x.email === m.email)) return false;
@@ -134,11 +134,24 @@ export const members = {
     if (local()) { const db = load(); db.members = (db.members ?? []).filter((x) => x.id !== id); return save(db); }
     await rest(`members?id=${eq(id)}`, { method: 'DELETE' });
   },
+  // 탈퇴한 회원 이메일을 남은 팀 내용·오토·처리 기록에서 지운다 (약관 제3조)
+  async scrub(email: string) {
+    const gone = '탈퇴한 회원';
+    if (local()) {
+      const db = load();
+      for (const a of db.autos ?? []) { if (a.created_by === email) a.created_by = gone; if (a.updated_by === email) a.updated_by = gone; }
+      for (const t of db.team_profiles ?? []) if (t.updated_by === email) t.updated_by = gone;
+      for (const m of db.members ?? []) if (m.decided_by === email) m.decided_by = gone;
+      return save(db);
+    }
+    const q = (table: string, col: string) => rest(`${table}?${col}=${eq(email)}`, { method: 'PATCH', body: JSON.stringify({ [col]: gone }) });
+    await Promise.all([q('autos', 'created_by'), q('autos', 'updated_by'), q('team_profiles', 'updated_by'), q('members', 'decided_by')]);
+  },
 };
 
 // 팀 설정: 팀장이 고치는 팀 페이지 내용 (표 team_profiles)
 export type TeamProfile = { team: number; school: string; region: string; intro: string; robot_name: string; logo_url: string | null; robot_url: string | null;
-  instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; hidden?: boolean; updated_at: string; updated_by: string | null };
+  instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; hidden?: boolean; sns_ok?: boolean; updated_at: string; updated_by: string | null };
 export const teamTag = (team: number) => `team-${team}`;
 export const PROFILES_TAG = 'team-profiles';
 export const teamProfiles = {
