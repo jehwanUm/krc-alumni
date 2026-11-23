@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { meta, abs } from '@/lib/meta';
 import JsonLd from '@/components/JsonLd';
 import { getDirectory, sponsorId } from '@/lib/teams';
-import { logoFor } from '@/lib/logos';
+import { getTeamsView } from '@/lib/directory';
 import './sponsors.css';
 
 // 후원사별로 후원하는 KRC 팀을 모은다. 팀 데이터로 만드는 페이지라 서버 HTML + ISR 10분.
@@ -12,8 +12,8 @@ export const metadata = meta('/sponsors');
 const sl = (y: number) => `${y}–${String(y + 1).slice(2)}`;
 
 export default async function Page() {
-  let dir: Awaited<ReturnType<typeof getDirectory>> | null = null, error = '';
-  try { dir = await getDirectory(); } catch (e) { error = (e as Error).message; }
+  let dir: Awaited<ReturnType<typeof getTeamsView>> | null = null, error = '';
+  try { dir = await getTeamsView(); } catch (e) { error = (e as Error).message; }
   const seasons = dir ? Object.keys(dir.res).map(Number).sort((a, b) => b - a) : [];
   const sponsors = dir ? [...new Set(dir.teams.flatMap((t) => t.sponsors))]
     .map((s) => ({ name: s, teams: dir!.teams.filter((t) => t.sponsors.includes(s)) }))
@@ -42,7 +42,7 @@ export default async function Page() {
                 const r = best?.r;
                 return (
                   <Link className="sp-team" href={`/teams/${t.n}`} key={t.n}>
-                    <img className="avatar" src={logoFor(t.n).src} width="48" height="48" alt="" loading="lazy" />
+                    <img className="avatar" src={t.logo} width="48" height="48" alt="" loading="lazy" />
                     <span><b>{t.n} {t.name}</b><span className="dim">{[t.school, t.region].filter(Boolean).join(' · ')}</span>
                       {best && r && <span className="res"><span className="dim">{sl(best.y)}</span>{r.worlds && <span className="chip yel">FIRST Championship</span>}{r.rank && <span className={r.cap && r.rank <= r.cap ? 'chip blue' : 'dim'}>{r.div ? `${r.div} ` : ''}{r.rank}위</span>}{r.awards.length > 0 && <span className="dim">수상 {r.awards.length}</span>}</span>}
                     </span>

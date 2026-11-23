@@ -56,6 +56,7 @@ export function pwError(pw: unknown) {
 
 const str = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 export type Profile = { name: string; school: string; team: string; role: string; intro: string };
+export const showOnTeam = (b: any) => b?.show_on_team === true || b?.show_on_team === 'on';
 export function parseProfile(b: any): { data?: Profile; error?: string } {
   const d = { name: str(b?.name, 40), school: str(b?.school, 80), team: str(b?.team, 80), role: str(b?.role, 60), intro: str(b?.intro, 300) };
   return d.name && d.school && d.team ? { data: d } : { error: '이름·학교·팀은 비울 수 없어요' };

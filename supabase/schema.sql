@@ -69,3 +69,4 @@ create table if not exists team_profiles (
 alter table team_profiles enable row level security;
 -- 사진: 공개 읽기 버킷. 쓰기는 서버(service_role)만
 insert into storage.buckets (id, name, public) values ('team-images', 'team-images', true) on conflict (id) do nothing;
+alter table members add column if not exists show_on_team boolean not null default false;   -- 팀 페이지에 이름·역할 공개 (본인 선택)

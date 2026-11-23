@@ -2,6 +2,7 @@ import { members } from '@/lib/store';
 import { newResetToken, resetHash, RESET_MIN } from '@/lib/member';
 import { memberOf } from '@/lib/session';
 import { sendMail } from '@/lib/mail';
+import { refreshTeam } from '@/lib/refresh';
 
 // 운영진: 승인·거절, 관리자 지정·해제, 비밀번호 재설정 링크, 회원 삭제. 승인된 관리자만
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ export async function POST(req: Request) {
 
   if (b.action === 'status' && ['approved', 'rejected', 'pending'].includes(b.status)) {
     await members.update(m.id, { status: b.status, decided_at: new Date().toISOString(), decided_by: me.email });
+    refreshTeam(m.team_no);
     const site = new URL(req.url).origin;
     const mailed = b.status === 'approved'
       ? await sendMail(m.email, '[KRC 동문회] 가입이 승인됐어요', `${m.name}님, KRC 동문회 홈페이지 가입이 승인됐어요.\n이제 로그인할 수 있어요: ${site}/login`)
@@ -34,6 +36,7 @@ export async function POST(req: Request) {
     const team_no = b.team_no == null || b.team_no === '' ? null : Number(b.team_no);
     if (team_no !== null && !(Number.isInteger(team_no) && team_no > 0 && team_no < 100000)) return bad('팀 번호를 확인해 주세요');
     await members.update(m.id, { team_no, team_leader: team_no !== null && !!b.leader });
+    refreshTeam(m.team_no, team_no);
     return Response.json({ ok: true });
   }
   if (b.action === 'reset') {
@@ -43,6 +46,7 @@ export async function POST(req: Request) {
   }
   if (b.action === 'delete') {
     await members.remove(m.id);
+    refreshTeam(m.team_no);
     return Response.json({ ok: true });
   }
   return bad('잘못된 요청이에요');

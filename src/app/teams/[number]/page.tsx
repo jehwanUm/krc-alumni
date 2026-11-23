@@ -6,7 +6,7 @@ import { meta, abs } from '@/lib/meta';
 import JsonLd from '@/components/JsonLd';
 import { config, getTeam, getKrcHistory, getTeamMatches, KRC_SEASONS } from '@/lib/ftc';
 import { teamKo, sponsorId, getDirectory } from '@/lib/teams';
-import { teamProfiles } from '@/lib/store';
+import { teamProfiles, members } from '@/lib/store';
 import { logoFor, hasOwnLogo } from '@/lib/logos';
 import { NEXT } from '@/lib/krc';
 import { BreakdownToggle } from './BreakdownToggle';
@@ -25,7 +25,7 @@ const load = cache(async (n: number) => {
   let team: any = null, history: Awaited<ReturnType<typeof getKrcHistory>> = [], matches: Record<number, any[]> = {}, sameSponsor: Record<string, number> = {}, error = '';
   const cfg = config();
   // 팀장이 고친 팀 설정이 있으면 소속·지역·후원사(운영진 확인 후)를 덮어쓴다
-  const p = await teamProfiles.get(n, true).catch(() => null);
+  const [p, mates] = await Promise.all([teamProfiles.get(n, true).catch(() => null), members.publicOfTeam(n).catch(() => [])]);
   const base = teamKo(n);
   const ko = { ...base, school: p?.school || base.school, region: p?.region || base.region, sponsors: p?.sponsors_ok ? p.sponsors : base.sponsors };
   try {
@@ -42,7 +42,7 @@ const load = cache(async (n: number) => {
     }
   } catch (e) { error = (e as Error).message; }
   const name = String(team?.nameShort ?? `팀 ${n}`).trim();
-  return { team, history, matches, sameSponsor, error, ko, name, p };
+  return { team, history, matches, sameSponsor, error, ko, name, p, mates };
 });
 
 const num = async (params: Props['params']) => {
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const n = await num(params);
-  const { team, history, matches, sameSponsor, error, ko, name, p } = await load(n);
+  const { team, history, matches, sameSponsor, error, ko, name, p, mates } = await load(n);
   const logo = p?.logo_url ?? logoFor(n).src, ownLogo = !!p?.logo_url || hasOwnLogo(n);
   const links = p ? ([['인스타그램', p.instagram], ['유튜브', p.youtube], ['홈페이지', p.web]] as const).filter(([, u]) => u) : [];
   if (!team && !error) notFound();
@@ -104,6 +104,7 @@ export default async function Page({ params }: Props) {
                 <div><p><b>아직 팀 소개가 없어요.</b></p><p className="dim">팀장이 로그인하면 소개글과 올해 로봇 사진을 올릴 수 있어요.</p></div>
               </div>
             )}
+            {mates.length > 0 && <div className="mates"><h3>팀원</h3><ul>{mates.map((m, i) => <li key={i}><b>{m.name}</b>{m.team_leader && <span className="chip blue">팀장</span>}{m.role && <span className="dim"> {m.role}</span>}</li>)}</ul></div>}
             <p className="edit"><Link href={`/teams/${n}/settings`} prefetch={false}>팀 설정 (팀장) →</Link></p>
             <table className="tbl facts"><tbody>
               {team.rookieYear && <tr><th scope="row">창단</th><td>{team.rookieYear}</td></tr>}

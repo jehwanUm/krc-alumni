@@ -18,7 +18,7 @@ export default async function Page() {
         <span className="label">Account</span>
         <h1>{on ? `${on.name}님` : '로그인'}</h1>
         <p>{on ? `${on.team} · ${on.school} · ${on.email}` : 'KRC에 참가했거나 지금 참가하는 학생이면 가입할 수 있어요. 운영진이 확인한 뒤 승인하면 로그인돼요.'}</p>
-        {on ? <Account me={{ name: on.name, school: on.school, team: on.team, role: on.role, intro: on.intro, admin: on.admin }} /> : <LoginForm />}
+        {on ? <Account me={{ name: on.name, school: on.school, team: on.team, role: on.role, intro: on.intro, admin: on.admin, team_no: on.team_no, leader: on.team_leader, show: on.show_on_team }} /> : <LoginForm />}
       </div></section>
     </main>
   );

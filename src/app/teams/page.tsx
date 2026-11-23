@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { meta } from '@/lib/meta';
 import { getDirectory, type DirTeam } from '@/lib/teams';
-import { logoFor } from '@/lib/logos';
+import { getTeamsView } from '@/lib/directory';
 import type { SeasonResult } from '@/lib/ftc';
 import { TeamsBoot } from './TeamsBoot';
 import './teams.css';
@@ -24,8 +24,8 @@ const perf = (r?: SeasonResult) => {
 const autoCount = (_n: number) => 0;
 
 export default async function Page() {
-  let dir: Awaited<ReturnType<typeof getDirectory>> | null = null, error = '';
-  try { dir = await getDirectory(); } catch (e) { error = (e as Error).message; }
+  let dir: Awaited<ReturnType<typeof getTeamsView>> | null = null, error = '';
+  try { dir = await getTeamsView(); } catch (e) { error = (e as Error).message; }
   const seasons = dir ? Object.keys(dir.res).map(Number).sort((a, b) => b - a) : [];
   const latest = seasons[0];
   const resOf = (t: DirTeam, s: number) => dir!.res[s]?.[t.n];
@@ -72,7 +72,7 @@ export default async function Page() {
                     data-seasons={t.seasons.join(' ')} data-search={[t.n, t.name, t.school, t.region, ...t.sponsors].join(' ').toLowerCase()}
                     data-perf-all={perf(resOf(t, lastSeason))} {...Object.fromEntries(seasons.map((s) => [`data-perf-${s}`, perf(resOf(t, s))]))}>
                     <div className="tm-who">
-                      <img className="avatar" src={logoFor(t.n).src} width="64" height="64" alt="" loading="lazy" />
+                      <img className="avatar" src={t.logo} width="64" height="64" alt="" loading="lazy" />
                       <div><span className="num">{t.n}</span><b>{t.name}</b></div>
                     </div>
                     <div className="tm-org">{t.school || <span className="dim">소속 확인 필요</span>}{t.region && ` · ${t.region}`}</div>

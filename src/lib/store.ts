@@ -8,7 +8,7 @@ export type LogRow = { key: string; event: string; match: string; team: number; 
 
 export type Member = { id: string; email: string; pw: string; name: string; school: string; team: string; verify: string; role: string; intro: string; status: 'pending' | 'approved' | 'rejected'; admin: boolean; created_at: string; decided_at: string | null; decided_by: string | null;
   sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null;
-  team_no: number | null; team_leader: boolean };
+  team_no: number | null; team_leader: boolean; show_on_team: boolean };
 
 type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[] };
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
@@ -106,6 +106,11 @@ export const members = {
     if (local()) return (load().members ?? []).filter((m) => m.team_no === n);
     return rest(`members?team_no=${eq(n)}&select=*&order=created_at`);
   },
+  // 팀 페이지에 공개할 팀원 (승인 + 본인이 공개 선택). 이름·역할·팀장만, 10분 캐시
+  async publicOfTeam(n: number): Promise<{ name: string; role: string; team_leader: boolean }[]> {
+    if (local()) return (load().members ?? []).filter((m) => m.team_no === n && m.status === 'approved' && m.show_on_team).map(({ name, role, team_leader }) => ({ name, role, team_leader }));
+    return rest(`members?team_no=${eq(n)}&status=eq.approved&show_on_team=eq.true&select=name,role,team_leader&order=team_leader.desc,created_at`, { next: { revalidate: 600, tags: [teamTag(n)] } });
+  },
   async list(): Promise<Member[]> {
     if (local()) return [...(load().members ?? [])].reverse();
     return rest('members?select=*&order=created_at.desc');
@@ -115,7 +120,7 @@ export const members = {
     if (local()) {
       const db = load(); db.members ??= [];
       if (db.members.some((x) => x.email === m.email)) return false;
-      db.members.push({ ...m, id: crypto.randomUUID(), status: 'pending', admin: false, created_at: new Date().toISOString(), decided_at: null, decided_by: null, sess: 0, fails: 0, locked_until: null, reset_hash: null, reset_exp: null, team_leader: false });
+      db.members.push({ ...m, id: crypto.randomUUID(), status: 'pending', admin: false, created_at: new Date().toISOString(), decided_at: null, decided_by: null, sess: 0, fails: 0, locked_until: null, reset_hash: null, reset_exp: null, team_leader: false, show_on_team: false });
       save(db); return true;
     }
     try { await rest('members', { method: 'POST', body: JSON.stringify(m) }); return true; }
@@ -135,6 +140,7 @@ export const members = {
 export type TeamProfile = { team: number; school: string; region: string; intro: string; robot_name: string; logo_url: string | null; robot_url: string | null;
   instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; updated_at: string; updated_by: string | null };
 export const teamTag = (team: number) => `team-${team}`;
+export const PROFILES_TAG = 'team-profiles';
 export const teamProfiles = {
   // cached: 공개 팀 페이지용 (10분 캐시, 저장하면 teamTag로 비움). 설정 화면·저장은 매번 새로
   async get(team: number, cached = false): Promise<TeamProfile | null> {
@@ -144,6 +150,11 @@ export const teamProfiles = {
   async put(row: TeamProfile) {
     if (local()) { const db = load(); db.team_profiles = [...(db.team_profiles ?? []).filter((t) => t.team !== row.team), row]; return save(db); }
     await rest('team_profiles?on_conflict=team', { method: 'POST', body: JSON.stringify(row), prefer: 'resolution=merge-duplicates' });
+  },
+  // 팀 목록·후원 페이지용 전체 (10분 캐시, 저장하면 PROFILES_TAG로 비움)
+  async all(): Promise<TeamProfile[]> {
+    if (local()) return load().team_profiles ?? [];
+    return rest('team_profiles?select=*', { next: { revalidate: 600, tags: [PROFILES_TAG] } });
   },
   async unchecked(): Promise<TeamProfile[]> {
     if (local()) return (load().team_profiles ?? []).filter((t) => !t.sponsors_ok);

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { post, PwField, PwInput, ok } from './LoginForm';
 
-type Me = { name: string; school: string; team: string; role: string; intro: string; admin: boolean };
+type Me = { name: string; school: string; team: string; role: string; intro: string; admin: boolean; team_no: number | null; leader: boolean; show: boolean };
 
 // 내 계정: 정보 수정 · 비밀번호 변경 · 로그아웃 · 탈퇴
 export function Account({ me }: { me: Me }) {
@@ -18,17 +18,20 @@ export function Account({ me }: { me: Me }) {
     <div className="acct">
       <div className="done">
         {me.admin && <a className="btn pri" href="/admin/members">가입 신청 관리 →</a>}
+        {me.team_no && (me.leader || me.admin) && <a className="btn" href={`/teams/${me.team_no}/settings`}>팀 설정 →</a>}
+        {me.team_no && <a className="btn" href={`/teams/${me.team_no}`}>우리 팀 페이지</a>}
         <button className="btn" type="button" onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.reload(); }}>로그아웃</button>
       </div>
 
       <details open>
         <summary>내 정보</summary>
-        <form className="f" onSubmit={run('p', async (f) => { await post('/api/auth/profile', Object.fromEntries(f)); return '저장했어요'; })}>
+        <form className="f" onSubmit={run('p', async (f) => { await post('/api/auth/profile', { ...Object.fromEntries(f), show_on_team: f.get('show_on_team') === 'on' }); return '저장했어요'; })}>
           <label className="full"><span>이름 <i>*</i></span><input name="name" defaultValue={me.name} required maxLength={40} /></label>
           <label><span>학교 <i>*</i></span><input name="school" defaultValue={me.school} required maxLength={80} /></label>
           <label><span>소속 팀 이름 <i>*</i></span><input name="team" defaultValue={me.team} required maxLength={80} /></label>
           <label>역할<input name="role" defaultValue={me.role} maxLength={60} /></label>
           <label>간단 소개<input name="intro" defaultValue={me.intro} maxLength={300} /></label>
+          {me.team_no && <label className="full agree"><input type="checkbox" name="show_on_team" defaultChecked={me.show} /><span>{me.team_no} 팀 페이지에 내 이름과 역할을 공개해요 <small>체크하지 않으면 팀 페이지에 보이지 않아요. 언제든 끌 수 있어요.</small></span></label>}
           {msg.p && <p className="full msg" role="status">{msg.p}</p>}
           <button className="btn full">정보 저장</button>
         </form>

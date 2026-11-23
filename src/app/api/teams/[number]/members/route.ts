@@ -1,6 +1,7 @@
 import { members } from '@/lib/store';
 import { memberOf } from '@/lib/session';
 import { canManageTeam } from '@/lib/member';
+import { refreshTeam } from '@/lib/refresh';
 
 // 팀장: 우리 팀 가입 신청 승인·거절, 팀원 내보내기, 팀장 넘기기·추가
 export const dynamic = 'force-dynamic';
@@ -23,5 +24,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ number:
     case 'leader': if (m.status !== 'approved') return bad('승인된 팀원만 팀장이 될 수 있어요'); await members.update(m.id, { team_leader: !!b.on }); break;
     default: return bad('잘못된 요청이에요');
   }
+  refreshTeam(n);
   return Response.json({ ok: true });
 }
