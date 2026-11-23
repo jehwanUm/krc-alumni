@@ -20,12 +20,12 @@ export function Account({ me }: { me: Me }) {
         {me.admin && <a className="btn pri" href="/admin/members">가입 신청 관리 →</a>}
         {me.team_no && (me.leader || me.admin) && <a className="btn" href={`/teams/${me.team_no}/settings`}>팀 설정 →</a>}
         {me.team_no && <a className="btn" href={`/teams/${me.team_no}`}>우리 팀 페이지</a>}
-        <button className="btn" type="button" onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.reload(); }}>로그아웃</button>
+        <button className="btn" type="button" onClick={async () => { await fetch('/api/account/logout', { method: 'POST' }); location.reload(); }}>로그아웃</button>
       </div>
 
       <details open>
         <summary>내 정보</summary>
-        <form className="f" onSubmit={run('p', async (f) => { await post('/api/auth/profile', { ...Object.fromEntries(f), show_on_team: f.get('show_on_team') === 'on' }); return '저장했어요'; })}>
+        <form className="f" onSubmit={run('p', async (f) => { await post('/api/account/profile', { ...Object.fromEntries(f), show_on_team: f.get('show_on_team') === 'on' }); return '저장했어요'; })}>
           <label className="full"><span>이름 <i>*</i></span><input name="name" defaultValue={me.name} required maxLength={40} /></label>
           <label><span>학교 <i>*</i></span><input name="school" defaultValue={me.school} required maxLength={80} /></label>
           <label><span>소속 팀 이름 <i>*</i></span><input name="team" defaultValue={me.team} required maxLength={80} /></label>
@@ -41,7 +41,7 @@ export function Account({ me }: { me: Me }) {
         <summary>비밀번호 변경</summary>
         <form className="f" onSubmit={run('w', async (f) => {
           if (pw !== pw2) throw new Error('새 비밀번호 확인이 달라요');
-          await post('/api/auth/password', { cur: f.get('cur'), next: pw });
+          await post('/api/account/password', { cur: f.get('cur'), next: pw });
           setPw(''); setPw2(''); (document.getElementById('cur') as HTMLInputElement).value = '';
           return '바꿨어요. 다른 기기에서는 로그아웃됐어요';
         })}>
@@ -56,7 +56,7 @@ export function Account({ me }: { me: Me }) {
         <summary>회원 탈퇴</summary>
         <form className="f" onSubmit={run('d', async (f) => {
           if (!confirm('탈퇴하면 회원 정보가 바로 지워지고 되돌릴 수 없어요. 탈퇴할까요?')) return;
-          await post('/api/auth/delete', { pw: f.get('pw') });
+          await post('/api/account/delete', { pw: f.get('pw') });
           location.assign('/');
         })}>
           <p className="full dim">탈퇴하면 이름·학교·팀·이메일 등 가입 정보가 바로 지워져요. 다시 쓰려면 새로 가입하고 승인받아야 해요.</p>

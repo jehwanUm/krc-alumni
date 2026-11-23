@@ -1,6 +1,8 @@
-// 호출 구독·입장 체크·호출 기록 저장소. SUPABASE_URL이 있으면 Supabase(REST), 없으면 로컬 파일(개발용).
-// 표 구조: supabase/schema.sql
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+// 저장소: SQLite 파일 하나 (Node 내장 node:sqlite, 추가 패키지 없음). 경로는 DB_PATH (기본 .data/krc.sqlite)
+// 표는 처음 열 때 자동으로 만든다 (SCHEMA). 서버 한 대에서 Next 프로세스 하나가 쓰는 구조
+import { DatabaseSync } from 'node:sqlite';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 export type SubRow = { endpoint: string; team: number; sub: any };
 export type Arrival = { event: string; match: string; team: number; at: string };
@@ -10,242 +12,182 @@ export type Member = { id: string; email: string; pw: string; name: string; scho
   sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null;
   team_no: number | null; team_leader: boolean; show_on_team: boolean; agreed_at?: string | null; terms_ver?: string | null };
 
-type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[]; autos?: Auto[]; signup_log?: { ip_hash: string; at: string }[] };
-// 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
-const env = () => ({ url: process.env.SUPABASE_URL?.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() });
+const SCHEMA = `
+create table if not exists push_subs (endpoint text primary key, team integer not null, sub text not null, created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
+create index if not exists push_subs_team on push_subs (team);
+create table if not exists arrivals (event text not null, match text not null, team integer not null, at text not null, primary key (event, match, team));
+create table if not exists push_log (key text primary key, event text not null, match text not null, team integer not null, stage text not null, at text not null);
+create index if not exists push_log_event on push_log (event);
+create table if not exists members (
+  id text primary key, email text not null unique, pw text not null, name text not null, school text not null, team text not null, verify text not null,
+  role text not null default '', intro text not null default '', status text not null default 'pending', admin integer not null default 0,
+  created_at text not null, decided_at text, decided_by text,
+  sess integer not null default 0, fails integer not null default 0, locked_until text, reset_hash text, reset_exp text,
+  team_no integer, team_leader integer not null default 0, show_on_team integer not null default 0, agreed_at text, terms_ver text);
+create index if not exists members_status on members (status);
+create index if not exists members_team on members (team_no);
+create table if not exists team_profiles (
+  team integer primary key, school text not null default '', region text not null default '', intro text not null default '', robot_name text not null default '',
+  logo_url text, robot_url text, instagram text not null default '', youtube text not null default '', web text not null default '', email text not null default '',
+  sponsors text not null default '[]', sponsors_ok integer not null default 1, hidden integer not null default 0, sns_ok integer not null default 0,
+  updated_at text not null, updated_by text);
+create table if not exists autos (
+  id text primary key, team integer not null, season integer not null, name text not null, project text not null,
+  visibility text not null default 'private', share_teams text not null default '[]',
+  created_by text, updated_by text, created_at text not null, updated_at text not null);
+create index if not exists autos_team on autos (team);
+create index if not exists autos_vis on autos (visibility);
+create table if not exists signup_log (id integer primary key autoincrement, ip_hash text not null, at text not null);
+create index if not exists signup_log_at on signup_log (at);
+`;
 
-async function rest(path: string, init: RequestInit & { prefer?: string; next?: { revalidate?: number; tags?: string[] } } = {}) {
-  const { url, key } = env();
-  const res = await fetch(`${url}/rest/v1/${path}`, {
-    // 기본은 매번 새로. 공개 페이지(ISR)는 next 옵션으로 캐시
-    ...(init.next ? {} : { cache: 'no-store' as const }), ...init,
-    // 예전 service_role 키(JWT, eyJ…)는 Authorization에도, 새 secret 키(sb_secret_…)는 apikey에만
-    headers: { apikey: key!, ...(key!.startsWith('eyJ') && { Authorization: `Bearer ${key}` }), 'Content-Type': 'application/json', ...(init.prefer && { Prefer: init.prefer }) },
-  });
-  if (!res.ok) throw new Error(`저장소 오류 ${res.status}: ${await res.text()}`);
-  return res.status === 204 ? null : res.json().catch(() => null);
+// 한 프로세스에 연결 하나 (개발 서버가 모듈을 다시 읽어도 새로 만들지 않게 globalThis에 둔다)
+const g = globalThis as unknown as { __krcDb?: DatabaseSync };
+export function db() {
+  if (g.__krcDb) return g.__krcDb;
+  const path = process.env.DB_PATH || '.data/krc.sqlite';
+  if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
+  const d = new DatabaseSync(path);
+  d.exec('pragma journal_mode = wal; pragma busy_timeout = 5000; pragma foreign_keys = on;');
+  d.exec(SCHEMA);
+  return (g.__krcDb = d);
 }
-const inList = (xs: (string | number)[]) => `in.(${xs.map((x) => encodeURIComponent(String(x))).join(',')})`;
-const eq = (x: string | number) => `eq.${encodeURIComponent(String(x))}`;
-
-// shortcut: 로컬 파일은 서버 한 대 개발용. 배포(Vercel)에서는 반드시 Supabase
-const FILE = '.data/store.json';
-const load = (): Db => { try { return JSON.parse(readFileSync(FILE, 'utf8')); } catch { return { push_subs: [], arrivals: [], push_log: [] }; } };
-const save = (db: Db) => { mkdirSync('.data', { recursive: true }); writeFileSync(FILE, JSON.stringify(db)); };
-const local = () => !env().url;
+const all = (sql: string, ...p: any[]) => db().prepare(sql).all(...p) as any[];
+const get = (sql: string, ...p: any[]) => db().prepare(sql).get(...p) as any;
+const run = (sql: string, ...p: any[]) => db().prepare(sql).run(...p);
+const now = () => new Date().toISOString();
+// 값 → SQLite: 참/거짓은 1/0, 배열·객체는 JSON 글자
+const val = (v: unknown) => (typeof v === 'boolean' ? (v ? 1 : 0) : v !== null && typeof v === 'object' ? JSON.stringify(v) : (v ?? null));
+// 고칠 칸만 골라 UPDATE (칸 이름은 정해 둔 목록만 — 밖에서 들어온 이름으로 SQL을 만들지 않게)
+function patchRow(table: string, cols: readonly string[], where: string, id: unknown, patch: Record<string, unknown>) {
+  const ks = Object.keys(patch).filter((k) => cols.includes(k) && patch[k] !== undefined);
+  if (!ks.length) return;
+  run(`update ${table} set ${ks.map((k) => `${k} = ?`).join(', ')} where ${where} = ?`, ...ks.map((k) => val(patch[k])), id);
+}
 
 export const subs = {
   async put(team: number, sub: any) {
-    const row = { endpoint: String(sub.endpoint), team, sub };
-    if (local()) { const db = load(); db.push_subs = [...db.push_subs.filter((r) => r.endpoint !== row.endpoint), row]; return save(db); }
-    await rest('push_subs?on_conflict=endpoint', { method: 'POST', body: JSON.stringify(row), prefer: 'resolution=merge-duplicates' });
+    run('insert into push_subs (endpoint, team, sub) values (?, ?, ?) on conflict(endpoint) do update set team = excluded.team, sub = excluded.sub', String(sub.endpoint), team, JSON.stringify(sub));
   },
-  async del(endpoint: string) {
-    if (local()) { const db = load(); db.push_subs = db.push_subs.filter((r) => r.endpoint !== endpoint); return save(db); }
-    await rest(`push_subs?endpoint=${eq(endpoint)}`, { method: 'DELETE' });
-  },
+  async del(endpoint: string) { run('delete from push_subs where endpoint = ?', endpoint); },
   async forTeams(teams: number[]): Promise<SubRow[]> {
     if (!teams.length) return [];
-    if (local()) return load().push_subs.filter((r) => teams.includes(r.team));
-    return rest(`push_subs?team=${inList(teams)}&select=endpoint,team,sub`);
+    return all(`select endpoint, team, sub from push_subs where team in (${teams.map(() => '?').join(',')})`, ...teams).map((r) => ({ ...r, sub: JSON.parse(r.sub) }));
   },
 };
 
 export const arrivals = {
-  async list(event: string): Promise<Arrival[]> {
-    if (local()) return load().arrivals.filter((r) => r.event === event);
-    return rest(`arrivals?event=${eq(event)}&select=*`);
-  },
+  async list(event: string): Promise<Arrival[]> { return all('select * from arrivals where event = ?', event); },
   async set(event: string, match: string, team: number, on: boolean, at = Date.now()) {
-    const row = { event, match, team, at: new Date(at).toISOString() };
-    if (local()) {
-      const db = load(); db.arrivals = db.arrivals.filter((r) => !(r.event === event && r.match === match && r.team === team));
-      if (on) db.arrivals.push(row);
-      return save(db);
-    }
-    if (on) await rest('arrivals?on_conflict=event,match,team', { method: 'POST', body: JSON.stringify(row), prefer: 'resolution=merge-duplicates' });
-    else await rest(`arrivals?event=${eq(event)}&match=${eq(match)}&team=${eq(team)}`, { method: 'DELETE' });
+    if (on) run('insert into arrivals (event, match, team, at) values (?, ?, ?, ?) on conflict(event, match, team) do update set at = excluded.at', event, match, team, new Date(at).toISOString());
+    else run('delete from arrivals where event = ? and match = ? and team = ?', event, match, team);
   },
 };
 
 export const log = {
-  async list(event: string): Promise<LogRow[]> {
-    if (local()) return load().push_log.filter((r) => r.event === event);
-    return rest(`push_log?event=${eq(event)}&select=*&order=at`);
-  },
+  async list(event: string): Promise<LogRow[]> { return all('select * from push_log where event = ? order by at', event); },
   // 처음 기록되는 것만 돌려준다 (이미 보낸 자동 호출은 다시 보내지 않기 위해)
   async addNew(rows: LogRow[]): Promise<LogRow[]> {
-    if (!rows.length) return [];
-    if (local()) {
-      const db = load(), have = new Set(db.push_log.map((r) => r.key));
-      const fresh = rows.filter((r) => !have.has(r.key));
-      db.push_log.push(...fresh); save(db); return fresh;
-    }
-    return rest('push_log?on_conflict=key', { method: 'POST', body: JSON.stringify(rows), prefer: 'resolution=ignore-duplicates,return=representation' });
+    const st = db().prepare('insert into push_log (key, event, match, team, stage, at) values (?, ?, ?, ?, ?, ?) on conflict(key) do nothing');
+    return rows.filter((r) => Number(st.run(r.key, r.event, r.match, r.team, r.stage, r.at).changes) > 0);
   },
 };
 
 // 홈페이지 회원 (가입 → 운영진 승인 → 로그인)
 export type MemberPatch = Partial<Omit<Member, 'id' | 'email' | 'created_at'>>;
-const one = async (q: string): Promise<Member | null> => (await rest(`members?${q}&select=*`))?.[0] ?? null;
+const MEMBER_COLS = ['pw', 'name', 'school', 'team', 'verify', 'role', 'intro', 'status', 'admin', 'decided_at', 'decided_by', 'sess', 'fails', 'locked_until', 'reset_hash', 'reset_exp', 'team_no', 'team_leader', 'show_on_team', 'agreed_at', 'terms_ver'] as const;
+const member = (r: any): Member | null => (r ? { ...r, admin: !!r.admin, team_leader: !!r.team_leader, show_on_team: !!r.show_on_team } : null);
 export const members = {
-  async byEmail(email: string): Promise<Member | null> {
-    if (local()) return load().members?.find((m) => m.email === email) ?? null;
-    return one(`email=${eq(email)}`);
-  },
-  async byId(id: string): Promise<Member | null> {
-    if (!/^[0-9a-f-]{36}$/.test(id)) return null;
-    if (local()) return load().members?.find((m) => m.id === id) ?? null;
-    return one(`id=${eq(id)}`);
-  },
-  async byResetHash(h: string): Promise<Member | null> {
-    if (local()) return load().members?.find((m) => m.reset_hash === h) ?? null;
-    return one(`reset_hash=${eq(h)}`);
-  },
-  async byTeam(n: number): Promise<Member[]> {
-    if (local()) return (load().members ?? []).filter((m) => m.team_no === n);
-    return rest(`members?team_no=${eq(n)}&select=*&order=created_at`);
-  },
-  // 팀 페이지에 공개할 팀원 (승인 + 본인이 공개 선택). 이름·역할·팀장만, 10분 캐시
+  async byEmail(email: string) { return member(get('select * from members where email = ?', email)); },
+  async byId(id: string) { return /^[0-9a-f-]{36}$/.test(id) ? member(get('select * from members where id = ?', id)) : null; },
+  async byResetHash(h: string) { return member(get('select * from members where reset_hash = ?', h)); },
+  async byTeam(n: number): Promise<Member[]> { return all('select * from members where team_no = ? order by created_at', n).map((r) => member(r)!); },
+  // 팀 페이지에 공개할 팀원 (승인 + 본인이 공개 선택). 이름·역할·팀장만
   async publicOfTeam(n: number): Promise<{ name: string; role: string; team_leader: boolean }[]> {
-    if (local()) return (load().members ?? []).filter((m) => m.team_no === n && m.status === 'approved' && m.show_on_team).map(({ name, role, team_leader }) => ({ name, role, team_leader }));
-    return rest(`members?team_no=${eq(n)}&status=eq.approved&show_on_team=eq.true&select=name,role,team_leader&order=team_leader.desc,created_at`, { next: { revalidate: 600, tags: [teamTag(n)] } });
+    return all("select name, role, team_leader from members where team_no = ? and status = 'approved' and show_on_team = 1 order by team_leader desc, created_at", n).map((r) => ({ ...r, team_leader: !!r.team_leader }));
   },
-  async list(): Promise<Member[]> {
-    if (local()) return [...(load().members ?? [])].reverse();
-    return rest('members?select=*&order=created_at.desc');
-  },
+  async list(): Promise<Member[]> { return all('select * from members order by created_at desc').map((r) => member(r)!); },
   // 같은 이메일이 있으면 false
   async create(m: Pick<Member, 'email' | 'pw' | 'name' | 'school' | 'team' | 'verify' | 'role' | 'intro' | 'team_no' | 'agreed_at' | 'terms_ver'>): Promise<boolean> {
-    if (local()) {
-      const db = load(); db.members ??= [];
-      if (db.members.some((x) => x.email === m.email)) return false;
-      db.members.push({ ...m, id: crypto.randomUUID(), status: 'pending', admin: false, created_at: new Date().toISOString(), decided_at: null, decided_by: null, sess: 0, fails: 0, locked_until: null, reset_hash: null, reset_exp: null, team_leader: false, show_on_team: false });
-      save(db); return true;
-    }
-    try { await rest('members', { method: 'POST', body: JSON.stringify(m) }); return true; }
-    catch (e) { if (String(e).includes(' 409')) return false; throw e; }
+    const r = run(`insert into members (id, email, pw, name, school, team, verify, role, intro, team_no, agreed_at, terms_ver, created_at)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on conflict(email) do nothing`,
+      crypto.randomUUID(), m.email, m.pw, m.name, m.school, m.team, m.verify, m.role, m.intro, m.team_no ?? null, m.agreed_at ?? null, m.terms_ver ?? null, now());
+    return Number(r.changes) > 0;
   },
-  async update(id: string, patch: MemberPatch) {
-    if (local()) { const db = load(); const m = db.members?.find((x) => x.id === id); if (m) Object.assign(m, patch); return save(db); }
-    await rest(`members?id=${eq(id)}`, { method: 'PATCH', body: JSON.stringify(patch) });
-  },
-  async remove(id: string) {
-    if (local()) { const db = load(); db.members = (db.members ?? []).filter((x) => x.id !== id); return save(db); }
-    await rest(`members?id=${eq(id)}`, { method: 'DELETE' });
-  },
+  async update(id: string, patch: MemberPatch) { patchRow('members', MEMBER_COLS, 'id', id, patch); },
+  async remove(id: string) { run('delete from members where id = ?', id); },
   // 탈퇴한 회원 이메일을 남은 팀 내용·오토·처리 기록에서 지운다 (약관 제3조)
   async scrub(email: string) {
     const gone = '탈퇴한 회원';
-    if (local()) {
-      const db = load();
-      for (const a of db.autos ?? []) { if (a.created_by === email) a.created_by = gone; if (a.updated_by === email) a.updated_by = gone; }
-      for (const t of db.team_profiles ?? []) if (t.updated_by === email) t.updated_by = gone;
-      for (const m of db.members ?? []) if (m.decided_by === email) m.decided_by = gone;
-      return save(db);
-    }
-    const q = (table: string, col: string) => rest(`${table}?${col}=${eq(email)}`, { method: 'PATCH', body: JSON.stringify({ [col]: gone }) });
-    await Promise.all([q('autos', 'created_by'), q('autos', 'updated_by'), q('team_profiles', 'updated_by'), q('members', 'decided_by')]);
+    for (const [t, c] of [['autos', 'created_by'], ['autos', 'updated_by'], ['team_profiles', 'updated_by'], ['members', 'decided_by']]) run(`update ${t} set ${c} = ? where ${c} = ?`, gone, email);
   },
 };
 
 // 팀 설정: 팀장이 고치는 팀 페이지 내용 (표 team_profiles)
 export type TeamProfile = { team: number; school: string; region: string; intro: string; robot_name: string; logo_url: string | null; robot_url: string | null;
   instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; hidden?: boolean; sns_ok?: boolean; updated_at: string; updated_by: string | null };
+// 캐시 태그 (저장하면 refresh.ts가 페이지를 다시 만든다)
 export const teamTag = (team: number) => `team-${team}`;
 export const PROFILES_TAG = 'team-profiles';
+const PROFILE_COLS = ['school', 'region', 'intro', 'robot_name', 'logo_url', 'robot_url', 'instagram', 'youtube', 'web', 'email', 'sponsors', 'sponsors_ok', 'hidden', 'sns_ok', 'updated_at', 'updated_by'] as const;
+const profile = (r: any): TeamProfile | null => (r ? { ...r, sponsors: JSON.parse(r.sponsors || '[]'), sponsors_ok: !!r.sponsors_ok, hidden: !!r.hidden, sns_ok: !!r.sns_ok } : null);
 export const teamProfiles = {
-  // cached: 공개 팀 페이지용 (10분 캐시, 저장하면 teamTag로 비움). 설정 화면·저장은 매번 새로
-  async get(team: number, cached = false): Promise<TeamProfile | null> {
-    if (local()) return load().team_profiles?.find((t) => t.team === team) ?? null;
-    return (await rest(`team_profiles?team=${eq(team)}&select=*`, cached ? { next: { revalidate: 600, tags: [teamTag(team)] } } : {}))?.[0] ?? null;
-  },
+  async get(team: number, _cached = false) { return profile(get('select * from team_profiles where team = ?', team)); },
+  // 저장에 없는 칸(hidden 등)은 그대로 둔다
   async put(row: Omit<TeamProfile, 'hidden'>) {
-    // 저장에 없는 칸(hidden 등)은 그대로 둔다 — Supabase merge-duplicates와 같게
-    if (local()) { const db = load(); const old = db.team_profiles?.find((t) => t.team === row.team); db.team_profiles = [...(db.team_profiles ?? []).filter((t) => t.team !== row.team), { ...old, ...row }]; return save(db); }
-    await rest('team_profiles?on_conflict=team', { method: 'POST', body: JSON.stringify(row), prefer: 'resolution=merge-duplicates' });
+    run('insert into team_profiles (team, updated_at) values (?, ?) on conflict(team) do nothing', row.team, row.updated_at);
+    const { team, ...rest } = row;
+    patchRow('team_profiles', PROFILE_COLS, 'team', team, rest);
   },
-  // 팀 목록·후원 페이지용 전체 (10분 캐시, 저장하면 PROFILES_TAG로 비움)
-  async all(): Promise<TeamProfile[]> {
-    if (local()) return load().team_profiles ?? [];
-    return rest('team_profiles?select=*', { next: { revalidate: 600, tags: [PROFILES_TAG] } });
-  },
-  async unchecked(): Promise<TeamProfile[]> {
-    if (local()) return (load().team_profiles ?? []).filter((t) => !t.sponsors_ok);
-    return rest('team_profiles?sponsors_ok=eq.false&select=*');
-  },
+  async all(): Promise<TeamProfile[]> { return all('select * from team_profiles').map((r) => profile(r)!); },
+  async unchecked(): Promise<TeamProfile[]> { return all('select * from team_profiles where sponsors_ok = 0').map((r) => profile(r)!); },
   // 운영진: 숨기기·사진 지우기 등
-  async patch(team: number, p: Partial<TeamProfile>) {
-    if (local()) { const db = load(); const t = db.team_profiles?.find((x) => x.team === team); if (t) Object.assign(t, p); return save(db); }
-    await rest(`team_profiles?team=${eq(team)}`, { method: 'PATCH', body: JSON.stringify(p) });
-  },
-  async checkSponsors(team: number) {
-    if (local()) { const db = load(); const t = db.team_profiles?.find((x) => x.team === team); if (t) t.sponsors_ok = true; return save(db); }
-    await rest(`team_profiles?team=${eq(team)}`, { method: 'PATCH', body: JSON.stringify({ sponsors_ok: true }) });
-  },
+  async patch(team: number, p: Partial<TeamProfile>) { patchRow('team_profiles', PROFILE_COLS, 'team', team, p); },
+  async checkSponsors(team: number) { run('update team_profiles set sponsors_ok = 1 where team = ?', team); },
 };
 
-// 사진 올리기 → 공개 주소. 로컬 개발은 data: 주소로 대신한다
-// shortcut: 로컬은 파일 대신 data URL, 여러 사람이 로컬로 시험하게 되면 public/uploads로
-export async function uploadImage(path: string, bytes: ArrayBuffer, type: string): Promise<string> {
-  if (local()) return `data:${type};base64,${Buffer.from(bytes).toString('base64')}`;
-  const { url, key } = env();
-  const res = await fetch(`${url}/storage/v1/object/team-images/${path}`, {
-    method: 'POST', body: bytes,
-    headers: { apikey: key!, ...(key!.startsWith('eyJ') && { Authorization: `Bearer ${key}` }), 'Content-Type': type, 'x-upsert': 'true', 'cache-control': 'max-age=3600' },
-  });
-  if (!res.ok) throw new Error(`사진 저장 오류 ${res.status}: ${await res.text()}`);
-  return `${url}/storage/v1/object/public/team-images/${path}`;
+// 사진 올리기 → 서버 폴더(UPLOAD_DIR, 기본 .data/uploads)에 저장, 주소는 /uploads/<경로> (app/uploads/[...path]가 내보냄)
+export const uploadDir = () => process.env.UPLOAD_DIR || '.data/uploads';
+export async function uploadImage(path: string, bytes: ArrayBuffer, _type: string): Promise<string> {
+  if (!/^\d+\/[\w.-]+$/.test(path)) throw new Error('사진 경로가 올바르지 않아요');
+  const file = join(uploadDir(), path);
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, Buffer.from(bytes));
+  return `/uploads/${path}`;
 }
 
 // 오토 경로 (표 autos). 목록은 project 없이 가볍게
 export type Visibility = 'private' | 'alliance' | 'teams' | 'public';
 export type Auto = { id: string; team: number; season: number; name: string; project: unknown; visibility: Visibility; share_teams: number[]; created_by: string | null; updated_by: string | null; created_at: string; updated_at: string };
 export type AutoMeta = Omit<Auto, 'project'>;
-const META = 'id,team,season,name,visibility,share_teams,created_by,updated_by,created_at,updated_at';
-const noProject = ({ project, ...m }: Auto): AutoMeta => m;
+const META = 'id, team, season, name, visibility, share_teams, created_by, updated_by, created_at, updated_at';
+const meta = (r: any): AutoMeta => ({ ...r, share_teams: JSON.parse(r.share_teams || '[]') });
 export const AUTOS_TAG = 'autos-public';
+const AUTO_COLS = ['name', 'project', 'visibility', 'share_teams', 'updated_by', 'updated_at'] as const;
 export const autos = {
-  async ofTeam(team: number): Promise<AutoMeta[]> {
-    if (local()) return (load().autos ?? []).filter((a) => a.team === team).map(noProject).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
-    return rest(`autos?team=${eq(team)}&select=${META}&order=updated_at.desc`);
-  },
+  async ofTeam(team: number): Promise<AutoMeta[]> { return all(`select ${META} from autos where team = ? order by updated_at desc`, team).map(meta); },
   async get(id: string): Promise<Auto | null> {
     if (!/^[0-9a-f-]{36}$/.test(id)) return null;
-    if (local()) return load().autos?.find((a) => a.id === id) ?? null;
-    return (await rest(`autos?id=${eq(id)}&select=*`))?.[0] ?? null;
+    const r = get('select * from autos where id = ?', id);
+    return r ? { ...meta(r), project: JSON.parse(r.project) } : null;
   },
-  // 모두에게 공개된 경로 (오토 모음·팀 목록·팀 페이지용, 10분 캐시)
-  async publicAll(): Promise<AutoMeta[]> {
-    if (local()) return (load().autos ?? []).filter((a) => a.visibility === 'public').map(noProject);
-    return rest(`autos?visibility=eq.public&select=${META}&order=updated_at.desc`, { next: { revalidate: 600, tags: [AUTOS_TAG] } });
-  },
+  // 모두에게 공개된 경로 (오토 모음·팀 목록·팀 페이지용)
+  async publicAll(): Promise<AutoMeta[]> { return all(`select ${META} from autos where visibility = 'public' order by updated_at desc`).map(meta); },
   async create(a: Pick<Auto, 'team' | 'season' | 'name' | 'project' | 'visibility' | 'share_teams' | 'created_by'>): Promise<string> {
-    const now = new Date().toISOString();
-    if (local()) { const db = load(); const id = crypto.randomUUID(); (db.autos ??= []).push({ ...a, id, updated_by: a.created_by, created_at: now, updated_at: now }); save(db); return id; }
-    return (await rest('autos?select=id', { method: 'POST', body: JSON.stringify({ ...a, updated_by: a.created_by }), prefer: 'return=representation' }))[0].id;
+    const id = crypto.randomUUID(), t = now();
+    run('insert into autos (id, team, season, name, project, visibility, share_teams, created_by, updated_by, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      id, a.team, a.season, a.name, JSON.stringify(a.project), a.visibility, JSON.stringify(a.share_teams), a.created_by, a.created_by, t, t);
+    return id;
   },
-  async update(id: string, patch: Partial<Pick<Auto, 'name' | 'project' | 'visibility' | 'share_teams' | 'updated_by'>>) {
-    const p = { ...patch, updated_at: new Date().toISOString() };
-    if (local()) { const db = load(); const a = db.autos?.find((x) => x.id === id); if (a) Object.assign(a, p); return save(db); }
-    await rest(`autos?id=${eq(id)}`, { method: 'PATCH', body: JSON.stringify(p) });
-  },
-  async remove(id: string) {
-    if (local()) { const db = load(); db.autos = (db.autos ?? []).filter((a) => a.id !== id); return save(db); }
-    await rest(`autos?id=${eq(id)}`, { method: 'DELETE' });
-  },
+  async update(id: string, patch: Partial<Pick<Auto, 'name' | 'project' | 'visibility' | 'share_teams' | 'updated_by'>>) { patchRow('autos', AUTO_COLS, 'id', id, { ...patch, updated_at: now() }); },
+  async remove(id: string) { run('delete from autos where id = ?', id); },
 };
 
 // 가입 시도 기록 (스팸 막기). 하루 지난 기록은 넣을 때 지운다
 export const signupLog = {
-  async recent(sinceIso: string): Promise<{ ip_hash: string }[]> {
-    if (local()) return (load().signup_log ?? []).filter((r) => r.at >= sinceIso);
-    return rest(`signup_log?at=gte.${encodeURIComponent(sinceIso)}&select=ip_hash`);
-  },
+  async recent(sinceIso: string): Promise<{ ip_hash: string }[]> { return all('select ip_hash from signup_log where at >= ?', sinceIso); },
   async add(ip_hash: string) {
-    const day = new Date(Date.now() - 864e5).toISOString();
-    if (local()) { const db = load(); db.signup_log = [...(db.signup_log ?? []).filter((r) => r.at >= day), { ip_hash, at: new Date().toISOString() }]; return save(db); }
-    await rest('signup_log', { method: 'POST', body: JSON.stringify({ ip_hash }) });
-    await rest(`signup_log?at=lt.${encodeURIComponent(day)}`, { method: 'DELETE' });
+    run('insert into signup_log (ip_hash, at) values (?, ?)', ip_hash, now());
+    run('delete from signup_log where at < ?', new Date(Date.now() - 864e5).toISOString());
   },
 };

@@ -9,7 +9,7 @@ export function ResetForm({ t }: { t: string }) {
   return (
     <form className="f auth" onSubmit={async (e) => {
       e.preventDefault(); setErr(''); setBusy(true);
-      try { await post('/api/auth/reset', { t, pw }); setDone(true); } catch (x) { setErr((x as Error).message); } finally { setBusy(false); }
+      try { await post('/api/account/reset', { t, pw }); setDone(true); } catch (x) { setErr((x as Error).message); } finally { setBusy(false); }
     }}>
       <PwField pw={pw} setPw={setPw} pw2={pw2} setPw2={setPw2} label="새 비밀번호" />
       {err && <p className="err full" role="alert">{err}</p>}

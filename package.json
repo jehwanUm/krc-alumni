@@ -8,11 +8,10 @@
     "start": "next start",
     "test": "node --test test/*.test.ts",
     "sync-editor": "cp ../../path-follower/girigocha/editor/index.html ../../path-follower/girigocha/editor/girigocha-path.js public/editor/",
-    "vercel:login": "vercel login",
-    "vercel:link": "vercel link",
-    "vercel:env": "node scripts/vercel-env.mjs",
-    "deploy": "vercel --prod",
-    "backup": "node --env-file=.env scripts/backup.mjs"
+    "backup": "node --env-file=.env scripts/backup.mjs",
+    "admin": "node --env-file=.env scripts/member-admin.mjs",
+    "import:supabase": "node --env-file=.env scripts/import-supabase.mjs",
+    "tick": "node scripts/tick.mjs"
   },
   "dependencies": {
     "next": "^16.4.5",
@@ -24,7 +23,9 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/web-push": "^3.6.4",
-    "typescript": "^7.0.2",
-    "vercel": "^65.12.1"
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22.13"
   }
 }

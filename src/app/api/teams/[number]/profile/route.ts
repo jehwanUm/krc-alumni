@@ -4,7 +4,7 @@ import { memberOf } from '@/lib/session';
 import { canManageTeam, parseTeamForm, IMG_TYPES } from '@/lib/member';
 import { teamKo } from '@/lib/teams';
 
-// 팀 설정 저장 (팀장·운영진). 사진은 Supabase Storage, 후원사가 바뀌면 운영진 확인 대기
+// 팀 설정 저장 (팀장·운영진). 사진은 서버 폴더(UPLOAD_DIR), 후원사가 바뀌면 운영진 확인 대기
 export const dynamic = 'force-dynamic';
 const LIMIT = { logo: 1 << 20, robot: 3 << 20 };
 

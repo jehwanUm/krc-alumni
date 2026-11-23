@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-// 로그인 / 회원가입 탭 (KRC Tech와 같은 항목). 서버: /api/auth/login, /api/auth/signup
+// 로그인 / 회원가입 탭 (KRC Tech와 같은 항목). 서버: /api/account/login, /api/account/signup
 export const RULES: [string, (p: string) => boolean][] = [
   ['8자 이상', (p) => p.length >= 8], ['영문 소문자', (p) => /[a-z]/.test(p)], ['영문 대문자', (p) => /[A-Z]/.test(p)], ['특수기호', (p) => /[^A-Za-z0-9\s]/.test(p)],
 ];
@@ -54,12 +54,12 @@ export function LoginForm() {
     try { await fn(new FormData(e.currentTarget)); } catch (x) { setErr((x as Error).message); } finally { setBusy(false); }
   };
   const login = (e: React.FormEvent<HTMLFormElement>) => run(e, async (f) => {
-    await post('/api/auth/login', { email: f.get('email'), pw: f.get('pw') });
+    await post('/api/account/login', { email: f.get('email'), pw: f.get('pw') });
     location.reload();
   });
   const signup = (e: React.FormEvent<HTMLFormElement>) => run(e, async (f) => {
     if (pw !== pw2) throw new Error('비밀번호 확인이 달라요');
-    await post('/api/auth/signup', { ...Object.fromEntries(f), pw, agree_terms: f.get('agree_terms') === 'on', agree_privacy: f.get('agree_privacy') === 'on', agree_optional: opt });
+    await post('/api/account/signup', { ...Object.fromEntries(f), pw, agree_terms: f.get('agree_terms') === 'on', agree_privacy: f.get('agree_privacy') === 'on', agree_optional: opt });
     setSent(true);
   });
 

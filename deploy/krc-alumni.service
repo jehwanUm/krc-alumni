@@ -1,0 +1,16 @@
+# 홈페이지 (Next.js). /etc/systemd/system/krc-alumni.service 로 복사
+[Unit]
+Description=KRC Alumni homepage
+After=network.target
+
+[Service]
+User=krc
+WorkingDirectory=/srv/krc-alumni
+EnvironmentFile=/srv/krc-alumni/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -20,7 +20,12 @@ export function checkPw(pw: string, stored: string) {
 }
 
 // 쿠키 = 회원 id.세션 버전.만료시각.서명. 비밀번호를 바꾸면 버전이 올라가 다른 기기의 쿠키가 무효가 된다
-const secret = () => `member:${process.env.SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.CRON_SECRET || 'dev-only'}`;
+// 로그인 쿠키 서명 키: SESSION_SECRET (운영 서버에서는 반드시 길고 무작위인 값. 바꾸면 모두 로그아웃)
+const secret = () => {
+  const k = process.env.SESSION_SECRET;
+  if (!k && process.env.NODE_ENV === 'production') throw new Error('.env에 SESSION_SECRET이 필요해요');
+  return `member:${k || 'dev-only'}`;
+};
 const sign = (s: string) => createHmac('sha256', secret()).update(s).digest('base64url');
 export function makeToken(id: string, sess: number, now = Date.now()) {
   const body = `${id}.${sess}.${now + DAYS * 864e5}`;

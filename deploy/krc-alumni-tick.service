@@ -1,0 +1,16 @@
+# 경기 호출 자동 실행 (30초마다 /api/push/tick). 대회가 없는 날은 아무것도 안 보낸다
+[Unit]
+Description=KRC Alumni match-call ticker
+After=krc-alumni.service
+Requires=krc-alumni.service
+
+[Service]
+User=krc
+WorkingDirectory=/srv/krc-alumni
+EnvironmentFile=/srv/krc-alumni/.env
+ExecStart=/usr/bin/node scripts/tick.mjs --url http://127.0.0.1:3000
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

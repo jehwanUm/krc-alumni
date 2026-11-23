@@ -1,11 +1,11 @@
 // 테스트 호출 보내기: node --env-file=.env scripts/test-push.mjs <팀번호>
-// 그 팀으로 호출을 켜 둔 휴대폰에 알림을 보낸다 (저장소는 .env의 Supabase).
+// 그 팀으로 호출을 켜 둔 휴대폰에 알림을 보낸다 (저장소는 SQLite, DB_PATH).
 import webpush from 'web-push';
+import { subs } from '../src/lib/store.ts';
 
 const team = Number(process.argv[2]);
 if (!Number.isInteger(team) || team <= 0) { console.error('사용법: node --env-file=.env scripts/test-push.mjs <팀번호>'); process.exit(1); }
-const url = process.env.SUPABASE_URL.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key = process.env.SUPABASE_SERVICE_ROLE_KEY.trim();
-const rows = await fetch(`${url}/rest/v1/push_subs?team=eq.${team}&select=endpoint,sub`, { headers: { apikey: key, ...(key.startsWith('eyJ') && { Authorization: `Bearer ${key}` }) } }).then((r) => r.json());
+const rows = await subs.forTeams([team]);
 console.log(`${team}팀 호출을 켠 휴대폰: ${rows.length}대`);
 webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:krc-alumni@example.com', process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 for (const r of rows) {
