@@ -24,7 +24,7 @@ const GO = [
 // 동문회가 만든 것 (인스타 소개글과 같은 3가지)
 const MADE = [
   { href: '/live', ext: false, tag: 'Live', h: '대회 Live · 경기 호출', d: '대진표와 결과를 실시간으로 보고, 우리 팀 경기 차례가 다가오면 휴대폰으로 알려 줘요.' },
-  { href: 'https://www.krcalumni.com/tech-blog/', ext: true, tag: 'KRC Tech', h: 'KRC Tech', d: '선배들과 팀들이 로봇 개발 과정을 올리는 기술 아카이브예요. 종이 엔지니어링 노트를 온라인으로.' },
+  { href: 'https://www.krcalumni.com/tech-blog/', ext: true, tag: 'KRC Tech', h: 'KRC Tech', d: '선배들과 팀들이 로봇 개발 과정을 올리는 기술 아카이브예요. 종이 엔지니어링 노트를 온라인으로. (별도 운영 사이트로 이동하며, 그 사이트의 약관이 적용돼요)' },
   { href: '/learn/girigocha', ext: false, tag: 'Girigocha', h: '기리고차', d: '동문회가 만든 메카넘 경로 추종 라이브러리예요. 경로 에디터로 그리고, 블록으로도 오토를 짜요.' },
 ] as const;
 // 누구를 위한 곳인지: 세 갈래

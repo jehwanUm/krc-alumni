@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div></header>
         {children}
         <footer className="ftr"><div className="in">
-          <span>KRC Alumni · Korea Robot Championship 동문회</span>
+          <span>KRC Alumni · Korea Robot Championship 동문회<br /><small className="tm">FIRST®, FIRST® Tech Challenge, FTC®, BIOBUZZ™는 FIRST의 상표이며, 이 홈페이지는 FIRST가 공식 운영하거나 보증하는 사이트가 아니에요.</small></span>
           <nav aria-label="바닥 메뉴">
             {NAV.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
             {!COMPETITION_ONLY && <><Link href="/sponsors">후원 기업</Link><Link href="/mentoring">멘토링</Link></>}<Link href="/terms">이용약관</Link><Link href="/privacy">개인정보처리방침</Link>

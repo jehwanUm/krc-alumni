@@ -73,8 +73,8 @@ export default function Page() {
       </Sec>
 
       <Sec n="02" title="매뉴얼 한국어 요약">
-        <p>175쪽 공식 매뉴얼을 장별·항목별로 한국어로 요약했어요. 규칙 번호(G304, R503 …)로 찾아볼 수 있어요.</p>
-        <p><Link href="/learn/season/manual"><b>BIOBUZZ 매뉴얼 한국어 요약 보기 →</b></Link></p>
+        <p>175쪽 공식 매뉴얼의 각 장이 무엇을 다루는지 한국어로 짧게 정리했어요. 규칙의 정확한 문장은 공식 매뉴얼에서 확인해 주세요.</p>
+        <p><Link href="/learn/season/manual"><b>매뉴얼 장별 안내 보기 →</b></Link></p>
       </Sec>
 
       <Sec n="03" title="지난 시즌과 달라진 것">

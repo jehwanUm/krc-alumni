@@ -4,6 +4,8 @@ import { FullscreenButton } from './Fullscreen';
 import { AutoTeam, GhostBox, PublicGhost } from './AutoTeam';
 import { autos } from '@/lib/store';
 import { getDirectory } from '@/lib/teams';
+import { ReportLink } from '@/components/Report';
+import { abs } from '@/lib/meta';
 import './auto.css';
 
 export const metadata = meta('/auto');
@@ -51,7 +53,7 @@ export default async function Page() {
       <section className="sec wide" id="public"><div className="in">
         <div><span className="label">§03</span><h2>공개 오토 모음</h2><p className="dim small" style={{ margin: '6px 0 0' }}>이번 시즌 · 모두에게 공개된 경로</p></div>
         <div className="body">{pub.length ? <ul className="alist">{pub.map((a) => (
-          <li key={a.id}><div><b>{a.name}</b> <Link href={`/teams/${a.team}`} className="dim small">{a.team} {tname(a.team)}</Link></div><div className="acts"><PublicGhost id={a.id} /></div></li>
+          <li key={a.id}><div><b>{a.name}</b> <Link href={`/teams/${a.team}`} className="dim small">{a.team} {tname(a.team)}</Link></div><div className="acts"><PublicGhost id={a.id} /><ReportLink what={`공개 오토 「${a.name}」 (팀 ${a.team})`} url={abs('/auto#public')} /></div></li>
         ))}</ul> : <p className="dim">아직 공개된 경로가 없어요. 팀이 경로를 「모두에게」 공개하면 여기에 모여요.</p>}</div>
       </div></section>
     </main>

@@ -10,6 +10,7 @@ import { teamProfiles, members, autos } from '@/lib/store';
 import { logoFor, hasOwnLogo } from '@/lib/logos';
 import { NEXT } from '@/lib/krc';
 import { BreakdownToggle } from './BreakdownToggle';
+import { ReportLink } from '@/components/Report';
 import './team.css';
 
 // 팀 페이지: 처음 열릴 때 서버가 만들고 ISR로 10분 캐시 (빌드 때는 만들지 않음).
@@ -106,7 +107,7 @@ export default async function Page({ params }: Props) {
               </div>
             )}
             {mates.length > 0 && <div className="mates"><h3>팀원</h3><ul>{mates.map((m, i) => <li key={i}><b>{m.name}</b>{m.team_leader && <span className="chip blue">팀장</span>}{m.role && <span className="dim"> {m.role}</span>}</li>)}</ul></div>}
-            <p className="edit"><Link href={`/teams/${n}/settings`} prefetch={false}>팀 설정 (팀장) →</Link></p>
+            <p className="edit"><Link href={`/teams/${n}/settings`} prefetch={false}>팀 설정 (팀장) →</Link> · <ReportLink what={`팀 ${n} ${name} 페이지`} url={abs(`/teams/${n}`)} /></p>
             <table className="tbl facts"><tbody>
               {team.rookieYear && <tr><th scope="row">창단</th><td>{team.rookieYear}</td></tr>}
               <tr><th scope="row">KRC 출전</th><td>{history.length}회</td></tr>

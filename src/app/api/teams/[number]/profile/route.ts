@@ -25,6 +25,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ number:
     if (file.size > LIMIT[k]) throw new Error(`${k === 'logo' ? '로고는 1MB' : '로봇 사진은 3MB'} 이하로 올려 주세요`);
     return uploadImage(`${n}/${k}-${Date.now()}.${ext}`, await file.arrayBuffer(), file.type);
   };
+  // 새 사진은 [필수 확인](사진 속 사람 공개 동의)이 있어야 받는다
+  const hasFile = (k: string) => { const x = f.get(k); return x instanceof File && x.size > 0; };
+  if ((hasFile('logo') || hasFile('robot')) && f.get('photo_ok') !== '1') return Response.json({ error: '사진에 나온 사람의 공개 동의를 확인해 주세요' }, { status: 400 });
   let logo_url, robot_url;
   try { [logo_url, robot_url] = await Promise.all([img('logo'), img('robot')]); }
   catch (e) { return Response.json({ error: (e as Error).message }, { status: 400 }); }

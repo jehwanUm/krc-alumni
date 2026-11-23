@@ -28,7 +28,7 @@ export default function Page() {
       </div></section>
       <section className="sec" id="discord"><div className="in">
         <div><span className="label">§04</span><h2>Discord</h2></div>
-        <div className="body"><p>질문과 대화는 동문회 Discord에서 나눠요.</p>{DISCORD_URL ? <p><a className="btn" href={DISCORD_URL} rel="external">Discord 들어가기 →</a></p> : <p className="note">Discord는 준비 중이에요.</p>}</div>
+        <div className="body"><p>질문과 대화는 동문회 Discord에서 나눠요. Discord 안에서의 활동은 Discord 이용약관을 따라요.</p>{DISCORD_URL ? <p><a className="btn" href={DISCORD_URL} rel="external">Discord 들어가기 →</a></p> : <p className="note">Discord는 준비 중이에요.</p>}</div>
       </div></section>
       <section className="sec" id="contact"><div className="in">
         <div><span className="label">§05</span><h2>연락</h2></div>

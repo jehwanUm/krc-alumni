@@ -26,7 +26,7 @@ export default async function Page() {
       <section className="page-head"><div className="in">
         <span className="label">Sponsors</span>
         <h1>후원 기업</h1>
-        <p>KRC 팀이 FTC 공식 팀 정보에 적어 둔 후원 기업과 기관이에요. 후원 내용은 각 팀과 후원사가 밝힌 범위만 실어요.</p>
+        <p>여기에 적힌 기업·기관 이름은 각 참가 팀이 FTC 대회 등록 때 직접 밝힌 팀별 후원사예요. KRC 동문회 홈페이지나 대회를 공식 후원한다는 뜻은 아니며, 동문회가 실제 계약 여부를 따로 확인하지는 않아요.</p>
       </div></section>
 
       <section className="sec wide"><div className="in"><div><span className="label">§01</span><h2>팀이 밝힌 후원사</h2></div><div className="body">

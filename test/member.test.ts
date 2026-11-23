@@ -20,11 +20,14 @@ test('로그인 쿠키: 서명·만료', () => {
 });
 
 test('가입 입력 검사', () => {
-  const ok = { name: '박지훈', school: '협회고', team: 'Eagles', verify: '2026 팀원', email: 'A@B.kr', pw: 'Abcdefg!', agree: true };
+  const ok = { name: '박지훈', school: '협회고', team: 'Eagles', verify: '2026 팀원', email: 'A@B.kr', pw: 'Abcdefg!', agree_terms: true, agree_privacy: true, role: '코딩', intro: '소개' };
   assert.equal(parseSignup(ok).data?.email, 'a@b.kr');
   assert.match(parseSignup({ ...ok, team: ' ' }).error!, /필수/);
   assert.match(parseSignup({ ...ok, email: 'nope' }).error!, /이메일/);
   assert.match(parseSignup({ ...ok, pw: 'abcdefgh' }).error!, /대문자.*특수기호/);
-  assert.match(parseSignup({ ...ok, agree: false }).error!, /동의/);
+  assert.match(parseSignup({ ...ok, agree_privacy: false }).error!, /동의/);
+  assert.match(parseSignup({ ...ok, agree_terms: false }).error!, /동의/);
+  assert.equal(parseSignup(ok).data?.role, '');                                   // 선택 동의 안 하면 저장 안 함
+  assert.equal(parseSignup({ ...ok, agree_optional: true }).data?.intro, '소개');
   assert.equal(parseSignup(null).error, '필수 항목을 모두 채워 주세요');
 });

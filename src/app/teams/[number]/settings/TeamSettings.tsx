@@ -10,6 +10,8 @@ export function TeamSettings({ n, name, init, roster }: { n: number; name: strin
   const [v, setV] = useState(init);
   const [logoFile, setLogoFile] = useState<File | null>(null), [robotFile, setRobotFile] = useState<File | null>(null);
   const [sp, setSp] = useState(''), [msg, setMsg] = useState(''), [busy, setBusy] = useState(false);
+  const [photoOk, setPhotoOk] = useState(false);   // [필수 확인] 사진 속 사람 동의 (새 사진을 올릴 때)
+  const newPhoto = !!(logoFile || robotFile);
   const set = (k: keyof Init) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setV({ ...v, [k]: e.target.value });
   const pick = (k: 'logo' | 'robot', setF: (f: File) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
@@ -23,6 +25,8 @@ export function TeamSettings({ n, name, init, roster }: { n: number; name: strin
     for (const k of ['school', 'region', 'intro', 'robot_name', 'instagram', 'youtube', 'web', 'email'] as const) f.set(k, v[k]);
     f.set('sponsors', v.sponsors.join('\n'));
     if (v.sns_ok) f.set('sns_ok', '1');
+    if (newPhoto && !photoOk) { setBusy(false); return setMsg('⚠ 사진을 올리려면 [필수 확인]에 체크해 주세요'); }
+    if (newPhoto) f.set('photo_ok', '1');
     if (logoFile) f.set('logo', logoFile);
     if (robotFile) f.set('robot', robotFile);
     if (!v.robot) f.set('robot_clear', '1');
@@ -61,7 +65,8 @@ export function TeamSettings({ n, name, init, roster }: { n: number; name: strin
               {v.robot && <button type="button" className="btn" onClick={() => { setRobotFile(null); setV({ ...v, robot: '' }); }}>사진 빼기</button>}
             </div>
             <small className="full">3MB 이하. 사진에 학생 얼굴이 크게 나오면 팀원 동의를 받고 올려 주세요.</small>
-            <label className="full agree"><input type="checkbox" checked={v.sns_ok} onChange={(e) => setV({ ...v, sns_ok: e.target.checked })} /><span>[선택] 동문회 공식 SNS에서 우리 팀을 소개할 때 이 사진과 소개를 써도 돼요 <small>사진에 나온 팀원 모두의 동의를 받았을 때만 켜 주세요. 끄면 SNS에 쓰지 않아요.</small></span></label>
+            {newPhoto && <label className="full agree"><input type="checkbox" checked={photoOk} onChange={(e) => setPhotoOk(e.target.checked)} /><span><b>[필수 확인]</b> 사진에 얼굴이 나온 사람(미성년자라면 본인)에게 홈페이지 공개 동의를 받았어요.</span></label>}
+            <label className="full agree"><input type="checkbox" checked={v.sns_ok} onChange={(e) => setV({ ...v, sns_ok: e.target.checked })} /><span><b>[선택]</b> KRC 동문회 공식 SNS에 팀 소개와 함께 이 사진이 올라가는 것에도 동의해요. <small>사진에 나온 팀원 모두의 동의를 받았을 때만 켜 주세요. 끄면 SNS에 쓰지 않아요.</small></span></label>
           </div></fieldset>
 
           <fieldset className="full"><legend>§04 SNS · 연락</legend><div className="grid">

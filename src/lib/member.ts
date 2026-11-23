@@ -65,11 +65,13 @@ export function parseProfile(b: any): { data?: Profile; error?: string } {
 }
 
 export type SignupIn = Profile & { verify: string; email: string; pw: string; agree: boolean; team_no: number | null };
+// 동의: [필수] 만 14세·약관, [필수] 개인정보, [선택] 역할·소개 (선택에 동의 안 하면 역할·소개는 저장 안 함)
 export const teamNo = (v: unknown) => { const n = Number(String(v ?? '').trim()); return Number.isInteger(n) && n > 0 && n < 100000 ? n : null; };
 // 입력 정리 + 검사. 틀리면 error에 화면에 띄울 문장
 export function parseSignup(b: any): { data?: SignupIn; error?: string } {
   const p = parseProfile(b);
-  const d: SignupIn = { ...(p.data ?? { name: '', school: '', team: '', role: '', intro: '' }), verify: str(b?.verify, 500), email: str(b?.email, 120).toLowerCase(), pw: String(b?.pw ?? ''), agree: b?.agree === true, team_no: teamNo(b?.team_no) };
+  const d: SignupIn = { ...(p.data ?? { name: '', school: '', team: '', role: '', intro: '' }), verify: str(b?.verify, 500), email: str(b?.email, 120).toLowerCase(), pw: String(b?.pw ?? ''), agree: b?.agree_terms === true && b?.agree_privacy === true, team_no: teamNo(b?.team_no) };
+  if (b?.agree_optional !== true) { d.role = ''; d.intro = ''; }
   if (!p.data || !d.verify) return { error: '필수 항목을 모두 채워 주세요' };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return { error: '이메일 주소를 확인해 주세요' };
   const e = pwError(d.pw);

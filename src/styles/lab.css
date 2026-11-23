@@ -162,3 +162,6 @@ mark.hl { background: var(--yel); color: #0E0F12; padding: 0 3px; border-radius:
   .made .cards3 { grid-template-columns: 1fr; }
   .for .rows3 > div { grid-template-columns: 1fr; gap: 8px; }
 }
+.report { font-size: 13px; color: var(--mut); text-decoration: underline; text-underline-offset: 3px; } .report:hover { color: var(--red-ink); }
+.apknote code { word-break: break-all; font-size: 12px; } .apknote { margin-top: 8px; }
+.ftr .tm { display: block; margin-top: 6px; color: var(--mut); font-size: 12px; line-height: 1.5; }

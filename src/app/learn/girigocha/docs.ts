@@ -23,3 +23,5 @@ export const DOCS: { group: string; items: [path: string, label: string][] }[] =
 export const FLAT = DOCS.flatMap((g) => g.items);
 export const VERSION = '0.12.1';
 export const APK = `/downloads/girigocha-${VERSION}.apk`;
+// 내려받은 파일이 바뀌지 않았는지 확인용 (APK를 바꾸면 shasum -a 256 으로 다시 계산)
+export const APK_SHA256 = '1e393e86705afab4c50b145eb5935dac7f9f688ee274df72e92fba27819f9069';

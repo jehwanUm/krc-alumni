@@ -47,6 +47,7 @@ export function LoginForm() {
   const [sent, setSent] = useState(false);
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
+  const [opt, setOpt] = useState(false);   // [선택] 역할·소개 동의
 
   const run = async (e: React.FormEvent<HTMLFormElement>, fn: (f: FormData) => Promise<void>) => {
     e.preventDefault(); setErr(''); setBusy(true);
@@ -58,7 +59,7 @@ export function LoginForm() {
   });
   const signup = (e: React.FormEvent<HTMLFormElement>) => run(e, async (f) => {
     if (pw !== pw2) throw new Error('비밀번호 확인이 달라요');
-    await post('/api/auth/signup', { ...Object.fromEntries(f), pw, agree: f.get('agree') === 'on' });
+    await post('/api/auth/signup', { ...Object.fromEntries(f), pw, agree_terms: f.get('agree_terms') === 'on', agree_privacy: f.get('agree_privacy') === 'on', agree_optional: opt });
     setSent(true);
   });
 
@@ -96,12 +97,16 @@ export function LoginForm() {
             <small>지금 참가하는 팀이면 적어 주세요. 운영진이 확인할 때 참고해요.</small></label>
           <label className="full"><span>팀 인증 신청 내용 <i>*</i></span><input name="verify" placeholder="예: 2026 시즌 구동계 파트 팀원 / 학번·기수 또는 팀장 확인 메모" required maxLength={500} />
             <small>졸업생은 참가한 시즌과 팀을 적어 주세요. 확인을 위해 증빙 자료를 요청할 수 있어요.</small></label>
-          <label>역할<input name="role" placeholder="예: 하드웨어 제작" maxLength={60} /></label>
-          <label>간단 소개<input name="intro" placeholder="담당 연구/개발 분야를 소개해 주세요" maxLength={300} /></label>
+          <label>역할 <small>(선택)</small><input name="role" placeholder="예: 하드웨어 제작" maxLength={60} disabled={!opt} /></label>
+          <label>간단 소개 <small>(선택)</small><input name="intro" placeholder="담당 연구/개발 분야를 소개해 주세요" maxLength={300} disabled={!opt} /></label>
           <label className="full"><span>이메일 <i>*</i></span><input name="email" type="email" placeholder="engineer@krcalumni.com" autoComplete="email" required /></label>
           <PwField pw={pw} setPw={setPw} pw2={pw2} setPw2={setPw2} />
-          <label className="full agree"><input type="checkbox" name="agree" required />
-            <span>만 14세 이상이며, <a href="/terms" target="_blank">이용약관</a>과 개인정보 수집·이용(<a href="/privacy" target="_blank">개인정보처리방침</a>)에 동의해요. <small>수집: 이름·학교·팀·인증 내용·역할·소개·이메일 / 목적: 회원 확인과 동문회 안내 / 보관: 탈퇴 요청 시까지</small></span></label>
+          <label className="full agree"><input type="checkbox" name="agree_terms" required />
+            <span><b>[필수]</b> 만 14세 이상이며 <a href="/terms" target="_blank">이용약관</a>에 동의해요.</span></label>
+          <label className="full agree"><input type="checkbox" name="agree_privacy" required />
+            <span><b>[필수]</b> 개인정보 수집·이용에 동의해요 (<a href="/privacy" target="_blank">개인정보처리방침</a>). <small>수집: 이름·학교·팀·팀 번호·인증 내용·이메일 / 목적: 회원 확인과 동문회 안내 / 보관: 탈퇴할 때까지</small></span></label>
+          <label className="full agree"><input type="checkbox" checked={opt} onChange={(e) => setOpt(e.target.checked)} />
+            <span><b>[선택]</b> 역할·간단 소개 수집·이용에 동의해요. <small>목적: 회원 소개 / 보관: 탈퇴할 때까지. 동의하지 않아도 가입할 수 있어요.</small></span></label>
           {err && <p className="err full" role="alert">{err}</p>}
           <button className="btn pri full" disabled={busy || !ok(pw) || pw !== pw2}>{busy ? '보내는 중…' : '가입 신청'}</button>
         </form>

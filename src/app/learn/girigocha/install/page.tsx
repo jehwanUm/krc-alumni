@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { meta } from '@/lib/meta';
 import Doc, { Steps } from '../Doc';
-import { APK, VERSION } from '../docs';
+import { APK, APK_SHA256, VERSION } from '../docs';
 
 export const metadata = meta('/learn/girigocha/install');
 
@@ -31,6 +31,7 @@ export default function Page() {
         <a className="btn pri" href={APK} download>설치 파일 내려받기 (APK {VERSION})</a>
         <small>인터넷이 될 때 먼저 받아 두세요 — 로봇 Wi‑Fi에 연결하면 인터넷이 끊겨요</small>
       </div>
+      <p className="dim small apknote">SHA-256 <code>{APK_SHA256}</code><br />로봇에 쓰기 전에 반드시 안전한 연습 공간에서 먼저 시험해 주세요. 충분히 시험하지 않고 써서 생긴 로봇 파손이나 안전사고는 동문회가 책임지지 않아요.</p>
       <Steps>
         <li><p>노트북을 <b>로봇 Wi‑Fi</b>에 연결하고 브라우저에서 <code>http://192.168.43.1:8080</code> 을 열어요.</p></li>
         <li><p><b>Manage</b> → <b>Select App</b> → 받은 <code>.apk</code> 파일 → <b>Update</b>. "기존 앱을 지우고 계속할까요?"가 나오면 <b>OK</b>.</p></li>
