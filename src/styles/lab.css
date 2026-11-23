@@ -148,3 +148,17 @@ mark.hl { background: var(--yel); color: #0E0F12; padding: 0 3px; border-radius:
 .guide details.ch > summary { cursor: pointer; padding: 12px 0; font-weight: 600; color: var(--blue-ink); }
 .guide details.ch[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
 .guide .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+/* 첫 화면 아래: 동문회가 만든 것 · 누구를 위한 곳 */
+.home .cta { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.made .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.made .cards3 a { display: flex; flex-direction: column; gap: 8px; padding: 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); transition: border-color .15s; }
+.made .cards3 a:hover { border-color: var(--mut); } .made .cards3 a:hover b { color: var(--blue-ink); }
+.made .cards3 b { font-size: 18px; } .made .cards3 p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.6; }
+.made .dim, .for .dim { margin: 8px 0 0; }
+.for .rows3 > div { display: grid; grid-template-columns: 180px 1fr auto; gap: 16px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.for .rows3 > div:last-child { border-bottom: 0; }
+.for .rows3 p { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.6; }
+@media (max-width: 900px) {
+  .made .cards3 { grid-template-columns: 1fr; }
+  .for .rows3 > div { grid-template-columns: 1fr; gap: 8px; }
+}
