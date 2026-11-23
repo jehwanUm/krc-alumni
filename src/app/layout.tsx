@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { IBM_Plex_Sans_KR, IBM_Plex_Mono } from 'next/font/google';
 import Nav from '../components/Nav';
 import { NAV, COMPETITION_ONLY, DISCORD_URL } from '../lib/nav';
+import { HeaderAuth } from '@/components/Client';
 import JsonLd from '../components/JsonLd';
 import { SITE, SITE_NAME, abs } from '../lib/meta';
 import '../styles/lab.css';
@@ -33,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="hdr"><div className="in">
           <Link className="logo" href={COMPETITION_ONLY ? '/live' : '/'}>KRC Alumni</Link>
           <Nav />
-          <div className="right">{!COMPETITION_ONLY && DISCORD_URL && <a className="btn" href={DISCORD_URL} rel="external">Discord</a>}<Link className="btn pri" href="/login">로그인</Link></div>
+          <div className="right">{!COMPETITION_ONLY && DISCORD_URL && <a className="btn" href={DISCORD_URL} rel="external">Discord</a>}<HeaderAuth /></div>
         </div></header>
         {children}
         <footer className="ftr"><div className="in">

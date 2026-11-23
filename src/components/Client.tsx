@@ -17,15 +17,28 @@ export function DDay({ start, after, id }: { start: string; after: string; id?: 
   return <b id={id} suppressHydrationWarning>{v}</b>;
 }
 
-// 홈 버튼: 로그인 쿠키로 자동 로그인 상태를 확인한다 (/api/me, 볼 때마다 로그인 30일 연장)
-// 로그인 + 팀 연결 → 우리 팀 페이지(대회 날엔 Live), 로그인만 → 내 계정, 로그인 안 함 → 로그인
+// 로그인 상태: 로그인 쿠키로 자동 확인 (/api/me, 볼 때마다 로그인 30일 연장). 한 페이지에서 한 번만 부른다
 type Me = { login: boolean; team?: number | null; teamName?: string };
-export function TeamButton({ live }: { live: boolean }) {
+let meP: Promise<Me> | null = null;
+const getMe = () => (meP ??= fetch('/api/me').then((r) => r.json()).catch(() => ({ login: false })));
+function useMe() {
   const [me, setMe] = useState<Me | null>(null);
-  useEffect(() => { fetch('/api/me').then((r) => r.json()).then(setMe).catch(() => setMe({ login: false })); }, []);
-  if (!me) return <span className="btn pri ghost" aria-hidden="true">&nbsp;</span>;   // 자리만 잡아 화면이 덜컹이지 않게
-  if (!me.login) return <Link className="btn pri" href="/login">로그인</Link>;
-  if (!me.team) return <Link className="btn pri" href="/login">내 계정</Link>;
+  useEffect(() => { getMe().then(setMe); }, []);
+  return me;
+}
+
+// 상단 버튼: 로그인 안 함 → 로그인, 로그인 + 팀 → 우리 팀 페이지, 팀 없음 → 내 계정
+export function HeaderAuth() {
+  const me = useMe();
+  if (me?.login && me.team) return <Link className="btn pri" href={`/teams/${me.team}`}>{me.team} · 우리 팀</Link>;
+  if (me?.login) return <Link className="btn pri" href="/login">내 계정</Link>;
+  return <Link className="btn pri" href="/login">로그인</Link>;
+}
+
+// 첫 화면 버튼: 로그인 + 팀 연결일 때만 우리 팀 페이지(대회 날엔 Live). 로그인 버튼은 상단에만
+export function TeamButton({ live }: { live: boolean }) {
+  const me = useMe();
+  if (!me?.login || !me.team) return null;
   const t = `${me.team}${me.teamName ? ` ${me.teamName}` : ''}`;
   return <Link className="btn pri" href={live ? `/live?live=1&team=${me.team}` : `/teams/${me.team}`}>{t} · {live ? '우리 팀 다음 경기' : '우리 팀 페이지'}</Link>;
 }
