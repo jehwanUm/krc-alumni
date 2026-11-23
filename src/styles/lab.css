@@ -138,3 +138,8 @@ main > .sec:nth-of-type(2) { animation-delay: .16s; } main > .sec:nth-of-type(3)
 mark.hl { background: var(--yel); color: #0E0F12; padding: 0 3px; border-radius: 2px; font-weight: 600; }
 .guide .body a { color: var(--blue-ink); text-decoration: underline; text-underline-offset: 3px; } /* 신생 팀 가이드: 자료 링크가 링크로 보이게 */
 .guide .body a:hover { color: var(--ink); }
+.guide .body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 15px; } /* 시즌 자료실 표 */
+.guide .body th, .guide .body td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+.guide .body th { color: var(--ink-2); font-weight: 500; background: var(--panel); }
+.guide .rule { font-family: var(--mono); color: var(--blue-ink); margin-right: 8px; white-space: nowrap; }
+.guide .body h3 { margin: 28px 0 8px; font-size: 17px; font-weight: 600; }
