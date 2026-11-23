@@ -15,6 +15,8 @@ export function meta(path: string, over?: { title: string; desc: string }): Meta
     description: p.desc,
     alternates: { canonical: abs(path) },
     robots: p.noindex ? { index: false } : undefined,
-    openGraph: { type: 'website', siteName: SITE_NAME, title: full, description: p.desc, url: abs(path), locale: 'ko_KR' },
+    // 공유 미리보기 그림: app/opengraph-image.tsx (페이지마다 openGraph를 새로 써서 여기서 직접 붙인다)
+    openGraph: { type: 'website', siteName: SITE_NAME, title: full, description: p.desc, url: abs(path), locale: 'ko_KR', images: [{ url: abs('/opengraph-image'), width: 1200, height: 630, alt: SITE_NAME }] },
+    twitter: { card: 'summary_large_image', title: full, description: p.desc, images: [abs('/opengraph-image')] },
   };
 }
