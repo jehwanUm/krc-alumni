@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { meta } from '@/lib/meta';
 import data from '@/data/manual-ko-tu10.json';
+import { OpenAll } from './OpenAll';
 
 export const metadata = meta('/learn/season/manual');
 
@@ -22,7 +23,7 @@ export default function Page() {
       <section className="sec"><div className="in"><div><span className="label">목차</span><h2>장 바로가기</h2></div><div className="body">
         <ul>{SECTIONS.map((s) => <li key={s.no}><a href={`#s${s.no}`}>{s.no}. {s.title}</a></li>)}</ul>
         <p className="note">요약은 이해를 돕기 위한 것이고, 규칙의 최종 기준은 <a href="https://ftc-resources.firstinspires.org/ftc/game/manual" target="_blank" rel="noopener noreferrer">영문 공식 매뉴얼</a>이에요. Korea Robot Championship 적용 내용은 다를 수 있으니, 정확한 내용은 <a href="https://fest.or.kr" target="_blank" rel="noopener noreferrer">fest.or.kr</a>에서 확인하세요.</p>
-        <p><Link href="/learn/season">← 시즌 자료실</Link></p>
+        <p className="row"><OpenAll /> <Link href="/learn/season">← 시즌 자료실</Link></p>
       </div></div></section>
 
       {SECTIONS.map((s) => (
@@ -30,12 +31,16 @@ export default function Page() {
           <div><span className="label">§{s.no}</span><h2>{s.title}</h2></div>
           <div className="body">
             <p>{s.summary}</p>
-            {s.groups.map((g) => (
-              <div key={g.no + g.title}>
-                <h3>{g.no} {g.title}</h3>
-                <ul>{g.items.map((it, i) => <li key={i}>{it.id && <span className="rule">{it.id}</span>}{it.text}</li>)}</ul>
-              </div>
-            ))}
+            {/* 처음엔 접어 두고, 누르면 이 장 내용이 다 펼쳐진다 */}
+            <details className="ch">
+              <summary>자세히 보기 · {s.groups.reduce((n, g) => n + g.items.length, 0)}항목</summary>
+              {s.groups.map((g) => (
+                <div key={g.no + g.title}>
+                  <h3>{g.no} {g.title}</h3>
+                  <ul>{g.items.map((it, i) => <li key={i}>{it.id && <span className="rule">{it.id}</span>}{it.text}</li>)}</ul>
+                </div>
+              ))}
+            </details>
           </div>
         </div></section>
       ))}

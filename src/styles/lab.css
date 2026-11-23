@@ -143,3 +143,8 @@ mark.hl { background: var(--yel); color: #0E0F12; padding: 0 3px; border-radius:
 .guide .body th { color: var(--ink-2); font-weight: 500; background: var(--panel); }
 .guide .rule { font-family: var(--mono); color: var(--blue-ink); margin-right: 8px; white-space: nowrap; }
 .guide .body h3 { margin: 28px 0 8px; font-size: 17px; font-weight: 600; }
+/* 매뉴얼 요약: 장마다 접힌 「자세히 보기」 */
+.guide details.ch { margin-top: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 0 14px; }
+.guide details.ch > summary { cursor: pointer; padding: 12px 0; font-weight: 600; color: var(--blue-ink); }
+.guide details.ch[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.guide .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
