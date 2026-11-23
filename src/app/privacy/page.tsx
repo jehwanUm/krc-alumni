@@ -16,7 +16,7 @@ export default function Page() {
       </div></section>
 
       <section className="sec"><div className="in"><div><span className="label">§01</span><h2>모으는 정보와 목적</h2></div><div className="body">
-        <table className="tbl"><thead><tr><th>구분</th><th>항목</th><th>목적</th></tr></thead><tbody>
+        <div className="tscroll"><table className="tbl"><thead><tr><th>구분</th><th>항목</th><th>목적</th></tr></thead><tbody>
           <tr><td>회원가입 (필수)</td><td>이름, 학교, 소속 팀 이름, 팀 인증 신청 내용, 이메일, 비밀번호(암호화해서 저장)</td><td>KRC 참가 여부 확인, 로그인, 동문회 안내</td></tr>
           <tr><td>회원가입 (선택)</td><td>역할, 간단 소개</td><td>회원 소개</td></tr>
           <tr><td>팀 페이지 공개 (선택)</td><td>이름, 역할, 팀장 여부</td><td>본인이 「팀 페이지에 공개」를 켠 경우에만 팀 페이지에 보여요. 언제든 끌 수 있어요</td></tr>
@@ -26,7 +26,7 @@ export default function Page() {
           <tr><td>가입 시도 기록</td><td>접속 주소(IP)를 바꿔 만든 값 — 원래 주소는 저장하지 않아요</td><td>자동 가입 스팸 막기. 하루 뒤 지워요</td></tr>
           <tr><td>오토 경로 (팀원)</td><td>경로 이름, 경로 데이터, 저장한 사람 이메일</td><td>팀 경로 저장·공유. 공개 범위는 팀이 정해요</td></tr>
           <tr><td>자동으로 생기는 정보</td><td>로그인 쿠키, 이 기기에 저장한 팀 번호·오토 경로</td><td>로그인 유지, 화면 설정. 기기 안에만 있거나 30일 뒤 만료돼요</td></tr>
-        </tbody></table>
+        </tbody></table></div>
       </div></div></section>
 
       <section className="sec"><div className="in"><div><span className="label">§02</span><h2>보관 기간과 파기</h2></div><div className="body">
@@ -39,10 +39,10 @@ export default function Page() {
 
       <section className="sec"><div className="in"><div><span className="label">§03</span><h2>제3자 제공 · 처리 위탁 · 국외 이전</h2></div><div className="body">
         <p>개인정보를 다른 곳에 팔거나 제공하지 않아요. 홈페이지를 운영하기 위해 아래 해외 클라우드 서비스에 저장·처리를 맡겨요. 서비스를 쓰는 동안 데이터가 네트워크를 통해 수시로 아래 국가의 서버로 전송·저장돼요. 이는 계약 이행을 위한 국외 처리위탁·보관이에요(개인정보 보호법 제28조의8 제1항 제3호).</p>
-        <table className="tbl"><thead><tr><th>이전받는 곳</th><th>국가</th><th>이전 항목</th><th>목적 · 보유 기간</th></tr></thead><tbody>
+        <div className="tscroll"><table className="tbl"><thead><tr><th>이전받는 곳</th><th>국가</th><th>이전 항목</th><th>목적 · 보유 기간</th></tr></thead><tbody>
           <tr><td>Supabase Inc.<br /><a href="mailto:privacy@supabase.com">privacy@supabase.com</a></td><td>싱가포르</td><td>회원가입 정보(이름·학교·팀·이메일·암호화한 비밀번호), 팀 사진·소개, 경기 호출 알림 정보, 오토 경로, 가입 시도 기록</td><td>데이터베이스·파일 저장 / 회원 탈퇴 또는 위탁 계약 종료 때까지</td></tr>
           <tr><td>Vercel Inc.<br /><a href="mailto:privacy@vercel.com">privacy@vercel.com</a></td><td>대한민국(서울 리전)에서 실행, 회사는 미국</td><td>접속 기록, 로그인 쿠키, 화면을 만드는 과정의 데이터</td><td>홈페이지 호스팅·전송 / 서비스 종료 또는 위탁 계약 종료 때까지</td></tr>
-        </tbody></table>
+        </tbody></table></div>
         <p className="dim small">가입 승인 알림 메일을 켜면 메일 발송 서비스를 이 표에 추가하고 미리 알려 드려요.</p>
       </div></div></section>
 

@@ -5,7 +5,7 @@ export const COMPETITION_ONLY = false;
 export const OPEN = ['/start', '/live', '/teams', '/login', '/learn/girigocha', '/auto', '/links'];
 
 const ALL = [
-  ['/live', '대회'], ['/teams', '팀'], ['/auto', '오토'], ['/learn', '배움'], ['/alumni', '동문회'], ['/krc', 'Korea Robot Championship'],
+  ['/live', '대회'], ['/teams', '팀'], ['/auto', '오토'], ['/learn', '배움'], ['/alumni', '동문회'], ['/krc', 'KRC 소개'],
 ] as const;
 export const NAV: readonly (readonly [string, string])[] = COMPETITION_ONLY ? ALL.filter(([h]) => h === '/live' || h === '/teams') : ALL;
 
