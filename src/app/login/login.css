@@ -62,3 +62,10 @@
   .assign .ck { display: inline-flex; gap: 4px; align-items: center; }
   h2 { margin: 0 0 4px; font-size: 18px; }
 }
+.pg-admin {
+  .tprev { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tprev img { border-radius: 6px; border: 1px solid var(--line); object-fit: cover; }
+  .tprev p { margin: 0; flex: 1; min-width: 200px; }
+  .hiddenrow { opacity: .6; }
+}
+.pg-login .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }

@@ -72,7 +72,7 @@ export function parseSignup(b: any): { data?: SignupIn; error?: string } {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return { error: '이메일 주소를 확인해 주세요' };
   const e = pwError(d.pw);
   if (e) return { error: e };
-  if (!d.agree) return { error: '개인정보 수집·이용에 동의해야 가입할 수 있어요' };
+  if (!d.agree) return { error: '이용약관과 개인정보 수집·이용에 동의해야 가입할 수 있어요' };
   return { data: d };
 }
 
@@ -92,3 +92,12 @@ export function parseTeamForm(f: FormData) {
   };
 }
 export const IMG_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+
+// 가입 스팸: 같은 IP 1시간 5번, 전체 1시간 60번. IP는 서버 비밀 값으로 해시해서만 저장
+export const SIGNUP_PER_IP = 5, SIGNUP_ALL = 60;
+export const ipHash = (req: Request) => createHmac('sha256', secret()).update('ip:' + (req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local')).digest('hex').slice(0, 32);
+export function tooMany(recent: { ip_hash: string }[], h: string) {
+  if (recent.filter((r) => r.ip_hash === h).length >= SIGNUP_PER_IP) return '가입 신청이 너무 많아요. 1시간 뒤에 다시 시도해 주세요';
+  if (recent.length >= SIGNUP_ALL) return '지금 가입 신청이 몰리고 있어요. 잠시 후 다시 시도해 주세요';
+  return '';
+}

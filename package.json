@@ -11,7 +11,8 @@
     "vercel:login": "vercel login",
     "vercel:link": "vercel link",
     "vercel:env": "node scripts/vercel-env.mjs",
-    "deploy": "vercel --prod"
+    "deploy": "vercel --prod",
+    "backup": "node --env-file=.env scripts/backup.mjs"
   },
   "dependencies": {
     "next": "^16.4.5",

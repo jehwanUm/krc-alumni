@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <span>KRC Alumni · Korea Robot Championship 동문회</span>
           <nav aria-label="바닥 메뉴">
             {NAV.map(([href, label]) => <Link key={href} href={href}>{label}</Link>)}
-            {!COMPETITION_ONLY && <><Link href="/sponsors">후원 기업</Link><Link href="/mentoring">멘토링</Link></>}<Link href="/privacy">개인정보처리방침</Link>
+            {!COMPETITION_ONLY && <><Link href="/sponsors">후원 기업</Link><Link href="/mentoring">멘토링</Link></>}<Link href="/terms">이용약관</Link><Link href="/privacy">개인정보처리방침</Link>
           </nav>
         </div></footer>
       </body>

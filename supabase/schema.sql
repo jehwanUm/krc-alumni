@@ -86,3 +86,9 @@ create table if not exists autos (
 create index if not exists autos_team on autos (team);
 create index if not exists autos_public on autos (visibility) where visibility = 'public';
 alter table autos enable row level security;
+alter table team_profiles add column if not exists hidden boolean not null default false;   -- 운영진이 숨김 (2026-11-23)
+
+-- 가입 스팸 막기 (2026-11-23): IP는 해시만, 하루 지나면 지운다
+create table if not exists signup_log (id bigserial primary key, ip_hash text not null, at timestamptz not null default now());
+create index if not exists signup_log_at on signup_log (at);
+alter table signup_log enable row level security;

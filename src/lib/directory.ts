@@ -7,7 +7,7 @@ export type ViewTeam = DirTeam & { logo: string };
 export type TeamsView = Omit<Directory, 'teams'> & { teams: ViewTeam[] };
 export async function getTeamsView(): Promise<TeamsView> {
   const [dir, ps]: [Directory, TeamProfile[]] = await Promise.all([getDirectory(), teamProfiles.all().catch(() => [])]);
-  const by = new Map(ps.map((p) => [p.team, p]));
+  const by = new Map(ps.filter((p) => !p.hidden).map((p) => [p.team, p]));
   return {
     ...dir,
     teams: dir.teams.map((t) => {

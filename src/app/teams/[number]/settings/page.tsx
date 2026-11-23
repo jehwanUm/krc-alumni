@@ -47,6 +47,7 @@ export default async function Page({ params }: { params: Promise<{ number: strin
   const roster = team.filter((m) => m.status !== 'rejected').map((m) => ({ id: m.id, name: m.name, school: m.school, role: m.role, verify: m.verify, status: m.status, leader: m.team_leader, me: m.id === me!.id, admin: m.admin }));
   return (
     <main className="pg-login pg-tset">{head('팀 페이지에 보이는 내용과 팀원을 관리해요.')}
+      {p?.hidden && <div className="preview-bar" role="note">운영진이 이 팀이 올린 내용을 숨겼어요. 고쳐서 저장한 뒤 운영진에게 다시 보이게 해 달라고 요청해 주세요.</div>}
       <section className="sec wide"><div className="in"><div className="body">
         <TeamSettings n={n} name={name} init={init} roster={roster} />
       </div></div></section>

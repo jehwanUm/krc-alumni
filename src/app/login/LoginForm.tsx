@@ -88,6 +88,7 @@ export function LoginForm() {
         </form>
       ) : (
         <form onSubmit={signup} className="f">
+          <input name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
           <label className="full"><span>이름 <i>*</i></span><input name="name" placeholder="예: 박지훈" autoComplete="name" required maxLength={40} /></label>
           <label><span>학교 <i>*</i></span><input name="school" placeholder="예: 창의공학교육협회" required maxLength={80} /></label>
           <label><span>소속 팀 이름 <i>*</i></span><input name="team" placeholder="예: KRC 동문회" required maxLength={80} /></label>
@@ -100,7 +101,7 @@ export function LoginForm() {
           <label className="full"><span>이메일 <i>*</i></span><input name="email" type="email" placeholder="engineer@krcalumni.com" autoComplete="email" required /></label>
           <PwField pw={pw} setPw={setPw} pw2={pw2} setPw2={setPw2} />
           <label className="full agree"><input type="checkbox" name="agree" required />
-            <span>만 14세 이상이며, 개인정보 수집·이용에 동의해요 (<a href="/privacy" target="_blank">개인정보처리방침</a>). <small>수집: 이름·학교·팀·인증 내용·역할·소개·이메일 / 목적: 회원 확인과 동문회 안내 / 보관: 탈퇴 요청 시까지</small></span></label>
+            <span>만 14세 이상이며, <a href="/terms" target="_blank">이용약관</a>과 개인정보 수집·이용(<a href="/privacy" target="_blank">개인정보처리방침</a>)에 동의해요. <small>수집: 이름·학교·팀·인증 내용·역할·소개·이메일 / 목적: 회원 확인과 동문회 안내 / 보관: 탈퇴 요청 시까지</small></span></label>
           {err && <p className="err full" role="alert">{err}</p>}
           <button className="btn pri full" disabled={busy || !ok(pw) || pw !== pw2}>{busy ? '보내는 중…' : '가입 신청'}</button>
         </form>

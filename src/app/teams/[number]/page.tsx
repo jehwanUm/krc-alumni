@@ -25,7 +25,8 @@ const load = cache(async (n: number) => {
   let team: any = null, history: Awaited<ReturnType<typeof getKrcHistory>> = [], matches: Record<number, any[]> = {}, sameSponsor: Record<string, number> = {}, error = '';
   const cfg = config();
   // 팀장이 고친 팀 설정이 있으면 소속·지역·후원사(운영진 확인 후)를 덮어쓴다
-  const [p, mates, pubAutos] = await Promise.all([teamProfiles.get(n, true).catch(() => null), members.publicOfTeam(n).catch(() => []), autos.publicAll().then((l) => l.filter((a) => a.team === n)).catch(() => [])]);
+  const [p0, mates, pubAutos] = await Promise.all([teamProfiles.get(n, true).catch(() => null), members.publicOfTeam(n).catch(() => []), autos.publicAll().then((l) => l.filter((a) => a.team === n)).catch(() => [])]);
+  const p = p0?.hidden ? null : p0;   // 운영진이 숨긴 팀 설정은 안 보여 줌
   const base = teamKo(n);
   const ko = { ...base, school: p?.school || base.school, region: p?.region || base.region, sponsors: p?.sponsors_ok ? p.sponsors : base.sponsors };
   try {

@@ -10,7 +10,7 @@ export type Member = { id: string; email: string; pw: string; name: string; scho
   sess: number; fails: number; locked_until: string | null; reset_hash: string | null; reset_exp: string | null;
   team_no: number | null; team_leader: boolean; show_on_team: boolean };
 
-type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[]; autos?: Auto[] };
+type Db = { push_subs: SubRow[]; arrivals: Arrival[]; push_log: LogRow[]; members?: Member[]; team_profiles?: TeamProfile[]; autos?: Auto[]; signup_log?: { ip_hash: string; at: string }[] };
 // 주소는 https://xxxx.supabase.co (화면에서 …/rest/v1/까지 복사해도 받아 준다)
 const env = () => ({ url: process.env.SUPABASE_URL?.trim().replace(/\/(rest\/v1\/?)?$/, '').replace(/\/$/, ''), key: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() });
 
@@ -138,7 +138,7 @@ export const members = {
 
 // 팀 설정: 팀장이 고치는 팀 페이지 내용 (표 team_profiles)
 export type TeamProfile = { team: number; school: string; region: string; intro: string; robot_name: string; logo_url: string | null; robot_url: string | null;
-  instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; updated_at: string; updated_by: string | null };
+  instagram: string; youtube: string; web: string; email: string; sponsors: string[]; sponsors_ok: boolean; hidden?: boolean; updated_at: string; updated_by: string | null };
 export const teamTag = (team: number) => `team-${team}`;
 export const PROFILES_TAG = 'team-profiles';
 export const teamProfiles = {
@@ -147,8 +147,9 @@ export const teamProfiles = {
     if (local()) return load().team_profiles?.find((t) => t.team === team) ?? null;
     return (await rest(`team_profiles?team=${eq(team)}&select=*`, cached ? { next: { revalidate: 600, tags: [teamTag(team)] } } : {}))?.[0] ?? null;
   },
-  async put(row: TeamProfile) {
-    if (local()) { const db = load(); db.team_profiles = [...(db.team_profiles ?? []).filter((t) => t.team !== row.team), row]; return save(db); }
+  async put(row: Omit<TeamProfile, 'hidden'>) {
+    // 저장에 없는 칸(hidden 등)은 그대로 둔다 — Supabase merge-duplicates와 같게
+    if (local()) { const db = load(); const old = db.team_profiles?.find((t) => t.team === row.team); db.team_profiles = [...(db.team_profiles ?? []).filter((t) => t.team !== row.team), { ...old, ...row }]; return save(db); }
     await rest('team_profiles?on_conflict=team', { method: 'POST', body: JSON.stringify(row), prefer: 'resolution=merge-duplicates' });
   },
   // 팀 목록·후원 페이지용 전체 (10분 캐시, 저장하면 PROFILES_TAG로 비움)
@@ -159,6 +160,11 @@ export const teamProfiles = {
   async unchecked(): Promise<TeamProfile[]> {
     if (local()) return (load().team_profiles ?? []).filter((t) => !t.sponsors_ok);
     return rest('team_profiles?sponsors_ok=eq.false&select=*');
+  },
+  // 운영진: 숨기기·사진 지우기 등
+  async patch(team: number, p: Partial<TeamProfile>) {
+    if (local()) { const db = load(); const t = db.team_profiles?.find((x) => x.team === team); if (t) Object.assign(t, p); return save(db); }
+    await rest(`team_profiles?team=${eq(team)}`, { method: 'PATCH', body: JSON.stringify(p) });
   },
   async checkSponsors(team: number) {
     if (local()) { const db = load(); const t = db.team_profiles?.find((x) => x.team === team); if (t) t.sponsors_ok = true; return save(db); }
@@ -214,5 +220,19 @@ export const autos = {
   async remove(id: string) {
     if (local()) { const db = load(); db.autos = (db.autos ?? []).filter((a) => a.id !== id); return save(db); }
     await rest(`autos?id=${eq(id)}`, { method: 'DELETE' });
+  },
+};
+
+// 가입 시도 기록 (스팸 막기). 하루 지난 기록은 넣을 때 지운다
+export const signupLog = {
+  async recent(sinceIso: string): Promise<{ ip_hash: string }[]> {
+    if (local()) return (load().signup_log ?? []).filter((r) => r.at >= sinceIso);
+    return rest(`signup_log?at=gte.${encodeURIComponent(sinceIso)}&select=ip_hash`);
+  },
+  async add(ip_hash: string) {
+    const day = new Date(Date.now() - 864e5).toISOString();
+    if (local()) { const db = load(); db.signup_log = [...(db.signup_log ?? []).filter((r) => r.at >= day), { ip_hash, at: new Date().toISOString() }]; return save(db); }
+    await rest('signup_log', { method: 'POST', body: JSON.stringify({ ip_hash }) });
+    await rest(`signup_log?at=lt.${encodeURIComponent(day)}`, { method: 'DELETE' });
   },
 };
