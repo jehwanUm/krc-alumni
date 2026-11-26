@@ -61,6 +61,15 @@
   .dlg h2 { margin: 0 0 8px; font-size: 18px; } .dlg p { margin: 0 0 6px; font-size: 15px; color: var(--ink-2); }
   .dlg .msg { background: var(--bg); padding: 10px 12px; font-size: 14px; margin: 10px 0 14px; border-left: 3px solid var(--ink); }
   .dlg .row { display: flex; gap: 8px; justify-content: flex-end; }
+  .fr .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .whys { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; color: var(--mut); }
+  .whys button { font: inherit; font-size: 13px; height: 32px; padding: 0 10px; border: 1px solid var(--line); background: var(--panel); border-radius: 2px; cursor: pointer; color: var(--ink); }
+  .whyopts { display: grid; gap: 6px; margin: 12px 0; }
+  .whyopts button { font: inherit; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 2px; background: var(--panel); cursor: pointer; color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
+  .whyopts button b { font-size: 16px; } .whyopts button small { font-size: 13px; color: var(--mut); }
+  .whyopts button[aria-pressed='true'] { outline: 2px solid var(--ink); }
+  .whyopts .event { border-left: 4px solid var(--mut); } .whyopts .noshow { border-left: 4px solid #D9A400; } .whyopts .forfeit { border-left: 4px solid var(--red); }
+  .whynote { font: inherit; font-size: 15px; width: 100%; height: 44px; padding: 0 10px; border: 1px solid var(--line); border-radius: 2px; margin: 4px 0 14px; box-sizing: border-box; }
   .pin { max-width: 320px; margin: 48px auto; background: var(--panel); border: 1px solid var(--line); padding: 24px; display: flex; flex-direction: column; gap: 12px; }
   .pin h1 { margin: 0; font-size: 22px; }
   .pin input { font: inherit; font-size: 22px; letter-spacing: .3em; height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: 2px; text-align: center; }

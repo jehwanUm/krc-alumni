@@ -1,0 +1,30 @@
+/* 경기장 심판 화면: 멀리서도 읽히게 크게. 도착 = 동맹 색으로 꽉 참, 경기 불참 = 노랑, 기권 = 빨간 테두리, 대회 불참 = 회색 */
+.pg-field {
+  .fnow { margin: 12px 0 0; font-size: 14px; color: var(--mut); }
+  .fnow b { color: var(--ink); margin-right: 6px; }
+  .flist { display: grid; gap: 14px; margin: 14px 0; }
+  .fm { background: var(--panel); border: 1px solid var(--line); padding: 14px; }
+  .fm.first { border: 2px solid var(--ink); padding: 13px; }
+  .fm .mh b { font-size: 22px; }
+  .sum { font-size: 15px; font-weight: 700; padding: 2px 10px; border-radius: 2px; background: var(--ink); color: var(--panel); }
+  .sum.ok { background: #1F8A4C; }
+  .fts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ft { min-height: 118px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 2px; background: var(--panel); display: flex; flex-direction: column; gap: 2px; color: var(--ink); }
+  .ft .n { font-family: var(--mono); font-size: 30px; font-weight: 600; line-height: 1.1; } /* taste-skill-ignore */
+  .ft .nm { font-size: 13px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1em; }
+  .ft .h { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .ft .s { font-size: 14px; }
+  .ft .memo { font-size: 14px; font-weight: 600; border-top: 1px solid currentColor; padding-top: 4px; margin-top: 4px; }
+  .side.r .ft.ok { background: var(--red); border-color: var(--red); color: #fff; }
+  .side.b .ft.ok { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .ft.ok .nm { color: rgba(255, 255, 255, .85); }
+  .ft.noshow { background: #FFF4CC; border: 2px solid #D9A400; color: #2B2100; } /* 다크 모드에서도 노란 칸 글씨는 어둡게 */
+  .ft.noshow .nm { color: #5A4600; }
+  .ft.forfeit { background: var(--panel); border: 3px solid var(--red); }
+  .ft.forfeit .h { color: var(--red-ink, #B42328); }
+  .ft.event { background: var(--bg); border: 2px solid var(--mut); opacity: .75; }
+  .ft.call { border: 2px dashed var(--ink); }
+  .ft.pre .h { color: var(--mut); font-weight: 600; }
+  @media (min-width: 1100px) { .flist { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fts { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .ft { min-height: 96px; } .ft .n { font-size: 24px; } }
+}

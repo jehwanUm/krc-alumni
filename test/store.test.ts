@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 process.env.DB_PATH = ':memory:';
-const { members, teamProfiles, autos, log, signupLog, subs, arrivals } = await import('../src/lib/store.ts');
+const { members, teamProfiles, autos, log, signupLog, subs, arrivals, teamStatus } = await import('../src/lib/store.ts');
 
 test('SQLite 저장소: 회원', async () => {
   const base = { pw: 'h', name: '가', school: 's', team: 't', verify: 'v', role: '', intro: '', team_no: 25316, agreed_at: null, terms_ver: null };
@@ -38,4 +38,8 @@ test('SQLite 저장소: 오토·호출 기록·가입 기록·구독', async () 
   await subs.put(7, { endpoint: 'u', keys: {} }); assert.equal((await subs.forTeams([7]))[0].sub.endpoint, 'u');
   await arrivals.set('E', 'Q1', 7, true); assert.equal((await arrivals.list('E')).length, 1);
   await arrivals.set('E', 'Q1', 7, false); assert.equal((await arrivals.list('E')).length, 0);
+  await teamStatus.set('E', 'Q1', 7, 'noshow', '인스펙션 재검사');
+  await teamStatus.set('E', 'Q1', 7, 'forfeit'); // 덮어쓰기
+  const ts = await teamStatus.list('E'); assert.equal(ts.length, 1); assert.equal(ts[0].status, 'forfeit'); assert.equal(ts[0].note, '');
+  await teamStatus.set('E', 'Q1', 7, null); assert.equal((await teamStatus.list('E')).length, 0);
 });

@@ -2,17 +2,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // 심판용 입장 체크. 팀을 누르면 도착/취소, 안 온 팀은 「찾는 중」에 모이고 직접 호출할 수 있다.
+// 안 온 팀은 「사유」로 대회 불참·경기 불참·기권을 적는다 → 경기장 심판 화면(/live/field)에 바로 보이고, 그 팀은 자동 호출에서 빠진다.
 // ?replay=2026-01-31T11:15 이면 지난 대회를 그 시각부터 재생(리허설).
 
-type Team = { n: number; name: string; arrived: string | null; firstCall: string | null };
-type QM = { key: string; label: string; state: 'wait' | 'live' | 'done'; start: string | null; actual: string | null; red: Team[]; blue: Team[]; calls: Record<string, { at: string; teams: number[] }> };
-type View = { event: { name: string } | null; now: string; divisions: { div: string; matches: QM[] }[]; store?: string };
+export type Why = { s: 'event' | 'noshow' | 'forfeit'; note: string; at: string };
+export type Team = { n: number; name: string; arrived: string | null; firstCall: string | null; status: Why | null };
+export type QM = { key: string; label: string; state: 'wait' | 'live' | 'done'; start: string | null; actual: string | null; red: Team[]; blue: Team[]; calls: Record<string, { at: string; teams: number[] }> };
+export type View = { event: { name: string } | null; now: string; divisions: { div: string; matches: QM[] }[]; store?: string };
 type Ask = { title: string; teams: number[]; match: QM };
 
-const KST = (ms: number) => new Date(ms + 9 * 3600e3).toISOString().slice(0, 19);
-const hm = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }) : '');
-const hmLocal = (s: string | null) => (s ? s.slice(11, 16) : '');   // 공식 데이터 시각(한국 시각 문자열)
-const divLabel = (v: string) => (v ? (v === '결승' ? '결승' : `${v} 디비전`) : '경기');
+export const KST = (ms: number) => new Date(ms + 9 * 3600e3).toISOString().slice(0, 19);
+export const hm = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }) : '');
+export const hmLocal = (s: string | null) => (s ? s.slice(11, 16) : '');   // 공식 데이터 시각(한국 시각 문자열)
+export const divLabel = (v: string) => (v ? (v === '결승' ? '결승' : `${v} 디비전`) : '경기');
 
 export function QueueApp() {
   const [view, setView] = useState<View | null>(null);
@@ -21,6 +23,7 @@ export function QueueApp() {
   const [div, setDiv] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; undo?: () => void } | null>(null);
   const [ask, setAsk] = useState<Ask | null>(null);
+  const [why, setWhy] = useState<{ m: QM; t: Team } | null>(null);
   const replay = useRef<{ base: number; loaded: number } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -65,6 +68,11 @@ export function QueueApp() {
     setArrived(m, [t.n], on);
     say(`${t.n} ${t.name} ${on ? '도착' : '도착 취소'}`, () => setArrived(m, [t.n], !on));
   }
+  async function saveWhy(m: QM, t: Team, status: Why['s'] | null, note: string) {
+    setWhy(null);
+    try { await post({ action: 'status', match: m.key, team: t.n, status, note }); say(`${t.n} ${status ? WHY[status] : '사유 지움'}`); load(); }
+    catch (e) { say(`저장 실패: ${(e as Error).message}`); }
+  }
   async function sendCall(a: Ask) {
     setAsk(null);
     try { const d = await post({ action: 'call', match: a.match.key, teams: a.teams }); say(`${d.teams.length}팀에 호출을 보냈어요 · 휴대폰 ${d.phones}대`); load(); }
@@ -89,7 +97,7 @@ export function QueueApp() {
 
   const btn = (m: QM, t: Team) => {
     const cls = t.arrived ? 'ok' : t.firstCall ? 'miss' : '';
-    const s = t.arrived ? `✓ 도착 ${hm(t.arrived)}` : t.firstCall ? `아직 안 옴 · ${mins(t.firstCall)}분째` : '호출 전';
+    const s = t.arrived ? `✓ 도착 ${hm(t.arrived)}` : t.status ? whyText(t.status) : t.firstCall ? `아직 안 옴 · ${mins(t.firstCall)}분째` : '호출 전';
     return <button type="button" key={t.n} id={`t${t.n}-${m.key}`} className={`tb ${cls}`} onClick={() => tap(m, t)}><span className="n">{t.n}</span><span className="nm">{t.name}</span><span className="s">{s}</span></button>;
   };
 
@@ -99,6 +107,7 @@ export function QueueApp() {
         <h1>입장 체크</h1>
         <span className="ev">{view.event?.name}{cur && divs.length > 1 ? ` · ${divLabel(cur.div)}` : ''}</span>
         <span className="lock">심판{replay.current ? ' · 리허설' : ''}</span>
+        <a className="lock" href={`/live/field${location.search}`} target="_blank" rel="noopener">경기장 화면 ↗</a>
         <span className="clock">{hm(view.now)}</span>
       </div></header>
       <div className="in">
@@ -115,7 +124,8 @@ export function QueueApp() {
               <div className="fr" key={`${m.key}-${t.n}`}>
                 <a href={`#t${t.n}-${m.key}`}>{t.n}</a>
                 <span className="w"><b>{t.name}</b> {m.label} · <span className={red ? 'dr' : 'db'}>{red ? '레드' : '블루'}</span> · {mins(t.firstCall!)}분째</span>
-                <button type="button" onClick={() => setAsk({ title: `${t.n} ${t.name} 다시 호출`, teams: [t.n], match: m })}>🔔 다시 호출</button>
+                <span className="btns"><button type="button" onClick={() => setWhy({ m, t })}>{t.status ? whyText(t.status) : '사유'}</button>
+                <button type="button" onClick={() => setAsk({ title: `${t.n} ${t.name} 다시 호출`, teams: [t.n], match: m })}>🔔 다시 호출</button></span>
               </div>
             ))}
           </> : '✓ 호출한 팀이 모두 도착했어요'}
@@ -138,6 +148,7 @@ export function QueueApp() {
                   <div className="side b"><h3>블루 동맹</h3><div className="ts">{m.blue.map((t) => btn(m, t))}</div></div>
                 </div>
                 <div className="foot">
+                  {miss.length > 0 && <div className="whys">사유: {miss.map((t) => <button type="button" key={t.n} onClick={() => setWhy({ m, t })}>{t.n}{t.status ? ` · ${WHY[t.status.s]}` : ''}</button>)}</div>}
                   <div className="calls">{Object.entries(m.calls).map(([g, c]) => <span key={g} className={g.startsWith('수동') ? 'man' : ''}>{g.startsWith('수동') ? `수동 ${hm(c.at)}` : `${g} ${hm(c.at)}`} · {c.teams.join(', ')}</span>)}</div>
                   {miss.length > 0 && <button type="button" className="call" onClick={() => setAsk({ title: `${m.label} · 미도착 ${miss.length}팀 호출`, teams: miss.map((t) => t.n), match: m })}>🔔 미도착 {miss.length}팀 호출</button>}
                 </div>
@@ -148,6 +159,7 @@ export function QueueApp() {
       </div>
 
       {toast && <div className="toast" role="status"><span>{toast.msg}</span>{toast.undo && <button type="button" onClick={() => { toast.undo!(); setToast(null); }}>되돌리기</button>}</div>}
+      {why && <WhyDialog m={why.m} t={why.t} onSave={(s, note) => saveWhy(why.m, why.t, s, note)} onClose={() => setWhy(null)} />}
       {ask && (
         <div className="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><div className="box">
           <h2 id="dlg-t">{ask.title}</h2>
@@ -163,7 +175,28 @@ export function QueueApp() {
   );
 }
 
-function PinForm({ onOk }: { onOk: () => void }) {
+export const WHY = { event: '대회 불참', noshow: '경기 불참', forfeit: '기권' } as const;
+const WHY_D = { event: '대회에 아예 안 옴 · 이 팀의 모든 경기에 표시', noshow: '계속 호출해도 안 옴, 인스펙션 실패 등 · 이 경기만', forfeit: '팀장이 와서 이 경기 기권 선언 · 이 경기만' } as const;
+export const whyText = (w: Why) => WHY[w.s];
+
+// 안 온 이유 고르기: 고르면 바로 저장 (메모는 같이 저장)
+function WhyDialog({ m, t, onSave, onClose }: { m: QM; t: Team; onSave: (s: Why['s'] | null, note: string) => void; onClose: () => void }) {
+  const [note, setNote] = useState(t.status?.note ?? '');
+  return (
+    <div className="dlg" role="dialog" aria-modal="true" aria-labelledby="why-t"><div className="box">
+      <h2 id="why-t">{t.n} {t.name} · 안 온 이유</h2>
+      <p>{m.label} · 경기장 심판 화면에 바로 보여요.</p>
+      <div className="whyopts">
+        {(Object.keys(WHY) as Why['s'][]).map((s) => <button type="button" key={s} className={s} aria-pressed={t.status?.s === s} onClick={() => onSave(s, note)}><b>{WHY[s]}</b><small>{WHY_D[s]}</small></button>)}
+      </div>
+      <label className="label" htmlFor="why-note">메모 (선택)</label>
+      <input id="why-note" className="whynote" maxLength={80} placeholder="예: 인스펙션 3회 실패, 로봇 고장" value={note} onChange={(e) => setNote(e.target.value)} />
+      <div className="row">{t.status && <button type="button" className="btn" onClick={() => onSave(null, '')}>사유 지우기</button>}<button type="button" className="btn" onClick={onClose}>닫기</button></div>
+    </div></div>
+  );
+}
+
+export function PinForm({ onOk }: { onOk: () => void }) {
   const [pin, setPin] = useState(''), [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);

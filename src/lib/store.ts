@@ -6,6 +6,8 @@ import { dirname, join } from 'node:path';
 
 export type SubRow = { endpoint: string; team: number; sub: any };
 export type Arrival = { event: string; match: string; team: number; at: string };
+// 안 온 이유: event(대회 불참, match='*'로 모든 경기) · noshow(경기 불참: 호출해도 안 옴·인스펙션 실패) · forfeit(기권: 팀장이 그 경기 기권 선언)
+export type TeamStatus = { event: string; match: string; team: number; status: 'event' | 'noshow' | 'forfeit'; note: string; at: string };
 export type LogRow = { key: string; event: string; match: string; team: number; stage: '1' | '2' | 'manual'; at: string };
 
 export type Member = { id: string; email: string; pw: string; name: string; school: string; team: string; verify: string; role: string; intro: string; status: 'pending' | 'approved' | 'rejected'; admin: boolean; created_at: string; decided_at: string | null; decided_by: string | null;
@@ -16,6 +18,7 @@ const SCHEMA = `
 create table if not exists push_subs (endpoint text primary key, team integer not null, sub text not null, created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
 create index if not exists push_subs_team on push_subs (team);
 create table if not exists arrivals (event text not null, match text not null, team integer not null, at text not null, primary key (event, match, team));
+create table if not exists team_status (event text not null, match text not null, team integer not null, status text not null, note text not null default '', at text not null, primary key (event, match, team));
 create table if not exists push_log (key text primary key, event text not null, match text not null, team integer not null, stage text not null, at text not null);
 create index if not exists push_log_event on push_log (event);
 create table if not exists members (
@@ -81,6 +84,15 @@ export const arrivals = {
   async set(event: string, match: string, team: number, on: boolean, at = Date.now()) {
     if (on) run('insert into arrivals (event, match, team, at) values (?, ?, ?, ?) on conflict(event, match, team) do update set at = excluded.at', event, match, team, new Date(at).toISOString());
     else run('delete from arrivals where event = ? and match = ? and team = ?', event, match, team);
+  },
+};
+
+export const teamStatus = {
+  async list(event: string): Promise<TeamStatus[]> { return all('select * from team_status where event = ?', event); },
+  // status가 null이면 지운다
+  async set(event: string, match: string, team: number, status: TeamStatus['status'] | null, note = '', at = Date.now()) {
+    if (status) run('insert into team_status (event, match, team, status, note, at) values (?, ?, ?, ?, ?, ?) on conflict(event, match, team) do update set status = excluded.status, note = excluded.note, at = excluded.at', event, match, team, status, note.slice(0, 80), new Date(at).toISOString());
+    else run('delete from team_status where event = ? and match = ? and team = ?', event, match, team);
   },
 };
 

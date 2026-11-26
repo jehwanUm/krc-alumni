@@ -2,7 +2,7 @@
 import { config, getLive, koDesc, type Cfg } from './ftc';
 import { liveCfg } from './krc';
 import { dueCalls, hideFuturePlayoffs, matchKey, states, divsOf, inDiv, type M, type Stage } from './livestate';
-import { arrivals, log, type LogRow } from './store';
+import { arrivals, log, teamStatus, type LogRow, type TeamStatus } from './store';
 import { sendToTeams, type Payload } from './push';
 
 export const eventId = (c: Cfg) => `${c.season}/${c.event}`;
@@ -35,7 +35,9 @@ export const runCalls = async (at?: number) => callsOn(await liveAt(at));
 async function callsOn({ ev, t, d }: Awaited<ReturnType<typeof liveAt>>) {
   const due = dueCalls(d.matches, t);
   const here = await arrivedSet(ev);
-  const rows: LogRow[] = due.flatMap(({ m, stage }) => [...m.red, ...m.blue].filter((n) => !here.has(`${matchKey(m)}|${n}`))
+  const sts = await teamStatus.list(ev).catch(() => [] as TeamStatus[]);
+  // 도착했거나, 대회 불참·경기 불참·기권으로 기록된 팀은 부르지 않는다
+  const rows: LogRow[] = due.flatMap(({ m, stage }) => [...m.red, ...m.blue].filter((n) => !here.has(`${matchKey(m)}|${n}`) && !statusOf(sts, matchKey(m), n))
     .map((n) => ({ key: `${ev}|${matchKey(m)}|${stage}|${n}`, event: ev, match: matchKey(m), team: n, stage: String(stage) as '1' | '2', at: new Date(t).toISOString() })));
   const fresh = await log.addNew(rows);
   const byKey = new Map(due.map((x) => [matchKey(x.m), x]));
@@ -59,6 +61,17 @@ export async function setArrival(match: string, team: number, on: boolean, at?: 
   await arrivals.set(eventId(liveCfg(config())), match, team, on, at);
 }
 
+// 안 온 이유 기록 (인스펙션 심판). 대회 불참은 그 팀 모든 경기(match='*'), 지울 때는 경기·대회 기록을 둘 다 지운다
+export async function setTeamStatus(match: string, team: number, status: TeamStatus['status'] | null, note: string, at?: number) {
+  const ev = eventId(liveCfg(config()));
+  if (!status) { await teamStatus.set(ev, match, team, null); await teamStatus.set(ev, '*', team, null); return; }
+  if (status === 'event') await teamStatus.set(ev, match, team, null);
+  else await teamStatus.set(ev, '*', team, null);
+  await teamStatus.set(ev, status === 'event' ? '*' : match, team, status, note, at);
+}
+// 그 경기에 적용되는 사유 (경기 기록 > 대회 불참)
+const statusOf = (sts: TeamStatus[], match: string, team: number) => sts.find((x) => x.match === match && x.team === team) ?? sts.find((x) => x.match === '*' && x.team === team);
+
 // 심판 화면: 구분(디비전)마다 진행 중 경기 + 다음 5경기, 팀별 도착·호출 시각
 // tick: 심판 화면을 부를 때 자동 호출도 같이 (FTC 데이터는 한 번만 받는다)
 export async function queueView(at?: number, tick = false) {
@@ -69,7 +82,7 @@ export async function queueView(at?: number, tick = false) {
   // 저장소가 끊겨도 경기 목록은 보여 준다 (도착·호출 기록만 빠지고 화면에 경고)
   let store = '';
   const fail = (e: unknown) => { store = (e as Error).message; return [] as never[]; };
-  const [arr, logs] = await Promise.all([arrivals.list(ev).catch(fail), log.list(ev).then((ls) => ls.filter((x) => Date.parse(x.at) <= t)).catch(fail)]);
+  const [arr, logs, sts] = await Promise.all([arrivals.list(ev).catch(fail), log.list(ev).then((ls) => ls.filter((x) => Date.parse(x.at) <= t)).catch(fail), teamStatus.list(ev).catch(fail)]);
   const names: Record<number, string> = Object.fromEntries((d.rankings ?? []).map((r: any) => [r.team, r.name]));
   const divs = divsOf(d.matches).map((v) => {
     const ms = inDiv(d.matches, v), s = states(ms, t);
@@ -80,7 +93,8 @@ export async function queueView(at?: number, tick = false) {
       const team = (n: number) => {
         const a = arr.find((x) => x.match === k && x.team === n);
         const ls = logs.filter((x) => x.match === k && x.team === n);
-        return { n, name: names[n] ?? '', arrived: a?.at ?? null, firstCall: ls[0]?.at ?? null };
+        const st = statusOf(sts, k, n);
+        return { n, name: names[n] ?? '', arrived: a?.at ?? null, firstCall: ls[0]?.at ?? null, status: st ? { s: st.status, note: st.note, at: st.at } : null };
       };
       return { key: k, label: label(m), state: s(m), start: m.start, actual: m.actual, red: m.red.map(team), blue: m.blue.map(team),
         calls: logs.filter((x) => x.match === k).reduce<Record<string, { at: string; teams: number[] }>>((acc, x) => {

@@ -8,6 +8,7 @@ export const PAGES: PageInfo[] = [
   { path: "/teams", section: "대회", title: "팀 · KRC 참가 팀", desc: "KRC(Korea Robot Championship) 참가 팀 목록. 팀 번호, 팀 이름, 소속, 지역과 팀별 KRC 기록." },
   { path: "/live", section: "대회", title: "대회 · KRC 일정과 결과", desc: "다음 KRC 일정, 지난 KRC 결승·수상·세계 대회 진출 팀과 순위, 국내 FTC 대회. 대회 당일에는 경기와 순위를 실시간으로.", noindex: true },
   { path: "/start", section: "대회", title: "우리 팀 설정", desc: "대회장 QR로 여는 첫 화면: 팀 번호를 넣어 이 기기에 우리 팀을 저장하고 대회 정보와 대진표로 가요.", noindex: true },
+  { path: "/live/field", section: "대회", title: "경기장 심판 화면", desc: "대회 경기장 심판용 보기 전용 화면: 다음 경기 4팀의 도착 여부와 지각·기권·연락 안 됨 사유를 크게 보여 줘요.", noindex: true },
   { path: "/live/queue", section: "대회", title: "입장 체크", desc: "대회 심판용 입장 체크: 다음 경기 팀의 대기석 도착을 체크하고, 안 온 팀을 휴대폰으로 호출해요.", noindex: true },
   { path: "/auto", section: "오토", title: "오토 · 경로 에디터", desc: "FTC 오토노머스 경로를 브라우저에서 그리고, 다른 팀 경로를 Ghost로 겹쳐 비교해요. 기리고차는 로봇으로 바로 보내고, 다른 라이브러리는 좌표를 내보내요." },
   { path: "/alumni", section: "동문회", title: "동문회 · 소식과 자원봉사·심판 모집", desc: "KRC 동문회 소식과 행사, KRC 대회 자원봉사·심판 모집, 동문 가입과 Discord." },
