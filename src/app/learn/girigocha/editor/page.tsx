@@ -17,14 +17,30 @@ export default function Page() {
         <li><p>아래 시간표에서 걸리는 시간을 확인해요.</p></li>
       </Steps>
 
-      <h2>2. 로봇으로 보내기</h2>
+      <h2>2. 다듬고 확인하기</h2>
+      <h3>위치를 섬세하게</h3>
+      <ul>
+        <li>점이나 출발 로봇을 누르고 <b>화살표</b>로 0.5 inch씩 옮겨요. <b>Shift</b>와 같이 누르면 5 inch씩.</li>
+        <li><b>Option</b>(맥)·<b>Alt</b>(윈도우)를 누른 채 끌면 0.1 inch 단위로 옮겨요. 방향 꼭지는 1°씩 돌아요.</li>
+        <li>그냥 끌 때 맞춰지는 칸은 <b>Settings → Field → Snap</b>에서 바꿔요 (기본 1 inch).</li>
+        <li>Inspector의 <b>Position</b> 칸에 숫자를 바로 적어도 돼요.</li>
+      </ul>
+      <h3>부딪히는 곳 미리 보기</h3>
+      <p>필드 왼쪽 도구의 <b>⋯</b>을 누르면 나와요.</p>
+      <ul>
+        <li><b>Obstacle</b> (단축키 <code>O</code>) — 필드를 끌어서 장애물 상자를 그려요. 경로가 지나가면 그 시각이 <b>Diagnostics</b>와 시간표에 빨갛게 떠요. 지울 때는 상자를 오른쪽 클릭.</li>
+        <li><b>Onion skin</b> — 경로 위에 로봇 윤곽을 겹쳐 그려서, 로봇 몸이 쓸고 지나가는 자리를 보여 줘요.</li>
+        <li><b>Video로 저장</b> — 처음부터 끝까지 달리는 모습을 영상 파일로 받아요. 팀원과 나누거나 발표할 때 써요. (Chrome·Edge)</li>
+      </ul>
+
+      <h2>3. 로봇으로 보내기</h2>
       <Steps>
         <li><p>노트북을 로봇 Wi‑Fi에 연결해요.</p></li>
         <li><p>오른쪽 위 <b>Send to robot</b> → Routine name에 이름(예: <code>오토1</code>) → <b>Send</b>. 브라우저가 로컬 네트워크 접근을 물으면 <b>허용</b>.</p></li>
         <li><p>빨간 글씨가 나오면 <b>Download file</b>로 파일을 받고, 새 탭에서 <code>192.168.43.1:8080/girigocha</code> → 파일 선택 → <b>올리기</b>.</p></li>
       </Steps>
 
-      <h2>3. 달리기</h2>
+      <h2>4. 달리기</h2>
       <h3>블록 없이 바로</h3>
       <p>Driver Station → <b>기리고차 경로 실행</b> → INIT → 화면에서 이름 확인 → ▶.</p>
       <h3>Blocks 프로그램 안에서</h3>

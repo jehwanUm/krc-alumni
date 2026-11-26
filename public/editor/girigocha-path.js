@@ -241,6 +241,21 @@
     return spans;
   }
 
+  /** 팀이 그린 장애물(project.obstacles, 사용자 좌표 직사각형)에 로봇이 닿는 구간 [{i, t0, t1}]. */
+  function obstacleHits(project, tl) {
+    var out = [], L = project.robot.length, W = project.robot.width;
+    if (!tl || !tl.items.length) return out;
+    (project.obstacles || []).forEach(function (o, i) {
+      var box = { x: (o.xMin + o.xMax) / 2, y: (o.yMin + o.yMax) / 2, h: 0, L: o.xMax - o.xMin, W: o.yMax - o.yMin }, cur = null;
+      for (var t = 0; t <= tl.total + 1e-9; t += 0.05) {
+        var q = poseAt(project, tl, t), hit = q && overlap({ x: q.x, y: q.y, h: q.h, L: L, W: W }, box);
+        if (hit && !cur) cur = { i: i, t0: t, t1: t }; if (hit) cur.t1 = t; if (!hit && cur) { out.push(cur); cur = null; }
+      }
+      if (cur) out.push(cur);
+    });
+    return out;
+  }
+
   // ---------------------------------------------------------------- 로봇 한계 (FollowerConfig.from과 같은 계산)
 
   function limits(project) {
@@ -700,6 +715,7 @@
       (p.segments || []).forEach(function (s) { sc(s.c1); sc(s.c2); sc(s.end); if (s.maxSpeed > 0) s.maxSpeed *= k; });
       (p.points || []).forEach(function (q) { sc(q); sc(q.c1); sc(q.c2); if (q.maxSpeed > 0) q.maxSpeed *= k; });
     });
+    (project.obstacles || []).forEach(function (o) { o.xMin *= k; o.xMax *= k; o.yMin *= k; o.yMax *= k; });
     project.field.size *= k;
     var r = project.robot;
     ['length', 'width', 'wheelDiameter', 'trackWidth', 'wheelBase', 'effectiveRadius'].forEach(function (f) { if (r[f] > 0) r[f] *= k; });
@@ -840,6 +856,9 @@
       var r = ruleSet(pr);
       return Object.keys(r).some(function (k) { return !(k in baseRules) || r[k] > baseRules[k]; });
     };
+    // 장애물에 새로 닿는 제안도 뺀다
+    var obsN = function (pr) { return (pr.obstacles || []).length ? obstacleHits(pr, timeline(pr)).length : 0; }, baseObs = obsN(project);
+    var newObs = function (pi, trial) { if (!(project.obstacles || []).length) return false; var pr = JSON.parse(JSON.stringify(project)); pr.paths[pi] = trial; return obsN(pr) > baseObs; };
     project.paths.forEach(function (p, pi) {
       if (!p.points || p.points.length < 2) return;
       var base = analyze(project, p);
@@ -859,7 +878,7 @@
         var r = analyze(project, trial);
         var err = r.warnings.filter(function (w) { return w.level === 'error'; }).length;
         var saved = base.time - r.time;
-        if (saved > 0.15 && err <= baseErr && !newRule(pi, trial)) {
+        if (saved > 0.15 && err <= baseErr && !newRule(pi, trial) && !newObs(pi, trial)) {
           out.push({ path: pi, point: k, kind: 'curve', saved: saved,
             text: (k + 1) + '번 점 모서리(' + Math.round(deg) + '°)를 곡선으로', apply: (function (pi2, k2) {
               return function (pr) { var q = pr.paths[pi2]; q.points[k2].curve = true; q.points[k2 + 1].curve = true; };
@@ -1152,7 +1171,7 @@
     check: check, analyze: analyze, javaSnippet: javaSnippet, javaOpMode: javaOpMode, javaPathExpr: javaPathExpr,
     blocksList: blocksList, convertUnits: convertUnits, segsOf: segsOf, toPoints: toPoints, examples: examples, WHEN_F: WHEN_F,
     routineJson: routineJson, parseGrlog: parseGrlog, replayAt: replayAt, replayGap: replayGap, suggestions: suggestions,
-    parseCommands: parseCommands, drumTicks: drumTicks, BIOBUZZ: BIOBUZZ, biobuzzRules: biobuzzRules, biobuzzAutos: biobuzzAutos, timeline: timeline, poseAt: poseAt, actionTimes: actionTimes, mirrorPath: mirrorPath, overlap: overlap, collisions: collisions, toM: toM, fromM: fromM, norm: norm, rad: rad
+    parseCommands: parseCommands, drumTicks: drumTicks, BIOBUZZ: BIOBUZZ, biobuzzRules: biobuzzRules, biobuzzAutos: biobuzzAutos, timeline: timeline, poseAt: poseAt, actionTimes: actionTimes, mirrorPath: mirrorPath, overlap: overlap, collisions: collisions, obstacleHits: obstacleHits, toM: toM, fromM: fromM, norm: norm, rad: rad
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.GPath = api;

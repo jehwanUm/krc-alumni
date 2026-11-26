@@ -28,3 +28,9 @@
   .linkbtn { border: 0; background: none; padding: 0; color: var(--blue-ink); cursor: pointer; font: inherit; text-align: left; }
   .btn.danger { color: var(--red-ink); }
 }
+/* 맨 아래 작은 판·업데이트 내용 */
+.pg-auto .edver { font-size: 12px; color: var(--mut); padding: 8px 0 32px;
+  summary { cursor: pointer; width: fit-content; }
+  ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; max-width: 60em; }
+  time { font-family: var(--mono, ui-monospace, monospace); margin-right: 6px; }
+}

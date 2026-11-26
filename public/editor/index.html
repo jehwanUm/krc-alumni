@@ -202,6 +202,19 @@ pre{background:#0B0D12;color:var(--ink);border:0;border-radius:var(--radius);pad
   #moreTools{left:12px;top:56px}
   #right{order:2}#left{order:3}
 }
+/* 튜토리얼: 퀘스트 카드 + 할 곳 빛나는 테 (눌러야 할 곳은 그대로 누를 수 있게 테는 클릭을 통과) */
+#tutRing{position:fixed;z-index:60;pointer-events:none;border:2px solid var(--yellow);border-radius:4px;box-shadow:0 0 0 4px rgba(245,197,66,.18),0 0 24px rgba(245,197,66,.35);transition:all 220ms ease;animation:tutPulse 1.6s ease-in-out infinite}
+#tutRing.ok{border-color:#5BD08A;box-shadow:0 0 0 6px rgba(91,208,138,.25),0 0 28px rgba(91,208,138,.5);animation:none}
+@keyframes tutPulse{50%{box-shadow:0 0 0 7px rgba(245,197,66,.08),0 0 32px rgba(245,197,66,.45)}}
+#tut{position:fixed;z-index:61;width:min(310px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--yellow);border-radius:6px;box-shadow:var(--shadow-float);padding:14px 14px 12px;transition:top 220ms ease,left 220ms ease}
+#tut .qh{display:flex;align-items:center;gap:8px;font:600 11px var(--mono);letter-spacing:.06em;color:var(--yellow)}
+#tut .qh .sp{flex:1}
+#tut .bar{display:flex;gap:3px;margin:8px 0 10px}#tut .bar i{flex:1;height:4px;border-radius:2px;background:var(--line-2)}#tut .bar i.on{background:var(--yellow)}#tut .bar i.skip{background:var(--faint)}#tut .bar i.now{background:var(--blue)}
+#tut h3{margin:0 0 4px;font-size:16px}#tut p{margin:0;color:var(--muted);line-height:1.55}#tut p b{color:var(--ink)}
+#tut kbd,#tut code{font:500 12px var(--mono);background:var(--surface-3);border:1px solid var(--line-2);border-radius:3px;padding:0 4px;color:var(--ink)}
+#tut .row{margin-top:12px;justify-content:flex-end}
+#tut .clear{font:700 22px var(--mono);color:#5BD08A;margin:2px 0 6px}
+@media (prefers-reduced-motion:reduce){#tutRing,#tut{transition:none;animation:none}}
 </style>
 </head>
 <body>
@@ -215,6 +228,7 @@ pre{background:#0B0D12;color:var(--ink);border:0;border-radius:var(--radius);pad
   <span class="sp"></span>
   <button class="icon" id="bUndo" title="Undo 되돌리기 (⌘/Ctrl+Z)" aria-label="되돌리기"><svg class="i" viewBox="0 0 16 16"><path d="M5 3 2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg></button>
   <button class="icon" id="bRedo" title="Redo 다시 (⌘/Ctrl+Shift+Z)" aria-label="다시"><svg class="i" viewBox="0 0 16 16"><path d="m11 3 3 3-3 3"/><path d="M14 6H6.5a4 4 0 0 0 0 8H9"/></svg></button>
+  <button id="bTut" class="ghostbtn hide-s" title="튜토리얼 다시 하기 · 퀘스트 6개">Tutorial</button>
   <button id="bFile" class="ghostbtn">File</button>
   <button id="bSettings" class="ghostbtn">Settings</button>
   <button id="bCode">Code</button>
@@ -258,6 +272,9 @@ pre{background:#0B0D12;color:var(--ink);border:0;border-radius:var(--radius);pad
         <button class="ghostbtn" id="tDrum" title="Drum marks 북 표시 · 데드휠 한 바퀴마다" aria-label="북 표시"><svg class="i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2"/></svg>Drum marks</button>
         <button class="ghostbtn" id="tImage" title="Field image 필드 그림 넣기" aria-label="필드 그림"><svg class="i" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.3"/><path d="m3 12 3.5-3 2.5 2 2-1.5L13 12"/></svg>Field image</button>
         <button class="ghostbtn" id="tPng" title="PNG로 저장" aria-label="그림으로 저장"><svg class="i" viewBox="0 0 16 16"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 11v2h10v-2"/></svg>PNG로 저장</button>
+        <button class="ghostbtn" id="tObs" title="Obstacle 장애물 · 끌어서 상자 그리기, 오른쪽 클릭으로 지우기 (O)" aria-label="장애물 그리기"><svg class="i" viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1"/><path d="m3 9 6-6M3 13 13 3M7 13l6-6"/></svg>Obstacle</button>
+        <button class="ghostbtn" id="tOnion" title="Onion skin 경로 위 로봇 자국 · 지나가는 자리 확인" aria-label="로봇 자국"><svg class="i" viewBox="0 0 16 16"><rect x="1.5" y="5" width="6" height="6" rx="1"/><rect x="5" y="5" width="6" height="6" rx="1" opacity=".6"/><rect x="8.5" y="5" width="6" height="6" rx="1" opacity=".35"/></svg>Onion skin</button>
+        <button class="ghostbtn" id="tVideo" title="Video 처음부터 끝까지 달리는 영상 저장" aria-label="영상으로 저장"><svg class="i" viewBox="0 0 16 16"><rect x="1.5" y="4" width="9" height="8" rx="1.5"/><path d="m10.5 7 4-2.5v7l-4-2.5"/></svg>Video로 저장</button>
       </div>
       <div class="ov num" id="hint" hidden></div>
       <button class="ov" id="sugBtn" hidden></button>
@@ -361,6 +378,9 @@ pre{background:#0B0D12;color:var(--ink);border:0;border-radius:var(--radius);pad
   </div>
 </div>
 
+<div id="tutRing" hidden></div>
+<div id="tut" role="dialog" aria-label="튜토리얼" aria-live="polite" hidden></div>
+
 <input type="file" id="fileOpen" accept=".json,application/json" hidden>
 <input type="file" id="fileRobot" accept=".json,application/json" hidden>
 <input type="file" id="fileGhost" accept=".json,application/json" hidden>
@@ -377,12 +397,15 @@ var STORE = 'girigocha-editor-v2', PREFS = 'girigocha-editor-prefs', OTHER = 'gi
 
 // ---------------------------------------------------------------- 상태
 
-var prefs = Object.assign({ snap: '5', showSpeed: false, advanced: false, newShape: 'line', codeKind: 'blocks', javaKind: 'opmode', grid: true, drum: true, pod: 32, game: 'biobuzz', imgAlpha: 0.6, robotAddr: '192.168.43.1:8080' }, loadJson(PREFS) || {});
+var prefs = Object.assign({ snap: '1', onion: false, showSpeed: false, advanced: false, newShape: 'line', codeKind: 'blocks', javaKind: 'opmode', grid: true, drum: true, pod: 32, game: 'biobuzz', imgAlpha: 0.6, robotAddr: '192.168.43.1:8080' }, loadJson(PREFS) || {});
+if (!prefs.snap1) { if (prefs.snap === '5') prefs.snap = '1'; prefs.snap1 = true; } // 11/26: 기본 Snap 5 → 1 (예전 기본값으로 저장된 것도 한 번만 바꿈)
 var project = migrate(loadJson(STORE) || freshProject());
 var other = loadJson(OTHER); if (other) other.project = migrate(other.project);
 var fieldImg = null; loadImage(loadText(IMG));
 var cur = 0, sel = null, undo = [], redo = [];
 var cache = {}, tl = { items: [], total: 0 }, acts = [], ocache = {}, otl = null, coll = [], sugs = [];
+var obs = [];                      // 장애물에 닿는 구간 (G.obstacleHits)
+var recorder = null;               // Video 저장 중
 var rules = [];                    // BIOBUZZ 규칙 점검 결과 (G.biobuzzRules)
 var replay = null, rgap = null;   // 실제 주행 (.grlog)
 var preview = null;                // 말로 만들기 미리보기 {chunks, errors}
@@ -396,6 +419,7 @@ function saveJson(k, v) { try { if (v == null) localStorage.removeItem(k); else 
 function migrate(p) {
   p.paths.forEach(function (q) { G.toPoints(q); q.startActions = q.startActions || []; q.points.forEach(function (pt) { pt.actions = pt.actions || []; pt.heading = pt.heading || { mode: 'keep' }; }); });
   if (!(p.limit > 0)) p.limit = 30;
+  p.obstacles = p.obstacles || [];
   if (p.units !== 'in') G.convertUnits(p, 'in'); // 길이는 inch 하나 (옛 cm·m 프로젝트는 열 때 바꾼다)
   p.version = 3;
   return p;
@@ -434,6 +458,7 @@ function analyzeAll() {
     } catch (e) { otl = null; }
   }
   try { sugs = G.suggestions(project, { game: prefs.game }); } catch (e) { sugs = []; }
+  try { obs = G.obstacleHits(project, tl); } catch (e) { obs = []; }
   rgap = replay && tl.total ? G.replayGap(project, tl, replay) : null;
   try { rules = prefs.game === 'biobuzz' ? G.biobuzzRules(project, tl) : []; } catch (e) { rules = []; }
   if (play.t > endT()) play.t = 0;
@@ -466,7 +491,7 @@ function Y(y) { return view.oy - y * view.scale; }
 function wx(px) { return (px - view.ox) / view.scale; }
 function wy(py) { return (view.oy - py) / view.scale; }
 function snapStep() { var s = prefs.snap; return s === '0' ? 0.1 : s === 'tile' ? project.field.size / 12 : Number(s); }
-function snap(v) { var st = snapStep(); return Math.round(Math.round(v / st) * st * 100) / 100; }
+function snap(v, fine) { var st = fine ? 0.1 : snapStep(); return Math.round(Math.round(v / st) * st * 100) / 100; }
 
 // ---------------------------------------------------------------- 필드 그리기
 
@@ -509,6 +534,7 @@ function draw() {
   if (fieldImg) { ctx.globalAlpha = prefs.imgAlpha; ctx.drawImage(fieldImg, X(b.lo), Y(b.hi), S, S); ctx.globalAlpha = 1; }
   if (prefs.grid) { ctx.strokeStyle = C.tile; ctx.lineWidth = 1; for (var i = 1; i < 6; i++) { var v = b.lo + i * s / 6; line(ctx, X(v), Y(b.lo), X(v), Y(b.hi)); line(ctx, X(b.lo), Y(v), X(b.hi), Y(v)); } }
   if (prefs.game === 'biobuzz') drawBiobuzz(b, s);
+  drawObstacles();
   ctx.strokeStyle = C.wall; ctx.lineWidth = 2; ctx.strokeRect(X(b.lo) - 1, Y(b.hi) - 1, S + 2, S + 2);
   var st = path().start;
   if (prefs.game !== 'biobuzz' && Math.hypot(st.x, st.y) > Math.max(project.robot.length, project.robot.width)) { // BIOBUZZ는 HIVE가 가운데를 보여 줌
@@ -520,13 +546,14 @@ function draw() {
   if (replay) strokeTrack(replay.samples, C.ink, 1.6, 0.85);
   drawCurrent();
   if (rules.length) drawRules();
+  obs.forEach(function (o) { drawSpan(o.t0, o.t1, C.red); });
   if (preview) drawPreview();
   // 시각 play.t의 로봇들
   var showAt = play.on || play.t > 0;
   if (other && other.view && otl && otl.items.length) { var op = G.poseAt(other.view, otl, play.t); if (op) robot(op.x, op.y, op.h, other.view.robot, C.ghost, 1.6, false, true); }
   if (replay && showAt) { var rpp = G.replayAt(replay, play.t); if (rpp) robot(rpp.x, rpp.y, rpp.h, project.robot, C.ink, 1.8, false, true); }
   if (showAt && tl.items.length) {
-    var me = G.poseAt(project, tl, play.t), hit = coll.some(function (c) { return play.t >= c.t0 - 0.03 && play.t <= c.t1 + 0.03; });
+    var me = G.poseAt(project, tl, play.t), hit = coll.concat(obs).some(function (c) { return play.t >= c.t0 - 0.03 && play.t <= c.t1 + 0.03; });
     if (me) robot(me.x, me.y, me.h, project.robot, hit ? C.red : C.blue, 2.4, true);
   }
   if (ruler) drawRuler();
@@ -538,15 +565,28 @@ function drawRules() {
   if (rules.some(function (r) { return r.rule === 'G304' || r.rule === 'R102'; })) {
     robot(st.x, st.y, G.rad(st.h), project.robot, C.red, 2.5, false, true);
   }
-  rules.forEach(function (r) {
-    if (r.t0 == null || r.rule === 'G403') return;
-    var col = r.level === 'error' ? C.red : C.yellow;
-    ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = 0.45; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath();
-    for (var t = r.t0, first = true; t <= r.t1 + 1e-9; t += 0.05) { var q = G.poseAt(project, tl, t); if (!q) continue; if (first) { ctx.moveTo(X(q.x), Y(q.y)); first = false; } else ctx.lineTo(X(q.x), Y(q.y)); }
-    if (r.t1 - r.t0 < 0.05) { var q1 = G.poseAt(project, tl, r.t0); if (q1) { ctx.arc(X(q1.x), Y(q1.y), 7, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); } }
-    ctx.stroke(); ctx.restore();
+  rules.forEach(function (r) { if (r.t0 != null && r.rule !== 'G403') drawSpan(r.t0, r.t1, r.level === 'error' ? C.red : C.yellow); });
+}
+/** t0~t1초에 로봇이 지나가는 길을 굵게 칠한다 (규칙·장애물 문제 표시). */
+function drawSpan(t0, t1, col) {
+  ctx.save(); ctx.strokeStyle = col; ctx.globalAlpha = 0.45; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath();
+  for (var t = t0, first = true; t <= t1 + 1e-9; t += 0.05) { var q = G.poseAt(project, tl, t); if (!q) continue; if (first) { ctx.moveTo(X(q.x), Y(q.y)); first = false; } else ctx.lineTo(X(q.x), Y(q.y)); }
+  if (t1 - t0 < 0.05) { var q1 = G.poseAt(project, tl, t0); if (q1) { ctx.arc(X(q1.x), Y(q1.y), 7, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill(); } }
+  ctx.stroke(); ctx.restore();
+}
+function drawObstacles() {
+  var list = project.obstacles.slice(); if (drag && drag.kind === 'obs') list.push(obsRect(drag.a, drag.b));
+  list.forEach(function (o, i) {
+    var x = X(o.xMin), y = Y(o.yMax), w = (o.xMax - o.xMin) * view.scale, h = (o.yMax - o.yMin) * view.scale;
+    ctx.save(); ctx.globalAlpha = 0.16; ctx.fillStyle = C.red; ctx.fillRect(x, y, w, h); ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.strokeStyle = C.red; ctx.lineWidth = 1;
+    for (var d = -h; d < w; d += 9) line(ctx, x + d, y + h, x + d + h, y);
+    ctx.restore(); ctx.strokeStyle = C.red; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
+    if (i < project.obstacles.length) { ctx.fillStyle = C.red; ctx.font = '600 10px ' + C.font; ctx.fillText('#' + (i + 1), x + 3, y + 11); }
   });
 }
+function obsRect(a, b) { return { xMin: Math.min(a.x, b.x), xMax: Math.max(a.x, b.x), yMin: Math.min(a.y, b.y), yMax: Math.max(a.y, b.y) }; }
+function obsAt(x, y) { for (var i = project.obstacles.length - 1; i >= 0; i--) { var o = project.obstacles[i]; if (x >= o.xMin && x <= o.xMax && y >= o.yMin && y <= o.yMax) return i; } return -1; }
 function strokeGeo(a, color, w, alpha) {
   if (!a || !a.geo) return;
   var g = a.geo, u = U(), step = Math.max(0.01, g.length / 300);
@@ -584,6 +624,13 @@ function drawCurrent() {
           line(ctx, px - nx, py - ny, px + nx, py + ny);
         });
       }
+    }
+    // Onion skin: 로봇 길이쯤마다 그 자리의 로봇 윤곽 (어디를 쓸고 지나가는지)
+    if (prefs.onion) {
+      var gap = Math.max(G.toM(project.robot.length * 0.75, u), g.length / 40);
+      ctx.globalAlpha = 0.28;
+      for (var so = gap; so < g.length - gap / 2; so += gap) { var oq = G.geoPoint(g, so); robot(G.fromM(oq[0], u), G.fromM(oq[1], u), G.geoHeading(g, so), project.robot, C.blue, 1, false); }
+      ctx.globalAlpha = 1;
     }
     var end = G.geoPoint(g, g.length);
     ctx.globalAlpha = 0.4; robot(G.fromM(end[0], u), G.fromM(end[1], u), G.geoHeading(g, g.length), project.robot, C.ink, 1.3); ctx.globalAlpha = 1;
@@ -683,6 +730,7 @@ cv.addEventListener('pointerdown', function (e) {
   pause(); closePops();
   var m = pos(e);
   if (tool === 'ruler') { ruler = { a: { x: wx(m.x), y: wy(m.y) }, b: { x: wx(m.x), y: wy(m.y) } }; drag = { kind: 'ruler' }; cv.setPointerCapture(e.pointerId); draw(); return; }
+  if (tool === 'obs') { var o0 = { x: snap(wx(m.x)), y: snap(wy(m.y)) }; drag = { kind: 'obs', a: o0, b: o0 }; cv.setPointerCapture(e.pointerId); return; }
   var h = hit(m.x, m.y);
   downAt = { m: m, h: h, moved: false };
   if (h && h.kind !== 'line' && h.kind !== 'otherPath') {
@@ -696,7 +744,7 @@ cv.addEventListener('pointermove', function (e) {
   if (!ruler || !drag) setHint('x ' + r1(wx(m.x)) + ' · y ' + r1(wy(m.y)) + ' ' + U());
   if (downAt && Math.hypot(m.x - downAt.m.x, m.y - downAt.m.y) > 3) downAt.moved = true;
   if (!drag) {
-    if (tool === 'ruler') { cv.style.cursor = 'crosshair'; return; }
+    if (tool === 'ruler' || tool === 'obs') { cv.style.cursor = 'crosshair'; return; }
     var h = hit(m.x, m.y), nh = h && h.kind === 'point' ? h : null;
     if (JSON.stringify(nh) !== JSON.stringify(hover)) { hover = nh; draw(); }
     cv.style.cursor = h ? (h.kind === 'line' ? 'copy' : h.kind === 'otherPath' ? 'pointer' : 'grab') : 'crosshair';
@@ -704,18 +752,20 @@ cv.addEventListener('pointermove', function (e) {
     return;
   }
   cv.style.cursor = 'grabbing';
-  var p = path(), x = snap(wx(m.x)), y = snap(wy(m.y));
+  var p = path(), x = snap(wx(m.x), e.altKey), y = snap(wy(m.y), e.altKey);
   if (drag.kind === 'ruler') { ruler.b = { x: wx(m.x), y: wy(m.y) }; draw(); return; }
+  if (drag.kind === 'obs') { drag.b = { x: x, y: y }; draw(); return; }
   if (drag.kind === 'start') { p.start.x = x; p.start.y = y; }
-  else if (drag.kind === 'startKnob') p.start.h = angleTo(p.start, m, e.shiftKey);
+  else if (drag.kind === 'startKnob') p.start.h = angleTo(p.start, m, e.shiftKey, e.altKey);
   else if (drag.kind === 'point') { p.points[drag.i].x = x; p.points[drag.i].y = y; }
-  else if (drag.kind === 'pointKnob') p.points[drag.i].heading.deg = angleTo(p.points[drag.i], m, e.shiftKey);
+  else if (drag.kind === 'pointKnob') p.points[drag.i].heading.deg = angleTo(p.points[drag.i], m, e.shiftKey, e.altKey);
   else if (drag.kind === 'c1' || drag.kind === 'c2') { var q = p.points[drag.i], sg = G.segsOf(p)[drag.i]; q.c1 = q.c1 || sg.c1; q.c2 = q.c2 || sg.c2; q[drag.kind] = { x: x, y: y }; }
   changed(false, true);
 });
 cv.addEventListener('pointerup', function (e) {
   var m = pos(e);
   if (drag && drag.kind === 'ruler') { drag = null; return; }
+  if (drag && drag.kind === 'obs') { var nr = obsRect(drag.a, drag.b); drag = null; if (nr.xMax - nr.xMin >= 1 && nr.yMax - nr.yMin >= 1) { snapshot(); project.obstacles.push(nr); changed(true); } else draw(); return; }
   if (drag) { drag = null; changed(true); }
   else if (downAt && !downAt.moved && !downAt.h) addPoint(snap(wx(m.x)), snap(wy(m.y)));
   else if (downAt && !downAt.moved && downAt.h && downAt.h.kind === 'line') { sel = downAt.h.i; panel(); draw(); }
@@ -723,10 +773,14 @@ cv.addEventListener('pointerup', function (e) {
   downAt = null;
 });
 cv.addEventListener('dblclick', function (e) { if (tool) return; var m = pos(e), h = hit(m.x, m.y); if (h && h.kind === 'line') insertPoint(h.i, snap(wx(m.x)), snap(wy(m.y))); });
-cv.addEventListener('contextmenu', function (e) { var m = pos(e), h = hit(m.x, m.y); if (h && h.kind === 'point') { e.preventDefault(); removePoint(h.i); } });
+cv.addEventListener('contextmenu', function (e) {
+  var m = pos(e), h = hit(m.x, m.y), oi = obsAt(wx(m.x), wy(m.y));
+  if (h && h.kind === 'point') { e.preventDefault(); removePoint(h.i); }
+  else if (oi >= 0) { e.preventDefault(); snapshot(); project.obstacles.splice(oi, 1); changed(true); }
+});
 cv.addEventListener('pointerleave', function () { hint(); if (hover) { hover = null; draw(); } });
 
-function angleTo(q, m, coarse) { var st = coarse ? 15 : 5; return Math.round(Math.atan2(wy(m.y) - q.y, wx(m.x) - q.x) * 180 / Math.PI / st) * st; }
+function angleTo(q, m, coarse, fine) { var st = fine ? 1 : coarse ? 15 : 5; return Math.round(Math.atan2(wy(m.y) - q.y, wx(m.x) - q.x) * 180 / Math.PI / st) * st; }
 function newPoint(x, y) { return { x: x, y: y, curve: prefs.newShape === 'curve', heading: { mode: prefs.newShape === 'curve' ? 'tangent' : 'keep' }, actions: [] }; }
 function addPoint(x, y) { var p = path(), last = p.points.length ? p.points[p.points.length - 1] : p.start; if (Math.hypot(x - last.x, y - last.y) < 1e-6) return; snapshot(); p.points.push(newPoint(x, y)); sel = p.points.length - 1; changed(true); }
 function insertPoint(i, x, y) { snapshot(); var q = newPoint(x, y), n = path().points[i]; q.curve = n.curve; q.heading = { mode: n.heading.mode === 'tangent' ? 'tangent' : 'keep' }; path().points.splice(i, 0, q); sel = i; changed(true); }
@@ -800,7 +854,7 @@ function drawTl() {
         if (b - a > 44) { tctx.save(); rr(tctx, a, y0, b - a, h, 3); tctx.clip(); tctx.fillStyle = '#fff'; tctx.font = '600 10px ' + C.font; tctx.fillText(project.paths[it.path].name, a + 5, y0 + h * 0.78); tctx.restore(); }
       });
       tctx.fillStyle = C.yellow; acts.forEach(function (a) { var x = tx(a.t); tctx.beginPath(); tctx.moveTo(x, y0 - 2); tctx.lineTo(x + 4, y0 + 3); tctx.lineTo(x, y0 + 8); tctx.lineTo(x - 4, y0 + 3); tctx.closePath(); tctx.fill(); });
-      tctx.fillStyle = C.red; coll.forEach(function (c) { tctx.fillRect(tx(c.t0), y0 + h + 1, Math.max(3, tx(c.t1) - tx(c.t0)), 2); });
+      tctx.fillStyle = C.red; coll.concat(obs).forEach(function (c) { tctx.fillRect(tx(c.t0), y0 + h + 1, Math.max(3, tx(c.t1) - tx(c.t0)), 2); });
       if (prefs.game === 'biobuzz') { // 오토 30 s 뒤 전환 8 s (G403: 이때 움직이면 안 됨)
         var a8 = tx(project.limit), b8 = tx(Math.min(project.limit + 8, tlScale()));
         if (b8 > a8) { tctx.save(); tctx.globalAlpha = 0.18; tctx.fillStyle = C.yellow; tctx.fillRect(a8, y0 - 2, b8 - a8, h + 4); tctx.restore(); tctx.fillStyle = C.muted; tctx.font = '10px ' + C.font; tctx.fillText('전환 8s', a8 + 3, y0 + h * 0.75); }
@@ -851,7 +905,7 @@ function tick(now) {
   frame(); if (play.on) requestAnimationFrame(tick);
 }
 function start() { if (!endT()) return; if (play.t >= endT() - 1e-6) play.t = 0; play.on = true; play.last = performance.now(); $('tlIcon').innerHTML = '<path d="M5 3.5v9M11 3.5v9" stroke-width="2.4"/>'; requestAnimationFrame(tick); }
-function pause() { if (!play.on) return; play.on = false; $('tlIcon').innerHTML = '<path d="M5 3.5v9l7-4.5z" fill="currentColor" stroke="none"/>'; frame(); }
+function pause() { if (recorder) { var rc = recorder; recorder = null; setTimeout(function () { rc.stop(); }, 400); } if (!play.on) return; play.on = false; $('tlIcon').innerHTML = '<path d="M5 3.5v9l7-4.5z" fill="currentColor" stroke="none"/>'; frame(); }
 $('tlPlay').onclick = function () { if (play.on) pause(); else start(); };
 $('tlLoop').onclick = function () { play.loop = !play.loop; $('tlLoop').classList.toggle('primary', play.loop); };
 $('tlSpeed').onchange = function () { play.speed = Number($('tlSpeed').value); };
@@ -875,10 +929,11 @@ function setHint(t) { $('hint').textContent = t; }
 function hint() {
   var p = path(), n = p.points.length, t;
   if (tool === 'ruler') t = 'Ruler · 필드를 끌어서 거리·각도 (R로 끄기)';
+  else if (tool === 'obs') t = 'Obstacle · 끌어서 장애물 상자 · 오른쪽 클릭으로 지우기 (O로 끄기)';
   else if (!n) t = '필드를 누르거나 위 Command에 「앞으로 24」처럼 써 보세요';
   else if (sel === null) t = '점을 누르면 Inspector에서 Heading·Marker · Space로 재생';
-  else if (sel === 'start') t = 'Start · 끌어서 위치, 꼭지로 방향 (Shift 15°씩)';
-  else t = 'Waypoint ' + (sel + 1) + ' · 화살표로 미세 조정, Shift+화살표 크게';
+  else if (sel === 'start') t = 'Start · 끌어서 위치, 꼭지로 방향 · 화살표 0.5씩 · Option/Alt 누르고 끌면 Snap 없이 (방향 1°)';
+  else t = 'Waypoint ' + (sel + 1) + ' · 화살표 0.5씩 (Shift 5) · Option/Alt 누르고 끌면 Snap 없이';
   setHint(t);
 }
 
@@ -988,7 +1043,7 @@ function startCard() {
   d.innerHTML = '<div class="head"><div class="badge start">S</div><div class="ttl"><b>Start <span class="tiny">출발</span></b><span class="num"></span></div></div>' +
     (on ? '<div class="body">' +
       '<div class="q"><label>Position 로봇을 놓을 곳 (' + U() + ')</label><div class="row">x <input type="number" data-k="x" value="' + r1(p.start.x) + '"> y <input type="number" data-k="y" value="' + r1(p.start.y) + '"></div></div>' +
-      '<div class="q"><label>Heading 로봇 앞 방향</label><div class="row"><input type="number" step="5" data-k="h" value="' + Math.round(p.start.h) + '">°</div><div class="row" style="margin-top:6px">' + [0, 90, 180, -90].map(function (v) { return '<button class="sm" data-h="' + v + '">' + dirName(v) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="q"><label>Heading 로봇 앞 방향</label><div class="row"><input type="number" step="1" data-k="h" value="' + Math.round(p.start.h) + '">°</div><div class="row" style="margin-top:6px">' + [0, 90, 180, -90].map(function (v) { return '<button class="sm" data-h="' + v + '">' + dirName(v) + '</button>'; }).join('') + '</div></div>' +
       '<div class="q"><label>Marker 출발하자마자</label><div data-acts></div><button class="sm" data-addact>+ Marker</button></div>' +
       '<div class="q"><label>Path name</label><input data-k="name" value="' + esc(p.name) + '" style="width:170px"></div></div>' : '');
   d.querySelector('.head').onclick = function () { sel = on ? null : 'start'; panel(); hint(); draw(); };
@@ -1074,6 +1129,7 @@ function warnings() {
   rules.forEach(function (r) { w.push({ x: { level: r.level, text: r.rule + ' · ' + r.text } }); });
   if (prefs.game !== 'biobuzz' && tl.total > project.limit) w.push({ x: { level: 'error', text: '오토 ' + tl.total.toFixed(1) + ' s가 제한 ' + project.limit + ' s보다 ' + (tl.total - project.limit).toFixed(1) + ' s 길어요' } });
   if (prefs.game !== 'biobuzz') hiveHits().forEach(function (c) { w.push({ x: { level: 'error', text: (c.t1 > c.t0 ? c.t0.toFixed(1) + '~' + c.t1.toFixed(1) + ' s에' : c.t0.toFixed(1) + ' s에') + ' HIVE에 닿아요 — 로봇이 지나갈 수 없는 곳이에요' } }); });
+  obs.forEach(function (c) { w.push({ x: { level: 'error', text: (c.t1 > c.t0 ? c.t0.toFixed(1) + '~' + c.t1.toFixed(1) + ' s에' : c.t0.toFixed(1) + ' s에') + ' 장애물 #' + (c.i + 1) + '에 닿아요' } }); });
   coll.forEach(function (c) { w.push({ x: { level: 'error', text: c.t0.toFixed(1) + '~' + c.t1.toFixed(1) + ' s에 ' + other.name + gwa(other.name) + ' 부딪혀요' } }); });
   if (rgap && rgap.max > 5 * (U() === 'cm' ? 1 : U() === 'in' ? 0.4 : 0.01)) w.push({ x: { level: 'warn', text: 'Replay: 계획과 실제가 최대 ' + r1(rgap.max) + ' ' + U() + ' 달라요 (' + rgap.maxAt.toFixed(1) + ' s)' } });
   project.paths.forEach(function (p, i) { ((cache[i] || {}).warnings || []).forEach(function (x) { w.push({ p: p.name, x: x }); }); });
@@ -1106,8 +1162,25 @@ function cmdOpen(on) { $('cmdBar').hidden = !on; $('tCmd').classList.toggle('on'
 $('tCmd').onclick = function () { cmdOpen($('cmdBar').hidden); };
 $('tMore').onclick = function () { $('moreTools').hidden = !$('moreTools').hidden; $('tMore').classList.toggle('on', !$('moreTools').hidden); };
 $('tImage').onclick = function () { $('fileImage').click(); };
+$('tObs').onclick = function () { tool = tool === 'obs' ? null : 'obs'; ruler = null; tools(); hint(); draw(); };
+$('tOnion').onclick = function () { prefs.onion = !prefs.onion; saveJson(PREFS, prefs); tools(); draw(); };
+// Video: 필드 캔버스를 처음부터 끝까지 1×로 재생하며 녹화 → .webm (Safari는 .mp4)
+$('tVideo').onclick = function () {
+  if (recorder) { pause(); return; }
+  var type = window.MediaRecorder && cv.captureStream ? ['video/webm;codecs=vp9', 'video/webm', 'video/mp4'].filter(function (t) { return MediaRecorder.isTypeSupported(t); })[0] : null;
+  if (!type) { alert('이 브라우저는 영상 저장을 못 해요 · Chrome이나 Edge에서 해 보세요'); return; }
+  if (!endT()) { alert('달릴 경로가 없어요'); return; }
+  var rec = new MediaRecorder(cv.captureStream(30), { mimeType: type, videoBitsPerSecond: 6e6 }), parts = [], loop = play.loop, speed = play.speed;
+  rec.ondataavailable = function (e) { if (e.data.size) parts.push(e.data); };
+  rec.onstop = function () {
+    play.loop = loop; play.speed = speed; $('tVideo').classList.remove('on'); hint();
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(parts, { type: type })); a.download = (path().name || 'girigocha') + (type.indexOf('mp4') >= 0 ? '.mp4' : '.webm'); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  };
+  pause(); play.t = 0; play.loop = false; play.speed = 1; recorder = rec; $('tVideo').classList.add('on'); setHint('Video 녹화 중 · 끝나면 파일로 받아요 (다시 누르면 멈춤)');
+  frame(); rec.start(); start();
+};
 $('tPng').onclick = function () { cv.toBlob(function (b) { if (!b) return; var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (path().name || 'girigocha') + '.png'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000); }); };
-function tools() { $('tGrid').classList.toggle('on', prefs.grid); $('tDrum').classList.toggle('on', prefs.drum); $('tRuler').classList.toggle('on', tool === 'ruler'); $('tImage').classList.toggle('on', !!fieldImg); }
+function tools() { $('tGrid').classList.toggle('on', prefs.grid); $('tDrum').classList.toggle('on', prefs.drum); $('tRuler').classList.toggle('on', tool === 'ruler'); $('tImage').classList.toggle('on', !!fieldImg); $('tObs').classList.toggle('on', tool === 'obs'); $('tOnion').classList.toggle('on', prefs.onion); }
 function loadImage(src) { if (!src) { fieldImg = null; return; } var im = new Image(); im.onload = function () { fieldImg = im; tools(); draw(); }; im.src = src; }
 $('fileImage').addEventListener('change', function () { var f = this.files[0]; if (!f) return; var rd = new FileReader(); rd.onload = function () { if (!saveJson(IMG, String(rd.result))) alert('그림이 커서 이 브라우저에 기억하지 못해요 · 이번에만 보여요'); loadImage(String(rd.result)); }; rd.readAsDataURL(f); this.value = ''; });
 $('fileGhost').addEventListener('change', function () {
@@ -1302,7 +1375,7 @@ document.addEventListener('keydown', function (e) {
   else if (e.key === ' ') { e.preventDefault(); $('tlPlay').click(); }
   else if (e.key === '/') { e.preventDefault(); cmdOpen(true); }
   else if (e.key.indexOf('Arrow') === 0 && sel !== null) {
-    e.preventDefault(); var q = sel === 'start' ? path().start : path().points[sel], st = snapStep() * (e.shiftKey ? 10 : 1);
+    e.preventDefault(); var q = sel === 'start' ? path().start : path().points[sel], st = e.shiftKey ? 5 : 0.5;
     if (!nudging) snapshot(); nudging = true; clearTimeout(nudgeT); nudgeT = setTimeout(function () { nudging = false; }, 600);
     if (e.key === 'ArrowLeft') q.x = r1(q.x - st); if (e.key === 'ArrowRight') q.x = r1(q.x + st); if (e.key === 'ArrowUp') q.y = r1(q.y + st); if (e.key === 'ArrowDown') q.y = r1(q.y - st);
     changed(true);
@@ -1311,6 +1384,7 @@ document.addEventListener('keydown', function (e) {
   else if (e.key === ']') { if (cur < project.paths.length - 1) { cur++; sel = null; changed(false); } }
   else if (e.key === 'r' || e.key === 'R') $('tRuler').click();
   else if (e.key === 'g' || e.key === 'G') $('tGrid').click();
+  else if (e.key === 'o' || e.key === 'O') $('tObs').click();
 });
 window.addEventListener('resize', resize);
 
@@ -1361,6 +1435,81 @@ if (Q.get('demo')) {
   if (Q.get('cmd')) { cmdOpen(true); $('cmd').value = Q.get('cmd'); $('cmdBar').requestSubmit(); }
   if (Q.get('sel')) { sel = Number(Q.get('sel')); panel(); draw(); }
 }
+
+// ---------------------------------------------------------------- 튜토리얼 — 게임처럼 퀘스트 6개. 처음 열면 묻고, 위 Tutorial로 다시
+
+var TUT = 'girigocha-editor-tutorial', tut = null;
+function sig(k) { return path().points.map(function (q) { return k === 'xy' ? q.x + ',' + q.y : (q.curve ? 1 : 0); }).join('|'); }
+// cnt: 점 개수가 늘어야 깨는 퀘스트. 아니면 점 개수가 바뀔 때 기준을 다시 잡는다 (새 점 찍는 건 옮기기가 아니므로)
+var QUESTS = [
+  { t: '점 찍기', el: 'cv', cnt: true, d: '필드를 눌러 로봇이 갈 점을 <b>2개</b> 찍어 보세요.', go: function (s) { return path().points.length >= s.n + 2; } },
+  { t: '점 옮기기', el: 'cv', d: '점을 <b>끌어서</b> 옮겨 보세요. <kbd>Option</kbd>·<kbd>Alt</kbd>를 누르고 끌면 0.1 inch씩, 점을 누르고 화살표로도 옮겨요.', go: function (s) { return sig('xy') !== s.xy; } },
+  { t: '곡선으로', el: 'right', d: '점을 누르고 오른쪽 Inspector에서 <b>Curve</b>를 눌러 부드럽게 이어 보세요. 모서리가 없으면 더 빨라요.', go: function (s) { return sig('c') !== s.c; } },
+  { t: '달려 보기', el: 'tlPlay', d: '<b>▶</b> 또는 <kbd>Space</kbd>로 로봇이 달리는 모습을 보세요. 옆에 걸리는 시간이 나와요.', go: function () { return play.on; } },
+  { t: '말로 만들기', el: 'tCmd', cnt: true, d: '말풍선(<kbd>/</kbd>)을 누르고 <code>앞으로 24</code>를 쓴 다음 <kbd>Enter</kbd> 두 번.', go: function (s) { return !$('cmdBar').hidden && path().points.length > s.n; } },
+  { t: '로봇으로 보내기', el: 'bSend', d: '<b>Send to robot</b>을 열어 보세요. 로봇 Wi‑Fi에서 Send를 누르면 로봇에 들어가요. 지금은 닫아도 돼요.', go: function () { return !$('mSend').hidden; } }
+];
+function tutBase() { tut.s = { n: path().points.length, xy: sig('xy'), c: sig('c') }; }
+function tutStart() {
+  document.querySelectorAll('.modal').forEach(function (m) { m.hidden = true; }); $('dSettings').hidden = true;
+  tut = { i: -1, done: [], t0: Date.now(), base: JSON.stringify(project), cur: cur, wait: 0 };
+  clearInterval(tutStart.iv); tutStart.iv = setInterval(tutTick, 250); tutShow();
+}
+function tutEnd(keep) {
+  clearInterval(tutStart.iv); $('tut').hidden = true; $('tutRing').hidden = true;
+  if (keep === false) { snapshot(); project = migrate(JSON.parse(tut.base)); cur = Math.min(tut.cur, project.paths.length - 1); sel = null; changed(true); }
+  tut = null; saveJson(TUT, 'done');
+}
+function tutNext() { tut.i++; tut.wait = 0; if (tut.i < QUESTS.length) tutBase(); tutShow(); }
+function tutTick() {
+  if (!tut) return;
+  var q = QUESTS[tut.i];
+  if (q && !tut.wait) {
+    if (!q.cnt && path().points.length !== tut.s.n) tutBase();
+    if (q.go(tut.s)) { tut.done[tut.i] = 'on'; tut.wait = 1; tutShow(true); setTimeout(tutNext, 900); }
+  }
+  tutPlace();
+}
+function tutShow(cleared) {
+  var box = $('tut'), i = tut.i, n = QUESTS.length, h;
+  var bar = '<div class="bar">' + QUESTS.map(function (x, k) { return '<i class="' + (tut.done[k] || (k === i ? 'now' : '')) + '"></i>'; }).join('') + '</div>';
+  if (i < 0) h = '<div class="qh">TUTORIAL<span class="sp"></span>1분</div>' + bar + '<h3>처음 오셨네요!</h3><p>퀘스트 <b>6개</b>로 점 찍기부터 로봇으로 보내기까지 익혀요. 연습한 경로는 끝나고 지울 수 있어요.</p>' +
+    '<div class="row"><button data-t="no">괜찮아요</button><button class="primary" data-t="go">시작</button></div>';
+  else if (i >= n) {
+    var ok = tut.done.filter(function (x) { return x === 'on'; }).length, sec = Math.round((Date.now() - tut.t0) / 1000);
+    h = '<div class="qh">TUTORIAL CLEAR<span class="sp"></span>' + Math.floor(sec / 60) + '분 ' + (sec % 60) + '초</div>' + bar + '<div class="clear">' + ok + ' / ' + n + '</div>' +
+      '<p>' + (ok === n ? '모든 퀘스트를 깼어요. 이제 우리 팀 오토를 그려 보세요!' : '건너뛴 퀘스트는 위 <b>Tutorial</b>로 다시 할 수 있어요.') + '</p>' +
+      '<div class="row"><button data-t="reset">연습한 것 지우기</button><button class="primary" data-t="keep">계속 그리기</button></div>';
+  } else {
+    var q = QUESTS[i];
+    h = '<div class="qh">QUEST ' + (i + 1) + ' / ' + n + '<span class="sp"></span>' + (cleared ? '<span style="color:#5BD08A">CLEAR ✓</span>' : '') + '</div>' + bar +
+      '<h3>' + q.t + '</h3><p>' + q.d + '</p><div class="row"><button class="ghostbtn" data-t="quit">그만하기</button><button data-t="skip">건너뛰기</button></div>';
+  }
+  box.innerHTML = h; box.hidden = false;
+  $('tutRing').classList.toggle('ok', !!cleared);
+  box.querySelectorAll('[data-t]').forEach(function (b) {
+    b.onclick = function () {
+      var a = b.getAttribute('data-t');
+      if (a === 'go') tutNext(); else if (a === 'no' || a === 'quit' || a === 'keep') tutEnd(true); else if (a === 'reset') tutEnd(false);
+      else if (a === 'skip') { tut.done[tut.i] = 'skip'; tutNext(); }
+    };
+  });
+  tutPlace();
+}
+/** 테는 할 곳에, 카드는 그 옆 빈자리에 (필드처럼 큰 곳이면 그 안 왼쪽 아래). */
+function tutPlace() {
+  var box = $('tut'), ring = $('tutRing'), q = tut && QUESTS[tut.i], vw = innerWidth, vh = innerHeight, bw = box.offsetWidth, bh = box.offsetHeight, x, y;
+  var el = q && $(q.el), r = el && el.getBoundingClientRect();
+  if (!r || !r.width) { ring.hidden = true; box.style.left = Math.round((vw - bw) / 2) + 'px'; box.style.top = Math.round(Math.max(60, (vh - bh) / 2)) + 'px'; return; }
+  ring.hidden = false; ring.style.left = (r.left - 4) + 'px'; ring.style.top = (r.top - 4) + 'px'; ring.style.width = (r.width + 8) + 'px'; ring.style.height = (r.height + 8) + 'px';
+  if (r.height > vh * 0.45) { x = r.left + 16; y = r.bottom - bh - 16; } // 오른쪽 아래는 Faster 단추 자리
+  else if (r.bottom + 12 + bh < vh) { x = r.left + r.width / 2 - bw / 2; y = r.bottom + 12; }
+  else { x = r.left + r.width / 2 - bw / 2; y = r.top - bh - 12; }
+  box.style.left = Math.round(Math.max(12, Math.min(vw - bw - 12, x))) + 'px'; box.style.top = Math.round(Math.max(12, Math.min(vh - bh - 12, y))) + 'px';
+}
+$('bTut').onclick = function () { if (tut) tutEnd(true); tutStart(); };
+window.addEventListener('resize', function () { if (tut) tutPlace(); });
+if (!loadText(TUT) && !Q.get('demo') && !exQ) setTimeout(tutStart, 500);
 })();
 </script>
 </body>

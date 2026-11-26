@@ -9,6 +9,17 @@ import { abs } from '@/lib/meta';
 import './auto.css';
 
 export const metadata = meta('/auto');
+
+// 경로 에디터 판과 바뀐 것 — 에디터를 고치고 `npm run sync-editor` 할 때 맨 위에 한 줄 더한다 (girigocha 저장소 커밋 기록 기준)
+const EDITOR_VERSION = '5판';
+const CHANGES: [date: string, text: string][] = [
+  ['2026-11-26', '처음 열면 튜토리얼(퀘스트 6개) · 장애물 그리기 · Onion skin · 영상 저장 · 섬세한 위치 조정(화살표 0.5 inch, Option/Alt+끌기 0.1 inch) · 기본 Snap 1 inch'],
+  ['2026-11-15', '화면 정리 — 필드를 크게, 자주 안 쓰는 도구는 ⋯ 메뉴로 · 어두운 색'],
+  ['2026-11-14', 'BIOBUZZ 예시 오토 4종을 실제 칸 위치로, 흡입 동작 포함'],
+  ['2026-11-13', '더 빠른 길(Faster) 제안이 BIOBUZZ 규칙에 새로 걸리면 빼기'],
+  ['2026-10-26', 'BIOBUZZ 규칙 경고'],
+  ['2026-10-22', '4판 — 로봇으로 바로 보내기, 실제 주행 겹쳐 보기, Faster 제안, 말로 경로 만들기'],
+];
 export const revalidate = 600;
 
 // 오토: 페이지를 열면 바로 경로 에디터(기리고차 Path Editor, public/editor — `npm run sync-editor`로 girigocha 저장소에서 복사).
@@ -56,6 +67,13 @@ export default async function Page() {
           <li key={a.id}><div><b>{a.name}</b> <Link href={`/teams/${a.team}`} className="dim small">{a.team} {tname(a.team)}</Link></div><div className="acts"><PublicGhost id={a.id} /><ReportLink what={`공개 오토 「${a.name}」 (팀 ${a.team})`} url={abs('/auto#public')} /></div></li>
         ))}</ul> : <p className="dim">아직 공개된 경로가 없어요. 팀이 경로를 「모두에게」 공개하면 여기에 모여요.</p>}</div>
       </div></section>
+
+      <footer className="edver"><div className="in">
+        <details>
+          <summary>경로 에디터 {EDITOR_VERSION} · {CHANGES[0][0]} 업데이트</summary>
+          <ul>{CHANGES.map(([d, t]) => <li key={d}><time dateTime={d}>{d}</time> {t}</li>)}</ul>
+        </details>
+      </div></footer>
     </main>
   );
 }
