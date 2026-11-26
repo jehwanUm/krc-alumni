@@ -212,7 +212,7 @@ pre{background:#0B0D12;color:var(--ink);border:0;border-radius:var(--radius);pad
 #tut .bar{display:flex;gap:3px;margin:8px 0 10px}#tut .bar i{flex:1;height:4px;border-radius:2px;background:var(--line-2)}#tut .bar i.on{background:var(--yellow)}#tut .bar i.skip{background:var(--faint)}#tut .bar i.now{background:var(--blue)}
 #tut h3{margin:0 0 4px;font-size:16px}#tut p{margin:0;color:var(--muted);line-height:1.55}#tut p b{color:var(--ink)}
 #tut kbd,#tut code{font:500 12px var(--mono);background:var(--surface-3);border:1px solid var(--line-2);border-radius:3px;padding:0 4px;color:var(--ink)}
-#tut .row{margin-top:12px;justify-content:flex-end}
+#tut .row{margin-top:12px;justify-content:flex-end}#tut .row .sp{flex:1}
 #tut .clear{font:700 22px var(--mono);color:#5BD08A;margin:2px 0 6px}
 @media (prefers-reduced-motion:reduce){#tutRing,#tut{transition:none;animation:none}}
 </style>
@@ -1437,6 +1437,7 @@ if (Q.get('demo')) {
 }
 
 // ---------------------------------------------------------------- 튜토리얼 — 게임처럼 퀘스트 6개. 처음 열면 묻고, 위 Tutorial로 다시
+// 해내면 CLEAR ✓만 표시하고, 넘기는 건 사용자가 「다음」으로 (자동으로 넘어가지 않는다)
 
 var TUT = 'girigocha-editor-tutorial', tut = null;
 function sig(k) { return path().points.map(function (q) { return k === 'xy' ? q.x + ',' + q.y : (q.curve ? 1 : 0); }).join('|'); }
@@ -1460,19 +1461,20 @@ function tutEnd(keep) {
   if (keep === false) { snapshot(); project = migrate(JSON.parse(tut.base)); cur = Math.min(tut.cur, project.paths.length - 1); sel = null; changed(true); }
   tut = null; saveJson(TUT, 'done');
 }
-function tutNext() { tut.i++; tut.wait = 0; if (tut.i < QUESTS.length) tutBase(); tutShow(); }
+function tutGo(d) { if (d > 0 && tut.i >= 0 && !tut.done[tut.i]) tut.done[tut.i] = 'skip'; tut.i += d; tut.wait = tut.done[tut.i] === 'on' ? 1 : 0; if (tut.i < QUESTS.length) tutBase(); tutShow(tut.wait === 1); }
+function tutNext() { tutGo(1); }
 function tutTick() {
   if (!tut) return;
   var q = QUESTS[tut.i];
   if (q && !tut.wait) {
     if (!q.cnt && path().points.length !== tut.s.n) tutBase();
-    if (q.go(tut.s)) { tut.done[tut.i] = 'on'; tut.wait = 1; tutShow(true); setTimeout(tutNext, 900); }
+    if (q.go(tut.s)) { tut.done[tut.i] = 'on'; tut.wait = 1; tutShow(true); }
   }
   tutPlace();
 }
 function tutShow(cleared) {
   var box = $('tut'), i = tut.i, n = QUESTS.length, h;
-  var bar = '<div class="bar">' + QUESTS.map(function (x, k) { return '<i class="' + (tut.done[k] || (k === i ? 'now' : '')) + '"></i>'; }).join('') + '</div>';
+  var bar = '<div class="bar">' + QUESTS.map(function (x, k) { return '<i class="' + (k === i && tut.done[k] !== 'on' ? 'now' : tut.done[k] || '') + '"></i>'; }).join('') + '</div>';
   if (i < 0) h = '<div class="qh">TUTORIAL<span class="sp"></span>1분</div>' + bar + '<h3>처음 오셨네요!</h3><p>퀘스트 <b>6개</b>로 점 찍기부터 로봇으로 보내기까지 익혀요. 연습한 경로는 끝나고 지울 수 있어요.</p>' +
     '<div class="row"><button data-t="no">괜찮아요</button><button class="primary" data-t="go">시작</button></div>';
   else if (i >= n) {
@@ -1483,7 +1485,9 @@ function tutShow(cleared) {
   } else {
     var q = QUESTS[i];
     h = '<div class="qh">QUEST ' + (i + 1) + ' / ' + n + '<span class="sp"></span>' + (cleared ? '<span style="color:#5BD08A">CLEAR ✓</span>' : '') + '</div>' + bar +
-      '<h3>' + q.t + '</h3><p>' + q.d + '</p><div class="row"><button class="ghostbtn" data-t="quit">그만하기</button><button data-t="skip">건너뛰기</button></div>';
+      '<h3>' + q.t + '</h3><p>' + q.d + '</p><div class="row"><button class="ghostbtn" data-t="quit">그만하기</button><span class="sp"></span>' +
+      (i > 0 ? '<button data-t="prev">← 이전</button>' : '') +
+      '<button' + (cleared ? ' class="primary"' : '') + ' data-t="next">' + (i === n - 1 ? '마치기' : '다음 →') + '</button></div>';
   }
   box.innerHTML = h; box.hidden = false;
   $('tutRing').classList.toggle('ok', !!cleared);
@@ -1491,7 +1495,7 @@ function tutShow(cleared) {
     b.onclick = function () {
       var a = b.getAttribute('data-t');
       if (a === 'go') tutNext(); else if (a === 'no' || a === 'quit' || a === 'keep') tutEnd(true); else if (a === 'reset') tutEnd(false);
-      else if (a === 'skip') { tut.done[tut.i] = 'skip'; tutNext(); }
+      else if (a === 'next') tutGo(1); else if (a === 'prev') tutGo(-1);
     };
   });
   tutPlace();

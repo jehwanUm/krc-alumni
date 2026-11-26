@@ -8,7 +8,7 @@ export const revalidate = 3600; // 마감이 지난 링크가 한 시간 안에 
 // until: 이 시각(KST)이 지나면 숨김. url이 비어 있으면 숨김.
 const LINKS: { title: string; sub?: string; url: string; until?: string; hot?: boolean }[] = [
   { title: '기리고차 테스트 팀 신청', sub: '5팀 모집 · 12/6(일) 마감', url: '', until: '2026-12-06T23:59:59+09:00', hot: true }, // 구글 폼 주소를 넣으면 보여요
-  { title: '기리고차 가이드', sub: '설치부터 첫 오토까지', url: '/learn/girigocha' },
+  { title: '기리고차 가이드', sub: '설치부터 첫 오토까지', url: 'https://www.krcalumni.com/tech-blog/post/기리고차-기리고차란' },
   { title: '경로 에디터', sub: '오토 경로를 그리고 미리 재생', url: '/auto' },
   { title: 'KRC Alumni 홈페이지', sub: '대회 일정 · 팀 · 시즌 자료', url: '/' },
 ];

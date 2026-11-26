@@ -56,7 +56,7 @@ export default function Page() {
             <li><b>텔레옵</b> — 이어서 드라이버가 컨트롤러로 로봇을 조종해요.</li>
             <li><b>예선과 본선</b> — 예선 경기 순위로 상위 팀이 정해지고, 본선(플레이오프)에서 동맹을 골라 우승을 겨뤄요.</li>
           </ul>
-          <p className="note">게임 과제와 점수 규칙은 시즌마다 바뀌어요. 이번 시즌 규칙 요약은 <Link href="/learn/season">시즌 자료실</Link>에 정리할 예정이에요.</p>
+          <p className="note">게임 과제와 점수 규칙은 시즌마다 바뀌어요. 이번 시즌 규칙 요약은 KRC Tech <a href="https://www.krcalumni.com/tech-blog/post/시즌-자료실-biobuzz">시즌 자료실</a>에 있어요.</p>
         </div>
       </div></section>
 

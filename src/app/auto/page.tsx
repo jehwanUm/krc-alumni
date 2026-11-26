@@ -35,7 +35,7 @@ export default async function Page() {
         <p>FTC 오토노머스 경로를 그리고, 다른 팀 경로를 Ghost로 겹쳐 비교해요. 어떤 라이브러리를 쓰든 쓸 수 있어요.</p>
         <div className="first">
           <div><b>기리고차가 처음인가요?</b><p>기리고차는 동문회가 만든 메카넘 경로 추종 라이브러리예요. 설치부터 첫 주행까지 가이드를 따라가 보세요.</p></div>
-          <Link className="btn pri" href="/learn/girigocha">기리고차 가이드 보기 →</Link>
+          <a className="btn pri" href="https://www.krcalumni.com/tech-blog/post/기리고차-기리고차란">기리고차 가이드 보기 →</a>
         </div>
       </div></section>
 

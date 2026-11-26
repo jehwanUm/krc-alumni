@@ -5,7 +5,7 @@ KRC(FIRST Tech Challenge 국내 대회) 동문회 홈페이지 코드예요. 대
 - Next.js 16 (App Router), Node 22.13+ (권장 24 LTS)
 - 저장소: SQLite 파일 하나 (Node 내장 `node:sqlite`, 추가 패키지 없음), 팀 사진은 서버 폴더
 - **서버에 올리기: [`deploy/README.md`](deploy/README.md)** (Ubuntu 24.04, systemd, nginx)
-- 라이선스: 이 저장소 코드는 MIT (`LICENSE`). FIRST®, FTC®, BIOBUZZ™는 FIRST의 상표이고, 매뉴얼 요약(`src/data/manual-ko-tu10.json`)의 원문 저작권은 FIRST에 있어요
+- 라이선스: 이 저장소 코드는 MIT (`LICENSE`). FIRST®, FTC®, BIOBUZZ™는 FIRST의 상표예요. 배움(/learn) 글은 KRC Tech(/tech-blog)로 옮겼고, 옛 주소는 `next.config.ts`에서 그 글로 리디렉트해요
 
 ## 실행
 ```
@@ -17,7 +17,7 @@ npm run build
 ```
 
 ## 구조
-- 빌드 때 HTML: `/`, `/krc`, `/auto`, `/learn/*`, `/alumni`, `/mentoring`, `/login`
+- 빌드 때 HTML: `/`, `/krc`, `/auto`, `/alumni`, `/mentoring`, `/login`
 - 서버가 HTML로 만들고 10분 캐시(ISR, 각 page.tsx의 `revalidate = 600`): `/teams`, `/teams/[번호]`(처음 열릴 때), `/sponsors`, `/live`, `/sitemap.xml`
 - 브라우저 동작: 페이지 폴더의 `*Boot.tsx`·`Fullscreen.tsx`, 홈 배경 `src/components/pcb.js`
 - `/live`는 대회 날 `/api/live`(CDN 30초 캐시)를 30초마다 불러 Live 화면이 된다. 다른 대회를 띄우려면 `LIVE_EVENT=2026/<코드>`, `LIVE_DATES=2026-11-21`

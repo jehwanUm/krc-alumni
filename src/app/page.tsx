@@ -19,13 +19,13 @@ const GO = [
   ['/live', '대회', '일정·경기·순위', 'blue'],
   ['/teams', '팀', '역대 기록과 수상', 'ink'],
   ['/auto', '오토', '경로 그리고 공유', 'red'],
-  ['/learn', '배움', '시즌 자료와 가이드', 'yel'],
+  ['https://www.krcalumni.com/tech-blog/', '배움', '시즌 자료와 가이드', 'yel'],
 ] as const;
 // 동문회가 만든 것 (인스타 소개글과 같은 3가지)
 const MADE = [
   { href: '/live', ext: false, tag: 'Live', h: '대회 Live · 경기 호출', d: '대진표와 결과를 실시간으로 보고, 우리 팀 경기 차례가 다가오면 휴대폰으로 알려 줘요.' },
   { href: 'https://www.krcalumni.com/tech-blog/', ext: true, tag: 'KRC Tech', h: 'KRC Tech', d: '선배들과 팀들이 로봇 개발 과정을 올리는 기술 아카이브예요. 종이 엔지니어링 노트를 온라인으로. (별도 운영 사이트로 이동하며, 그 사이트의 약관이 적용돼요)' },
-  { href: '/learn/girigocha', ext: false, tag: 'Girigocha', h: '기리고차', d: '동문회가 만든 메카넘 경로 추종 라이브러리예요. 경로 에디터로 그리고, 블록으로도 오토를 짜요.' },
+  { href: 'https://www.krcalumni.com/tech-blog/post/기리고차-기리고차란', ext: true, tag: 'Girigocha', h: '기리고차', d: '동문회가 만든 메카넘 경로 추종 라이브러리예요. 경로 에디터로 그리고, 블록으로도 오토를 짜요.' },
 ] as const;
 // 누구를 위한 곳인지: 세 갈래
 const FOR = [
@@ -48,7 +48,7 @@ export default function Page() {
         <div className="cta"><TeamButton live={isEventDay()} /></div>
       </div></section>
       <nav className="go" aria-label="바로가기">
-        {GO.map(([href, h, d, c]) => <Link key={href} href={href} data-c={c}><b>{h}</b><span>{d}</span></Link>)}
+        {GO.map(([href, h, d, c]) => href.startsWith('http') ? <a key={href} href={href} data-c={c}><b>{h}</b><span>{d}</span></a> : <Link key={href} href={href} data-c={c}><b>{h}</b><span>{d}</span></Link>)}
       </nav>
     </div>
 

@@ -9,7 +9,7 @@ export default function Nav() {
   const here = usePathname();
   return (
     <nav aria-label="주 메뉴">
-      {NAV.map(([href, label]) => <Link key={href} href={href} aria-current={here.startsWith(href) ? 'page' : undefined}>{label}</Link>)}
+      {NAV.map(([href, label]) => href.startsWith('http') ? <a key={href} href={href}>{label}</a> : <Link key={href} href={href} aria-current={here.startsWith(href) ? 'page' : undefined}>{label}</Link>)}
     </nav>
   );
 }
